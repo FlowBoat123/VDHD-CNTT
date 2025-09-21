@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Chat</title></head>
+<body>
+  <div id="chat" style="max-width:600px;margin:20px auto;">
+    <div id="messages" style="border:1px solid #ddd;padding:10px;height:300px;overflow:auto;"></div>
+    <input id="input" placeholder="Gõ tin nhắn..." style="width:80%"/>
+    <button id="send">Gửi</button>
+  </div>
+
+  <script>
+    // sessionId lưu localStorage để Dialogflow giữ context
+    let sessionId = localStorage.getItem('df_sid');
+    if (!sessionId) {
+      sessionId = crypto.randomUUID(); // modern browsers
+      localStorage.setItem('df_sid', sessionId);
+    }
+
+    const messagesEl = document.getElementById('messages');
+    function addMessage(from, text){
+      const el = document.createElement('div');
+      el.innerHTML = `<strong>${from}:</strong> ${text}`;
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    document.getElementById('send').onclick = async () => {
+      const input = document.getElementById('input');
+      const txt = input.value.trim();
+      if (!txt) return;
+      addMessage('You', txt);
+      input.value = '';
+      const resp = await fetch('http://localhost:3000/api/message', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message: txt, sessionId})
+      });
+      const data = await resp.json();
+      // simple: show fulfillmentText or fallback to first fulfillmentMessage text
+      const reply = data.fulfillmentText || (data.fulfillmentMessages && data.fulfillmentMessages[0]?.text?.text?.[0]) || '...';
+      addMessage('Bot', reply);
+      // you can also parse data.fulfillmentMessages for cards/quick replies
+    };
+  </script>
+</body>
+</html>
