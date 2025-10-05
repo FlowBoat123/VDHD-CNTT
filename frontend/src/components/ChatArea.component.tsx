@@ -1,0 +1,59 @@
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import type { Message as MessageType } from "@/types/message.type";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import { Response } from "@/components/ai-elements/response";
+import { Loader } from "./ai-elements/loader";
+import { MovieCard } from "./ui/movie-card";
+
+export interface ChatAreaProps {
+  messages: MessageType[];
+  isLoading?: boolean; // Add isLoading prop
+}
+
+export function ChatArea({ messages, isLoading }: ChatAreaProps) {
+  const hasMessages = messages.length > 0;
+
+  return (
+    <Conversation className="flex-1 flex flex-col">
+      <ConversationContent className="flex-1 overflow-y-auto max-w-4xl mx-auto space-y-0 pb-24">
+        {isLoading ? (
+          // 👉 show loader while fetching messages
+          <div className="flex justify-center items-center h-full">
+            <Loader size={32} />
+          </div>
+        ) : hasMessages ? (
+          messages.map((m) => (
+            <Message key={m.id} from={m.sender}>
+              <MessageContent variant="contained">
+                {m.sender === "user" ? (
+                  m.content
+                ) : (
+                  <div className="space-y-3">
+                    <Response>{m.content}</Response>
+                    {m.movies && m.movies.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {m.movies.map((movie) => (
+                          <MovieCard key={movie.id} {...movie} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </MessageContent>
+            </Message>
+          ))
+        ) : (
+          <ConversationEmptyState className="pb-24" />
+        )}
+      </ConversationContent>
+
+      {/* stick-to-bottom button */}
+      <ConversationScrollButton />
+    </Conversation>
+  );
+}
