@@ -1,58 +1,65 @@
 // src/services/seed.service.ts
 import { admin, db } from "../config/firebase.config.js";
 
-export async function seedCities() {
-  const chats = db
-    .collection("users")
-    .doc("HMslCzCj1kUwqwENtKQKz3CU8pl1")
-    .collection("chats");
-  await chats.doc("SF").set({
-    name: "San Francisco",
-    state: "CA",
-    country: "USA",
-    capital: false,
-    population: 860000,
-  });
-  await chats.doc("LA").set({
-    name: "Los Angeles",
-    state: "CA",
-    country: "USA",
-    capital: false,
-    population: 3900000,
-  });
-  await chats.doc("DC").set({
-    name: "Washington, D.C.",
-    state: null,
-    country: "USA",
-    capital: true,
-    population: 680000,
-  });
-  await chats.doc("TOK").set({
-    name: "Tokyo",
-    state: null,
-    country: "Japan",
-    capital: true,
-    population: 9000000,
-  });
-  await chats.doc("BJ").set({
-    name: "Beijing",
-    state: null,
-    country: "China",
-    capital: true,
-    population: 21500000,
-  });
+export async function seedMovieSuggestions() {
+  const seedRef = db.collection("seed").doc("movieSuggestions");
 
-  console.log("✅ Chats seeded successfully (v8)");
+  const movieSuggestions = {
+    movieSuggestions: [
+      {
+        title: "Inception",
+        year: 2010,
+        genre: ["Action", "Sci-Fi", "Thriller"],
+        director: "Christopher Nolan",
+        rating: 8.8,
+      },
+      {
+        title: "Interstellar",
+        year: 2014,
+        genre: ["Adventure", "Drama", "Sci-Fi"],
+        director: "Christopher Nolan",
+        rating: 8.6,
+      },
+      {
+        title: "The Matrix",
+        year: 1999,
+        genre: ["Action", "Sci-Fi"],
+        director: "Lana Wachowski, Lilly Wachowski",
+        rating: 8.7,
+      },
+      {
+        title: "Parasite",
+        year: 2019,
+        genre: ["Drama", "Thriller"],
+        director: "Bong Joon Ho",
+        rating: 8.6,
+      },
+      {
+        title: "The Dark Knight",
+        year: 2008,
+        genre: ["Action", "Crime", "Drama"],
+        director: "Christopher Nolan",
+        rating: 9.0,
+      },
+    ],
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await seedRef.set(movieSuggestions);
+
+  console.log("✅ Movie suggestions saved in 'seed' collection successfully");
 }
 
-export async function readCities() {
-  const cityRef = db
-    .collection("users")
-    .doc("HMslCzCj1kUwqwENtKQKz3CU8pl1")
-    .collection("chats");
-  const snapshot = await cityRef.get();
-  console.log("snapshot:", snapshot.size);
-  snapshot.forEach((doc) => {
-    console.log("Document ID:", doc.id);
-  });
+export async function readMovieSuggestions() {
+  const docRef = db.collection("seed").doc("movieSuggestions");
+  const doc = await docRef.get();
+
+  if (!doc.exists) {
+    console.log("❌ No movie suggestions found in 'seed' collection.");
+    return;
+  }
+
+  console.log("🎬 Movie Suggestions JSON from 'seed':");
+  console.log(JSON.stringify(doc.data(), null, 2));
+  return doc.data();
 }

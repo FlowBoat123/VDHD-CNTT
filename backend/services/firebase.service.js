@@ -37,7 +37,11 @@ export async function setUserPreferences(uid, preferences) {
  * @param {*} param2 - Message data
  * @returns
  */
-export async function saveChatMessage(uid, chatId, { sender, content, movies }) {
+export async function saveChatMessage(
+  uid,
+  chatId,
+  { sender, content, movies }
+) {
   if (!uid) throw new Error("UID is required");
   if (!chatId) throw new Error("chatId is required");
 
@@ -72,19 +76,13 @@ export async function saveChatMessage(uid, chatId, { sender, content, movies }) 
   };
 
   if (Array.isArray(movies) && movies.length > 0) {
-    payload.movies = movies;
+    payload.movieSuggestions = movies;
+    // console.log("Attaching movies to message:", movies);
   }
 
-  await messageRef.set(payload);
+  console.log("Saving message:", payload);
 
-  // console.log(
-  //   "Saved message for user:",
-  //   uid,
-  //   "chatId:",
-  //   chatId,
-  //   "messageID:",
-  //   messageID
-  // );
+  await messageRef.set(payload);
 
   return messageID; // better to return messageId instead of subcollection id
 }
@@ -107,9 +105,5 @@ export async function getUserChatsId(uid) {
   if (!uid) throw new Error("UID is required");
   const chatsRef = db.collection("users").doc(uid).collection("chats");
   const snapshot = await chatsRef.get();
-  console.log("snapshot:", snapshot.size);
-  snapshot.forEach((doc) => {
-    console.log("Document ID:", doc.id);
-  });
   return snapshot.docs.map((doc) => doc.id);
 }

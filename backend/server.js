@@ -3,6 +3,10 @@ import cors from "cors";
 import messageRoutes from "./routes/message.routes.js";
 import dotenv from "dotenv";
 import { tmdbService } from "./services/tmdb.service.js";
+import {
+  seedMovieSuggestions,
+  readMovieSuggestions,
+} from "./services/seed.service.js";
 
 dotenv.config();
 
@@ -17,6 +21,9 @@ app.use("/api", messageRoutes);
 
 // const genres = await tmdbService.getGenres();
 // console.log(genres); // → full genre list
+
+// await seedMovieSuggestions();
+// await readMovieSuggestions();
 
 // Start server
 const PORT = process.env.PORT || 3000;

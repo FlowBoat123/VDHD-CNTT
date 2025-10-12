@@ -2,6 +2,8 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
+const MOVIES_PER_REQUEST = 8;
+
 export class TMDbService {
   constructor() {
     this.genreCache = null; // 🧠 Cache genre list in memory
@@ -29,7 +31,7 @@ export class TMDbService {
   // 🔥 Get trending movies
   async getTrendingMovies(timeWindow = "week") {
     const data = await this.fetchFromTMDb(`/trending/movie/${timeWindow}`);
-    return data.results.slice(0, 10);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 🔍 Search movies
@@ -37,19 +39,19 @@ export class TMDbService {
     const data = await this.fetchFromTMDb(
       `/search/movie?query=${encodeURIComponent(query)}`
     );
-    return data.results.slice(0, 10);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 🎬 Get popular movies
   async getPopularMovies() {
     const data = await this.fetchFromTMDb("/movie/popular");
-    return data.results.slice(0, 10);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 🌟 Get top-rated movies
   async getTopRatedMovies() {
     const data = await this.fetchFromTMDb("/movie/top_rated");
-    return data.results.slice(0, 10);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 📖 Get details
@@ -62,7 +64,7 @@ export class TMDbService {
     const data = await this.fetchFromTMDb(
       `/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`
     );
-    return data.results.slice(0, 10);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 🏷️ Dynamically fetch & cache genres
@@ -86,7 +88,7 @@ export class TMDbService {
   // 🎞️ Get similar movies
   async getSimilarMovies(movieId) {
     const data = await this.fetchFromTMDb(`/movie/${movieId}/similar`);
-    return data.results.slice(0, 6);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
   // 🖼️ Build full image URL

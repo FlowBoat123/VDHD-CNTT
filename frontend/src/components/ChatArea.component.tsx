@@ -8,7 +8,7 @@ import type { Message as MessageType } from "@/types/message.type";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { Loader } from "./ai-elements/loader";
-import { MovieCard } from "./ui/movie-card";
+import { MovieCard } from "@/components/MovieCard.component";
 
 export interface ChatAreaProps {
   messages: MessageType[];
@@ -35,10 +35,10 @@ export function ChatArea({ messages, isLoading }: ChatAreaProps) {
                 ) : (
                   <div className="space-y-3">
                     <Response>{m.content}</Response>
-                    {m.movies && m.movies.length > 0 && (
+                    {m.movieSuggestions && m.movieSuggestions.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {m.movies.map((movie) => (
-                          <MovieCard key={movie.id} {...movie} />
+                        {m.movieSuggestions.map((movie) => (
+                          <MovieCard key={movie.id} movie={movie} />
                         ))}
                       </div>
                     )}

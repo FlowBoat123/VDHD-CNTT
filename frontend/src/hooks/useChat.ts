@@ -125,30 +125,168 @@ export function useChat(user: User | null) {
     loadMessages();
   }, [activeChat, user]);
 
+  // const createNewChat = () => {
+  //   if (!user) {
+  //     // Guest: clear single chat messages
+  //     setChats((prev) => {
+  //       if (prev.length === 0) return prev;
+  //       const single = { ...prev[0], messages: [] };
+  //       return [single];
+  //     });
+  //     return;
+  //   }
+
+  //   const newChatId = uuidv1();
+  //   const newChat: Chat = {
+  //     id: newChatId,
+  //     title: "Cuộc trò chuyện mới",
+  //     messages: [],
+  //   };
+
+  //   setChats((prev) => [newChat, ...prev]);
+  //   setActiveChat(newChatId);
+  //   return newChatId;
+  // };
+
   const createNewChat = () => {
     if (!user) {
-      // Guest: clear single chat messages
+      // Guest mode — keep only one chat
       setChats((prev) => {
-        if (prev.length === 0) return prev;
+        if (prev.length === 0) {
+          const guestChat: Chat = {
+            id: "guest-chat",
+            title: "Cuộc trò chuyện khách",
+            messages: [],
+          };
+          return [guestChat];
+        }
+        // clear messages for guest chat
         const single = { ...prev[0], messages: [] };
         return [single];
       });
+      setActiveChat(null); // “model” state
       return;
     }
 
-    const newChatId = uuidv1();
-    const newChat: Chat = {
-      id: newChatId,
-      title: "Cuộc trò chuyện mới",
-      messages: [],
-    };
-
-    setChats((prev) => [newChat, ...prev]);
-    setActiveChat(newChatId);
-    return newChatId;
+    // Logged-in: don't actually create chat until first message
+    setActiveChat(null); // open blank “model” page
   };
 
+  // const sendMessage = async (content: string) => {
+  //   let sessionId = localStorage.getItem("sessionId");
+  //   if (!sessionId) {
+  //     sessionId = uuidv1();
+  //     localStorage.setItem("sessionId", sessionId);
+  //   }
+
+  //   let chatId = activeChat;
+  //   if (!chatId) {
+  //     chatId = sessionId;
+  //     if (!user && chats.length === 0) {
+  //       const guestChat: Chat = {
+  //         id: chatId,
+  //         title:
+  //           content.length > 30 ? content.substring(0, 30) + "..." : content,
+  //         messages: [],
+  //       };
+  //       setChats([guestChat]);
+  //     }
+  //     setActiveChat(chatId);
+  //   }
+
+  //   const userMessage = createMessage(content, "user");
+
+  //   setChats((prev) => {
+  //     const existingChat = prev.find((chat) => chat.id === chatId);
+  //     if (existingChat) {
+  //       return prev.map((chat) =>
+  //         chat.id === chatId
+  //           ? { ...chat, messages: [...chat.messages, userMessage] }
+  //           : chat
+  //       );
+  //     } else {
+  //       const newChat: Chat = {
+  //         id: chatId,
+  //         title:
+  //           content.length > 30 ? content.substring(0, 30) + "..." : content,
+  //         messages: [userMessage],
+  //       };
+  //       return [newChat, ...prev];
+  //     }
+  //   });
+
+  //   setIsTyping(true);
+
+  //   try {
+  //     setError(null);
+  //     const response = await chatService.sendMessage(
+  //       content,
+  //       sessionId,
+  //       chatId
+  //     );
+
+  //     console.log("Chatbot response:", response.data);
+
+  //     // Extract main text message and movie list from backend response
+  //     const fulfillmentMessages = response.data.fulfillmentMessages || [];
+
+  //     let textMessage = "";
+  //     let moviesPayload: {
+  //       id: number;
+  //       title: string;
+  //       subtitle?: string;
+  //       poster?: string;
+  //       url?: string;
+  //     }[] = [];
+
+  //     // Loop through Dialogflow-like messages
+  //     for (const msg of fulfillmentMessages) {
+  //       if (msg?.text?.text?.length) {
+  //         textMessage = msg.text.text.join("\n");
+  //       }
+
+  //       if (Array.isArray(msg?.movieSuggestions)) {
+  //         moviesPayload = msg.movieSuggestions;
+  //       }
+  //     }
+
+  //     // Build one assistant message for UI
+  //     const botMessage = createMessage(textMessage, "assistant");
+
+  //     if (moviesPayload.length > 0) {
+  //       botMessage.movieSuggestions = moviesPayload;
+  //     }
+
+  //     setChats((prev) =>
+  //       prev.map((chat) =>
+  //         chat.id === chatId
+  //           ? { ...chat, messages: [...chat.messages, botMessage] }
+  //           : chat
+  //       )
+  //     );
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError("Không thể gửi tin nhắn. Vui lòng thử lại.");
+  //     const errorMessage = createMessage(
+  //       "Đã có lỗi xảy ra. Vui lòng thử lại.",
+  //       "assistant"
+  //     );
+  //     setChats((prev) =>
+  //       prev.map((chat) =>
+  //         chat.id === chatId
+  //           ? { ...chat, messages: [...chat.messages, errorMessage] }
+  //           : chat
+  //       )
+  //     );
+  //   } finally {
+  //     setIsTyping(false);
+  //   }
+  // };
+
   const sendMessage = async (content: string) => {
+    if (!content.trim()) return;
+
+    // --- Ensure sessionId for backend ---
     let sessionId = localStorage.getItem("sessionId");
     if (!sessionId) {
       sessionId = uuidv1();
@@ -156,100 +294,89 @@ export function useChat(user: User | null) {
     }
 
     let chatId = activeChat;
-    if (!chatId) {
-      chatId = sessionId;
-      if (!user && chats.length === 0) {
-        const guestChat: Chat = {
-          id: chatId,
-          title:
-            content.length > 30 ? content.substring(0, 30) + "..." : content,
-          messages: [],
-        };
-        setChats([guestChat]);
-      }
-      setActiveChat(chatId);
-    }
-
     const userMessage = createMessage(content, "user");
 
-    setChats((prev) => {
-      const existingChat = prev.find((chat) => chat.id === chatId);
-      if (existingChat) {
-        return prev.map((chat) =>
+    // --- If user hasn't created a chat yet (ChatGPT-style first message logic) ---
+    if (!chatId) {
+      chatId = uuidv1(); // separate from sessionId (session is for context)
+      const title =
+        content.length > 30 ? content.substring(0, 30) + "..." : content;
+
+      if (!user) {
+        // Guest: only one chat at a time
+        setChats(() => [
+          {
+            id: chatId as string,
+            title,
+            messages: [userMessage],
+          },
+        ]);
+      } else {
+        // Logged-in: create new chat
+        setChats((prev) => [
+          {
+            id: chatId!,
+            title,
+            messages: [userMessage],
+          },
+          ...prev,
+        ]);
+      }
+
+      setActiveChat(chatId);
+    } else {
+      // --- Existing chat: append user message ---
+      setChats((prev) =>
+        prev.map((chat) =>
           chat.id === chatId
             ? { ...chat, messages: [...chat.messages, userMessage] }
             : chat
-        );
-      } else {
-        const newChat: Chat = {
-          id: chatId,
-          title:
-            content.length > 30 ? content.substring(0, 30) + "..." : content,
-          messages: [userMessage],
-        };
-        return [newChat, ...prev];
-      }
-    });
+        )
+      );
+    }
 
+    // --- Show typing indicator ---
     setIsTyping(true);
+    setError(null);
 
     try {
-      setError(null);
       const response = await chatService.sendMessage(
         content,
         sessionId,
         chatId
       );
+      console.log("Chatbot response:", response.data);
 
-      // Build assistant content from Dialogflow fulfillmentMessages
       const fulfillmentMessages = response.data.fulfillmentMessages || [];
-      const parts: string[] = [];
+
+      let textMessage = "";
       let moviesPayload: {
         id: number;
         title: string;
         subtitle?: string;
         poster?: string;
         url?: string;
-      }[] | undefined;
+      }[] = [];
 
+      // Parse backend messages
       for (const msg of fulfillmentMessages) {
-        // Text message
-        const textArr = msg?.text?.text as unknown as string[] | undefined;
-        if (Array.isArray(textArr) && textArr.length > 0) {
-          parts.push(textArr.join("\n"));
+        if (msg?.text?.text?.length) {
+          textMessage += msg.text.text.join("\n");
         }
 
-        // Movies message (custom payload)
-        const movies = msg?.movies as
-          | Array<{
-              id: number;
-              title: string;
-              subtitle?: string;
-              poster?: string;
-              url?: string;
-            }>
-          | undefined;
-        if (Array.isArray(movies) && movies.length > 0) {
-          // keep full movies payload to render cards and to store
-          moviesPayload = movies;
-          const lines: string[] = [];
-          lines.push("\n**Gợi ý phim:**");
-          movies.forEach((m, idx) => {
-            const titleWithLink = m.url ? `[${m.title}](${m.url})` : m.title;
-            const subtitle = m.subtitle ? ` — ${m.subtitle}` : "";
-            lines.push(`${idx + 1}. ${titleWithLink}${subtitle}`);
-          });
-          parts.push(lines.join("\n"));
+        if (Array.isArray(msg?.movieSuggestions)) {
+          moviesPayload = msg.movieSuggestions;
         }
       }
 
-      const assistantContent = parts.length > 0 ? parts.join("\n\n") : "";
-      const botMessage = createMessage(assistantContent || "", "assistant");
-      if (moviesPayload && moviesPayload.length > 0) {
-        // attach movies to the same assistant message so UI can render cards
-        (botMessage as any).movies = moviesPayload;
-      }
+      // Build assistant message
+      const botMessage = createMessage(
+        textMessage || "Không có phản hồi.",
+        "assistant"
+      );
+      if (moviesPayload.length > 0) botMessage.movieSuggestions = moviesPayload;
 
+      // Update chat with assistant response
       setChats((prev) =>
         prev.map((chat) =>
           chat.id === chatId

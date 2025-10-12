@@ -1,19 +1,28 @@
 import { v4 as uuidv4 } from "uuid";
 import { sessionClient } from "../config/dialogflow.config.js";
+import { DialogflowAdapter } from "./utils/dialogflow.adapter.js";
+import { intentHandlers } from "./utils/stratergies/intent.stratergies.js";
 
 const projectId = process.env.GOOGLE_PROJECT_ID;
 if (!projectId) {
   throw new Error("Set GOOGLE_PROJECT_ID env var");
 }
 
+// Intents that we just passthrough the text response from Dialogflow
+const PASSTHROUGH_INTENTS = ["Default Fallback Intent"];
+
 /**
- * Detect intent from Dialogflow using just text input
- * @param {string} message - User input text
- * @param {string} sessionId - Unique session ID (per user/session)
- * @param {string} languageCode - Language (default "en")
- * @returns {Promise<object>} Dialogflow result
+ *
+ * @param {*} message
+ * @param {*} sessionId
+ * @param {*} languageCode
+ * @returns Dialogflow-like response enhanced by custom handlers
  */
-export async function detectIntent(message, sessionId, languageCode = "en") {
+export async function handleDialogflow(
+  message,
+  sessionId,
+  languageCode = "en"
+) {
   if (!message) throw new Error("Message is required");
 
   const sid = sessionId || uuidv4();
@@ -30,16 +39,31 @@ export async function detectIntent(message, sessionId, languageCode = "en") {
   };
 
   const responses = await sessionClient.detectIntent(request);
-  // console.log("Dialogflow response:", responses);
-  const result = responses[0].queryResult;
-  console.log("Dialogflow fulfillment messages:", result.fulfillmentMessages);
 
-  return {
-    sessionId: sid,
-    // fulfillmentText: result.fulfillmentText,
-    fulfillmentMessages: result.fulfillmentMessages,
-    intent: result.intent ? result.intent.displayName : null,
-    parameters: result.parameters ? result.parameters.fields : null,
-    allRequiredParamsPresent: result.allRequiredParamsPresent,
-  };
+  // --- Normalize intent and parameters ---
+  const unified = DialogflowAdapter.toUnifiedRequest(responses[0], sid);
+  // console.log(unified);
+
+  const { intent, allRequiredParamsPresent, parameters } = unified;
+
+  // console.log("🤖 Intent:", intent);
+  // console.log("param found:", parameters);
+
+  // Pass-through intents (welcome, fallback, etc.)
+  if (PASSTHROUGH_INTENTS.includes(intent)) {
+    return unified;
+  }
+
+  // Not all parameters present → return Dialogflow’s own response
+  if (!allRequiredParamsPresent) {
+    return unified;
+  }
+
+  const handler = intentHandlers[intent];
+  if (!handler) return unified;
+
+  // Call the handler
+  const handled = await handler(unified);
+
+  return { ...unified, ...handled };
 }
