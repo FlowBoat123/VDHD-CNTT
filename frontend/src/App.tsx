@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar.component";
 import { ChatArea } from "@/components/ChatArea.component";
 import { MessageInput } from "@/components/MessageInput.component";
+import { SearchWindow } from "@/components/Window.SearchWindow"; 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/hooks/useChat";
+import { useSearch } from "@/hooks/useSearch";
 
 type View = "chat";
 
@@ -27,6 +29,13 @@ export default function App() {
     createNewChat,
   } = useChat(user);
 
+  const {
+    isSearchOpen, 
+    openSearchWindow, 
+    closeSearchWindow,
+    toggleSearchWindow,
+  } = useSearch();
+
   return (
     <div className="flex w-full h-full">
       {!isGuest && currentView === "chat" && (
@@ -45,6 +54,9 @@ export default function App() {
             createNewChat();
             navigate(`/chat/model`);
           }}
+          onSearchUse={() => {
+            openSearchWindow();
+          }}
         />
       )}
 
@@ -59,6 +71,8 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      <SearchWindow open={isSearchOpen} onClose={closeSearchWindow} />
     </div>
   );
 }

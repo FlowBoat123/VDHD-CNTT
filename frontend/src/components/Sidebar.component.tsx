@@ -6,7 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, MessageSquare } from "lucide-react";
+import { Plus, Search, MessageSquare } from "lucide-react";
 import type { Chat } from "@/types/chat.type";
 
 interface SidebarProps {
@@ -16,6 +16,7 @@ interface SidebarProps {
   activeChat: string | null;
   onChatSelect: (chatId: string) => void;
   onNewChat: () => void;
+  onSearchUse: () => void;
 }
 
 export function Sidebar({
@@ -25,15 +26,24 @@ export function Sidebar({
   activeChat,
   onChatSelect,
   onNewChat,
+  onSearchUse,
 }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex w-64 border-r bg-muted/10 flex-col">
+
         <div className="p-4 border-b">
           <Button onClick={onNewChat} className="w-full">
             <Plus className="h-4 w-4 mr-2" />
             Cuộc trò chuyện mới
+          </Button>
+        </div>
+
+        <div className="p-4 border-b">
+          <Button onClick={onSearchUse} className="w-full">
+            <Search className="h-4 w-4 mr-2" />
+            Tìm kiếm
           </Button>
         </div>
 
@@ -75,6 +85,13 @@ export function Sidebar({
             <Button onClick={onNewChat} className="w-full">
               <Plus className="h-4 w-4 mr-2" />
               Cuộc trò chuyện mới
+            </Button>
+          </div>
+
+          <div className="p-4 border-b">
+            <Button onClick={onSearchUse} className="w-full">
+              <Search className="h-4 w-4 mr-2" />
+              Tìm kiếm
             </Button>
           </div>
 
