@@ -1,12 +1,16 @@
 import { useState } from "react";
+
 import { Sidebar } from "@/components/Sidebar.component";
 import { ChatArea } from "@/components/ChatArea.component";
 import { MessageInput } from "@/components/MessageInput.component";
-import { SearchWindow } from "@/components/Window.SearchWindow"; 
+import { SearchWindow } from "@/components/Window.SearchWindow";
+import { MovieDetailWindow } from "@/components/Window.MovieDetail";
+
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/hooks/useChat";
 import { useSearch } from "@/hooks/useSearch";
+import { usemovieDetail } from "@/hooks/useMovieDetail";
 
 type View = "chat";
 
@@ -30,11 +34,25 @@ export default function App() {
   } = useChat(user);
 
   const {
-    isSearchOpen, 
-    openSearchWindow, 
+    isSearchOpen,
+    openSearchWindow,
     closeSearchWindow,
     toggleSearchWindow,
   } = useSearch();
+
+  const {
+    movieDetail_id,
+    movieDetail_setId,
+    movieDetail_isOpen,
+    movieDetail_isSaved,
+    movieDetail_setIsSaved,
+    movieDetail_open,
+    movieDetail_close,
+    movieDetail_toggle,
+    movieDetail_movie,
+    movieDetail_loading,
+    movieDetail_error,
+  } = usemovieDetail();
 
   return (
     <div className="flex w-full h-full">
@@ -72,7 +90,22 @@ export default function App() {
         </div>
       </div>
 
+      <button
+        onClick={() => movieDetail_open("338969")}
+        className="rounded-xl border border-black/10 px-4 py-2 hover:bg-neutral-50"
+      >
+        Show Film Detail
+      </button>
+
       <SearchWindow open={isSearchOpen} onClose={closeSearchWindow} />
+
+      <MovieDetailWindow
+        open={movieDetail_isOpen}
+        onOpenChange={(v) => (v ? movieDetail_open() : movieDetail_close())}
+        movie={movieDetail_movie}
+        isSaved={movieDetail_isSaved}
+        onToggleSave={() => movieDetail_setIsSaved((v) => !v)}
+      />
     </div>
   );
 }
