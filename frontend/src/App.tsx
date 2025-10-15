@@ -43,7 +43,7 @@ export default function App() {
           }}
           onNewChat={() => {
             createNewChat();
-            navigate(`/chat/model`);
+            navigate(`/chat/?model=auto`);
           }}
         />
       )}
