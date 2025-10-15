@@ -17,6 +17,7 @@ interface SidebarProps {
   onChatSelect: (chatId: string) => void;
   onNewChat: () => void;
   onSearchUse: () => void;
+  onOpenCollection?: () => void;
 }
 
 export function Sidebar({
@@ -27,6 +28,7 @@ export function Sidebar({
   onChatSelect,
   onNewChat,
   onSearchUse,
+  onOpenCollection,
 }: SidebarProps) {
   return (
     <>
@@ -40,10 +42,15 @@ export function Sidebar({
           </Button>
         </div>
 
-        <div className="p-4 border-b">
+        <div className="p-4 border-b space-y-2">
           <Button onClick={onSearchUse} className="w-full">
             <Search className="h-4 w-4 mr-2" />
             Tìm kiếm
+          </Button>
+
+          <Button onClick={() => onOpenCollection?.()} className="w-full">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Bộ sưu tập
           </Button>
         </div>
 
@@ -88,10 +95,15 @@ export function Sidebar({
             </Button>
           </div>
 
-          <div className="p-4 border-b">
+          <div className="p-4 border-b space-y-2">
             <Button onClick={onSearchUse} className="w-full">
               <Search className="h-4 w-4 mr-2" />
               Tìm kiếm
+            </Button>
+
+            <Button onClick={() => onOpenCollection?.()} className="w-full">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Bộ sưu tập
             </Button>
           </div>
 

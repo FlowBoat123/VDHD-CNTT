@@ -5,11 +5,15 @@ import type { Movie } from "@/types/movie.type";
 
 interface MovieCardProps {
   movie: Movie;
+  onClick?: (id: number | string) => void; // allow click handler
 }
 
-export function MovieCard({ movie }: MovieCardProps) {
+export function MovieCard({ movie, onClick }: MovieCardProps) {
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 p-0 gap-3">
+    <Card
+      onClick={() => onClick?.(movie.id)}
+      className="overflow-hidden hover:shadow-lg transition-shadow duration-200 p-0 gap-3 cursor-pointer"
+    >
       <div className="relative overflow-hidden">
         {movie.poster ? (
           <img
@@ -29,7 +33,6 @@ export function MovieCard({ movie }: MovieCardProps) {
           </div>
         )}
 
-        {/* Rating Badge */}
         {movie.rating !== undefined && (
           <div className="absolute top-2 right-2">
             <Badge

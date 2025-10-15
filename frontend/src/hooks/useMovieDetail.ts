@@ -17,8 +17,6 @@ export function usemovieDetail() {
         setLoading(true);
         setError(null);
 
-        console.log(`${CHATBOT_API_BASE_URL}/fetch/movie/${encodeURIComponent(movieDetail_id)}`);
-
         fetch(`${CHATBOT_API_BASE_URL}/fetch/movie/${encodeURIComponent(movieDetail_id)}`)
             .then((res) => (res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)))
             .then((d) =>
@@ -39,7 +37,6 @@ export function usemovieDetail() {
     const movieDetail_open = (newId?: string) => {
         if (newId) movieDetail_setId(newId);
         movieDetail_setIsOpen(true);
-        console.log(newId);
     };
     const movieDetail_close = () => movieDetail_setIsOpen(false);
     const movieDetail_toggle = () => movieDetail_setIsOpen((v) => !v);
