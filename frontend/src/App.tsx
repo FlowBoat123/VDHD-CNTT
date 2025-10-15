@@ -42,10 +42,10 @@ export default function App() {
   const {
     movieDetail_isOpen,
     movieDetail_isSaved,
-    movieDetail_setIsSaved,
     movieDetail_open,
     movieDetail_close,
     movieDetail_movie,
+    movieDetail_toggleSave,
   } = usemovieDetail();
 
   return (
@@ -111,7 +111,7 @@ export default function App() {
         onOpenChange={(v) => (v ? movieDetail_open() : movieDetail_close())}
         movie={movieDetail_movie}
         isSaved={movieDetail_isSaved}
-        onToggleSave={() => movieDetail_setIsSaved((v) => !v)}
+        onToggleSave={() => movieDetail_toggleSave()}
       />
     </div>
   );

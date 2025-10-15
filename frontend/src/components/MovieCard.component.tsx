@@ -16,17 +16,17 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
     >
       <div className="relative overflow-hidden">
         {movie.poster ? (
-          <img
-            src={movie.poster}
-            alt={movie.title}
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src =
-                "/placeholder-image.jpg";
-            }}
-            className="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
-          />
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src =
+                  "/placeholder-image.jpg";
+              }}
+              className="w-full h-80 object-cover transition-transform duration-300 hover:scale-105"
+            />
         ) : (
-          <div className="w-full h-64 bg-muted flex items-center justify-center">
+          <div className="w-full h-80 bg-muted flex items-center justify-center">
             <span className="text-muted-foreground text-sm">
               Không có poster
             </span>
@@ -45,7 +45,7 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
           </div>
         )}
       </div>
-      <CardContent className="p-2 pb-4">
+      <CardContent className="p-3 pb-4">
         <h3 className="font-medium line-clamp-2 leading-tight text-center">
           {movie.title}
         </h3>
