@@ -23,12 +23,6 @@ app.use("/api", messageRoutes);
 app.use("/api", fetchRoutes);
 app.use("/api", collectionRoutes);
 
-// const genres = await tmdbService.getGenres();
-// console.log(genres); // → full genre list
-
-// await seedMovieSuggestions();
-// await readMovieSuggestions();
-
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -77,10 +77,7 @@ export async function saveChatMessage(
 
   if (Array.isArray(movies) && movies.length > 0) {
     payload.movieSuggestions = movies;
-    // console.log("Attaching movies to message:", movies);
   }
-
-  console.log("Saving message:", payload);
 
   await messageRef.set(payload);
 
@@ -115,7 +112,8 @@ export async function getUserChatsId(uid) {
  */
 export async function saveMovieToCollection(uid, movie) {
   if (!uid) throw new Error("UID is required");
-  if (!movie || (typeof movie !== "object")) throw new Error("movie must be an object");
+  if (!movie || typeof movie !== "object")
+    throw new Error("movie must be an object");
   if (!movie.id) throw new Error("movie.id is required");
 
   const movieId = String(movie.id);
