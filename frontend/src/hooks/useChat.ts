@@ -65,7 +65,22 @@ export function useChat(user: User | null) {
         } else {
           // Authenticated user: fetch chats from backend
           const response = await chatService.fetchChats();
-          setChats(response || []);
+          if (Array.isArray(response)) {
+            setChats(response);
+          } else if (Array.isArray((response as any).chats)) {
+            // Handle different response structure
+            setChats((response as any).chats);
+          } else if (Array.isArray((response as any).chatIds)) {
+            const ids: string[] = (response as any).chatIds;
+            const mapped: Chat[] = ids.map((id) => ({
+              id,
+              title: "Cuộc trò chuyện",
+              messages: [],
+            }));
+            setChats(mapped);
+          } else {
+            setChats([]);
+          }
         }
       } catch (err) {
         console.error("Failed to initialize chats:", err);
@@ -91,6 +106,11 @@ export function useChat(user: User | null) {
         setChats((prev) => {
           const existingChat = prev.find((chat) => chat.id === activeChat);
           if (existingChat) {
+            // Nếu đã có messages cục bộ (ví dụ: tin nhắn người dùng mới gửi), giữ nguyên để không bị ghi đè
+            if (existingChat.messages && existingChat.messages.length > 0) {
+              return prev;
+            }
+            // Nếu không có messages cục bộ, cập nhật bằng messages từ server
             return prev.map((chat) =>
               chat.id === activeChat ? { ...chat, messages } : chat
             );
@@ -108,15 +128,16 @@ export function useChat(user: User | null) {
         setError("Không thể tải tin nhắn");
         setChats((prev) => {
           const existingChat = prev.find((chat) => chat.id === activeChat);
-          if (!existingChat) {
-            const newChat: Chat = {
-              id: activeChat,
-              title: "Cuộc trò chuyện mới",
-              messages: [],
-            };
-            return [newChat, ...prev];
+          // Nếu đã có chat cục bộ (với messages), giữ nguyên để không mất tin nhắn người dùng
+          if (existingChat) {
+            return prev;
           }
-          return prev;
+          const newChat: Chat = {
+            id: activeChat,
+            title: "Cuộc trò chuyện mới",
+            messages: [],
+          };
+          return [newChat, ...prev];
         });
       } finally {
         setIsLoading(false);
@@ -164,12 +185,10 @@ export function useChat(user: User | null) {
     let chatId = activeChat;
     const userMessage = createMessage(content, "user");
 
-    let isNewChat = false;
 
     // --- If user hasn't created a chat yet (ChatGPT-style first message logic) ---
     if (!chatId) {
       chatId = uuidv1(); // separate from sessionId (session is for context)
-      isNewChat = true;
       const title =
         content.length > 30 ? content.substring(0, 30) + "..." : content;
 
@@ -255,10 +274,6 @@ export function useChat(user: User | null) {
             : chat
         )
       );
-
-      if (isNewChat) {
-        navigate(`/chat/${chatId}`);
-      }
     } catch (err) {
       console.error(err);
       setError("Không thể gửi tin nhắn. Vui lòng thử lại.");
