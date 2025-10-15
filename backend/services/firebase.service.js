@@ -77,10 +77,7 @@ export async function saveChatMessage(
 
   if (Array.isArray(movies) && movies.length > 0) {
     payload.movieSuggestions = movies;
-    // console.log("Attaching movies to message:", movies);
   }
-
-  console.log("Saving message:", payload);
 
   await messageRef.set(payload);
 
@@ -106,4 +103,61 @@ export async function getUserChatsId(uid) {
   const chatsRef = db.collection("users").doc(uid).collection("chats");
   const snapshot = await chatsRef.get();
   return snapshot.docs.map((doc) => doc.id);
+}
+
+/**
+ * Save a movie to the user's collection (idempotent - uses movie.id as doc id)
+ * @param {string} uid - Firebase user ID
+ * @param {{id:number|string, title:string, poster?:string, rating?:number}} movie - movie object to save
+ */
+export async function saveMovieToCollection(uid, movie) {
+  if (!uid) throw new Error("UID is required");
+  if (!movie || typeof movie !== "object")
+    throw new Error("movie must be an object");
+  if (!movie.id) throw new Error("movie.id is required");
+
+  const movieId = String(movie.id);
+  const movieRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("collections")
+    .doc(movieId);
+
+  const payload = {
+    ...movie,
+    id: movie.id,
+    savedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  console.log(`Saved ${movie} to ${uid}`);
+  await movieRef.set(payload, { merge: true });
+  return movieId;
+}
+
+/**
+ * Get all movies saved in user's collection
+ * @param {string} uid - Firebase user ID
+ * @returns {Array<Object>} list of saved movies
+ */
+export async function getUserCollection(uid) {
+  if (!uid) throw new Error("UID is required");
+
+  const ref = db.collection("users").doc(uid).collection("collections");
+  const snapshot = await ref.orderBy("savedAt", "desc").get();
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Remove a movie from user's collection
+ * @param {string} uid - Firebase user ID
+ * @param {string|number} movieId - movie id to remove
+ */
+export async function removeMovieFromCollection(uid, movieId) {
+  if (!uid) throw new Error("UID is required");
+  if (!movieId) throw new Error("movieId is required");
+
+  const id = String(movieId);
+  const ref = db.collection("users").doc(uid).collection("collections").doc(id);
+  await ref.delete();
+  return id;
 }

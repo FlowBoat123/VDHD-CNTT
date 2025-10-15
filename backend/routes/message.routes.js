@@ -41,13 +41,10 @@ router.post("/message", authenticateOptional, async (req, res) => {
         Array.isArray(msg?.movieSuggestions) &&
         msg.movieSuggestions.length > 0
       ) {
-        // console.log("Found movies payload in response:", msg.movieSuggestions);
         moviesPayload = msg.movieSuggestions;
       }
     }
 
-    // console.log("Bot text parts:", textParts);
-    // console.log("Bot movies payload:", moviesPayload);
     const assistantText =
       textParts.length > 0
         ? textParts.join("\n\n")
@@ -73,9 +70,7 @@ router.get("/chats", authenticateOptional, async (req, res) => {
   const { uid } = req.user || {};
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
   try {
-    // console.log("Fetching chats for user:", uid);
     getUserChatsId(uid).then((chatIds) => {
-      // console.log("User chats:", chatIds);
       res.json({ chatIds });
     });
   } catch (err) {
@@ -105,7 +100,6 @@ router.get(
     try {
       const { chatId } = req.params;
       getChatMessages(req.user?.uid, chatId).then((messages) => {
-        // console.log("Fetched messages for chat:", chatId, messages);
         res.json({ messages: messages });
       });
     } catch (err) {

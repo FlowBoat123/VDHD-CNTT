@@ -11,7 +11,7 @@ export async function handleMovieRecommendation(request) {
 
   const genreName = params.genre || "bất kỳ";
 
-  console.log("🎬 User requested genre:", genreName);
+  console.log("User requested genre:", genreName);
 
   // --- Step 1: Get TMDB genres ---
   const tmdbGenres = await tmdbService.getGenres();

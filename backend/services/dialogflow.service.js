@@ -42,12 +42,10 @@ export async function handleDialogflow(
 
   // --- Normalize intent and parameters ---
   const unified = DialogflowAdapter.toUnifiedRequest(responses[0], sid);
-  // console.log(unified);
 
   const { intent, allRequiredParamsPresent, parameters } = unified;
 
-  // console.log("🤖 Intent:", intent);
-  // console.log("param found:", parameters);
+  // console.log("unified :", unified);
 
   // Pass-through intents (welcome, fallback, etc.)
   if (PASSTHROUGH_INTENTS.includes(intent)) {

@@ -12,10 +12,12 @@ import { MovieCard } from "@/components/MovieCard.component";
 
 export interface ChatAreaProps {
   messages: MessageType[];
-  isLoading?: boolean; // Add isLoading prop
+  isLoading?: boolean;
+
+  onClickMovieCard?: (id: number) => void;
 }
 
-export function ChatArea({ messages, isLoading }: ChatAreaProps) {
+export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProps) {
   const hasMessages = messages.length > 0;
 
   return (
@@ -38,7 +40,7 @@ export function ChatArea({ messages, isLoading }: ChatAreaProps) {
                     {m.movieSuggestions && m.movieSuggestions.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {m.movieSuggestions.map((movie) => (
-                          <MovieCard key={movie.id} movie={movie} />
+                          <MovieCard onClick={onClickMovieCard ? () => onClickMovieCard(movie.id) : undefined} key={movie.id} movie={movie} />
                         ))}
                       </div>
                     )}
