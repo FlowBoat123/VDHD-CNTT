@@ -10,6 +10,8 @@ export type Movie = {
   id?: string;
   title: string;
   year?: number | string;
+  release_date?: string;
+  production?: string;
   description?: string;
   posterUrl?: string;
   genres?: string[];
@@ -138,6 +140,12 @@ export function MovieDetailWindow({
                     <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
                   ) : null}
                 </h2>
+                {safeMovie.production && (
+                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+                    <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
+                  </p>
+                )}
+
                 {metaBits.length > 0 && (
                   <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
                     {metaBits.join(" • ")}

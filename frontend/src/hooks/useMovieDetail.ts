@@ -27,10 +27,13 @@ export function usemovieDetail() {
                     id: String(d.id),
                     title: d.title,
                     year: d.release_date?.slice(0, 4),
+                    release_date: d.release_date,
+                    production: d.production_companies.map((obj: { name: any; }) => obj.name).join(" | "),
                     description: d.overview,
                     posterUrl: d.poster_path
                         ? `https://image.tmdb.org/t/p/w500${d.poster_path}`
                         : undefined,
+                    genres: Array.isArray(d.genres) ? d.genres.map((g: any) => g.name) : undefined,
                 });
             })
             .catch((e) => { console.error(`Failed to fetch movie ${e.id}`); setError(String(e)); })
