@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { X, Bookmark, BookmarkCheck, ExternalLink } from "lucide-react";
+import { Loader } from "@/components/ai-elements/loader";
 
 function cn(...classes: Array<string | undefined | false>) {
   return classes.filter(Boolean).join(" ");
@@ -24,6 +25,7 @@ export type MovieDetailProps = {
   isSaved?: boolean;
   onToggleSave?: (movieId?: string) => void;
   actions?: React.ReactNode;
+  loading?: boolean;
   className?: string;
 };
 
@@ -34,6 +36,7 @@ export function MovieDetailWindow({
   isSaved,
   onToggleSave,
   actions,
+  loading,
   className,
 }: MovieDetailProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -89,7 +92,14 @@ export function MovieDetailWindow({
           className
         )}
       >
+        {loading ? (
+          <div className="flex items-center justify-center h-96">
+            <Loader size={48} />
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-8 p-8">
+        {loading ? null : (
+          <>
           <div className="flex flex-col items-stretch">
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl shadow-sm border border-black/10 dark:border-white/10 bg-neutral-100 dark:bg-neutral-800">
               {safeMovie.posterUrl ? (
@@ -152,6 +162,9 @@ export function MovieDetailWindow({
               {safeMovie.description ?? "No description provided."}
             </div>
           </div>
+          </>
+        )}
+
         </div>
 
         <button

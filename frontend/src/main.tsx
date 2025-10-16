@@ -21,6 +21,14 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="/" element={<Navigate to="/chat" replace />} />
                   <Route path="/chat" element={<App />} />
                   <Route
+                    path="/collection"
+                    element={
+                      <ProtectedRoute>
+                        <App />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/chat/:id"
                     element={
                       <ProtectedRoute>

@@ -21,7 +21,8 @@ export function usemovieDetail() {
 
         fetch(`${CHATBOT_API_BASE_URL}/fetch/movie/${encodeURIComponent(movieDetail_id)}`)
             .then((res) => (res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)))
-            .then((d) =>
+            .then((d) => {
+                console.log(`Fetch movie: ${d.id}`);
                 setMovie({
                     id: String(d.id),
                     title: d.title,
@@ -30,9 +31,9 @@ export function usemovieDetail() {
                     posterUrl: d.poster_path
                         ? `https://image.tmdb.org/t/p/w500${d.poster_path}`
                         : undefined,
-                })
-            )
-            .catch((e) => setError(String(e)))
+                });
+            })
+            .catch((e) => { console.error(`Failed to fetch movie ${e.id}`); setError(String(e)); })
             .finally(() => setLoading(false));
     }, [movieDetail_id]);
 

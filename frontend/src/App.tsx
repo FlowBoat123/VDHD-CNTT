@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Sidebar } from "@/components/Sidebar.component";
 import { ChatArea } from "@/components/ChatArea.component";
@@ -7,7 +7,7 @@ import { SearchWindow } from "@/components/Window.SearchWindow";
 import { MovieDetailWindow } from "@/components/Window.MovieDetail";
 import Collection from "@/components/Collection.component";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/hooks/useChat";
 import { useSearch } from "@/hooks/useSearch";
@@ -20,6 +20,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState<View>("chat");
   const navigate = useNavigate();
+  const location = useLocation();
   const isGuest = !user;
 
   const {
@@ -42,11 +43,21 @@ export default function App() {
   const {
     movieDetail_isOpen,
     movieDetail_isSaved,
+    movieDetail_loading,
     movieDetail_open,
     movieDetail_close,
     movieDetail_movie,
     movieDetail_toggleSave,
   } = usemovieDetail();
+
+  // keep currentView synced with the URL so direct navigation works
+  useEffect(() => {
+    if (location.pathname.startsWith("/collection")) {
+      setCurrentView("collection");
+    } else {
+      setCurrentView("chat");
+    }
+  }, [location.pathname]);
 
   return (
     <div className="flex w-full h-full">
@@ -72,6 +83,7 @@ export default function App() {
           }}
           onOpenCollection={() => {
             setCurrentView("collection");
+            navigate("/collection");
           }}
         />
       )}
@@ -88,10 +100,7 @@ export default function App() {
                 />
               </>
             ) : (
-              <Collection
-                movies={[]}
-                onOpenMovie={(id) => movieDetail_open(id.toString())}
-              />
+              <Collection onOpenMovie={(id) => movieDetail_open(id.toString())} />
             )}
           </div>
         </div>
@@ -112,6 +121,7 @@ export default function App() {
         movie={movieDetail_movie}
         isSaved={movieDetail_isSaved}
         onToggleSave={() => movieDetail_toggleSave()}
+        loading={movieDetail_loading}
       />
     </div>
   );
