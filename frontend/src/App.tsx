@@ -33,11 +33,7 @@ export default function App() {
     createNewChat,
   } = useChat(user);
 
-  const {
-    isSearchOpen,
-    openSearchWindow,
-    closeSearchWindow,
-  } = useSearch();
+  const { isSearchOpen, openSearchWindow, closeSearchWindow } = useSearch();
 
   const {
     movieDetail_isOpen,
@@ -65,7 +61,6 @@ export default function App() {
           onNewChat={() => {
             setCurrentView("chat");
             createNewChat();
-            navigate(`/chat/?model=auto`);
           }}
           onSearchUse={() => {
             openSearchWindow();
@@ -81,7 +76,13 @@ export default function App() {
           <div className="flex-1 flex flex-col h-full">
             {currentView === "chat" ? (
               <>
-                <ChatArea messages={getCurrentMessages()} isLoading={isLoading} onClickMovieCard={(id) => {movieDetail_open(id.toString())}}/>
+                <ChatArea
+                  messages={getCurrentMessages()}
+                  isLoading={isLoading}
+                  onClickMovieCard={(id) => {
+                    movieDetail_open(id.toString());
+                  }}
+                />
                 <MessageInput
                   onSend={sendMessage}
                   disabled={isTyping || isLoading}
