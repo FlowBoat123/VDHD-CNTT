@@ -57,22 +57,8 @@ export function useChat(user: User | null) {
       } else {
         // Authenticated user: fetch chats from backend
         const response = await chatService.fetchChats();
-        if (Array.isArray(response)) {
-          setChats(response);
-        } else if (Array.isArray((response as any).chats)) {
-          // Handle different response structure
-          setChats((response as any).chats);
-        } else if (Array.isArray((response as any).chatIds)) {
-          const ids: string[] = (response as any).chatIds;
-          const mapped: Chat[] = ids.map((id) => ({
-            id,
-            title: "Cuộc trò chuyện",
-            messages: [],
-          }));
-          setChats(mapped);
-        } else {
-          setChats([]);
-        }
+        console.log("this is chat response: ", response);
+        setChats(response);
       }
     } catch (err) {
       console.error("Failed to initialize chats:", err);
@@ -167,6 +153,10 @@ export function useChat(user: User | null) {
           },
           ...prev,
         ]);
+        chatService.createChatWithTitle(chatId, title).catch((err) => {
+          console.error("Lỗi khi tạo chat ở backend:", err);
+          // Tùy chọn: Bạn có thể thêm logic để hiển thị lỗi cho người dùng ở đây
+        });
       }
 
       setActiveChat(chatId);
@@ -192,9 +182,8 @@ export function useChat(user: User | null) {
         chatId
       );
 
-      navigate(`/chat/${chatId}`);
-
       console.log("Chatbot response:", response.data);
+      navigate(`/chat/${chatId}`);
 
       const fulfillmentMessages = response.data.fulfillmentMessages || [];
 
@@ -254,7 +243,7 @@ export function useChat(user: User | null) {
 
   const getCurrentMessages = (): Message[] => {
     if (!activeChat) return [];
-    const chat = chats.find((c) => c.id === activeChat);
+    const chat = (chats || []).find((c) => c.id === activeChat);
     return chat?.messages || [];
   };
 
@@ -269,6 +258,7 @@ export function useChat(user: User | null) {
   // something
   useEffect(() => {
     initializeChats();
+    console.log(chats);
   }, [user]);
 
   // Load messages for active chat (authenticated users only)

@@ -20,11 +20,9 @@ class ChatService {
 
   // Fetch chat directly from firebase
   async fetchChats(): Promise<Chat[]> {
-    const res = await api.get<{ chatIds: string[] }>(
-      `${CHATBOT_API_BASE_URL}/chats`
-    );
+    const res = await api.get<Chat[]>(`${CHATBOT_API_BASE_URL}/chats`);
     console.log("Fetched chats:", res.data);
-    return res.data.chatIds.map((id) => ({ id, title: "Chat", messages: [] })); // don’t preload messages in the sidebar
+    return res.data;
   }
 
   // Fetch messages for a specific chat
@@ -35,6 +33,16 @@ class ChatService {
     );
     console.log("Fetched messages:", res.data);
     return res.data.messages || [];
+  }
+
+  async createChatWithTitle(chatId: string, title: string): Promise<Chat> {
+    // Gửi yêu cầu POST đến endpoint `/api/chats/:chatId/title`
+    // với `title` mới trong phần body của request.
+    const res = await api.post(
+      `${CHATBOT_API_BASE_URL}/chats/${chatId}/title`,
+      { title }
+    );
+    return res.data;
   }
 }
 
