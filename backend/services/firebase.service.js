@@ -54,10 +54,12 @@ export async function saveChatMessage(
   // Ensure chat doc exists (or create it if missing)
   const chatSnap = await chatDocRef.get();
   if (!chatSnap.exists) {
-    await chatDocRef.set({
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    await chatDocRef.set(
+      {
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
   } else {
     // Update lastUpdated if already exists
     await chatDocRef.update({
@@ -98,11 +100,21 @@ export async function getChatMessages(uid, chatId) {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 
-export async function getUserChatsId(uid) {
+export async function getUserChats(uid) {
   if (!uid) throw new Error("UID is required");
   const chatsRef = db.collection("users").doc(uid).collection("chats");
-  const snapshot = await chatsRef.get();
-  return snapshot.docs.map((doc) => doc.id);
+  const snapshot = await chatsRef.orderBy("lastUpdated", "desc").get();
+  // snapshot.forEach((doc) => {
+  //   const data = doc.data();
+  //   console.log(data);
+  // });
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      title: data.title || "Cuộc trò chuyện", // Fallback title
+    };
+  });
 }
 
 /**
@@ -145,6 +157,35 @@ export async function getUserCollection(uid) {
   const ref = db.collection("users").doc(uid).collection("collections");
   const snapshot = await ref.orderBy("savedAt", "desc").get();
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Cập nhật tiêu đề của một cuộc trò chuyện cụ thể
+ * @param {string} uid - ID user Firebase
+ * @param {string} chatId - ID of chat needed changing title
+ * @param {string} title - New title
+ */
+export async function updateChatTitle(uid, chatId, title) {
+  // Kiểm tra các tham số đầu vào
+  if (!uid) throw new Error("UID is required");
+  if (!chatId) throw new Error("chatId is required");
+  if (!title) throw new Error("title is required");
+
+  // Tạo một tham chiếu đến document của cuộc trò chuyện trong Firestore
+  const chatDocRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("chats")
+    .doc(chatId);
+
+  // Thực hiện cập nhật trường 'title' và 'lastUpdated'
+  await chatDocRef.set({
+    title: title,
+    lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Ghi log để xác nhận
+  console.log(`Updated title for chat ${chatId} to: "${title}"`);
 }
 
 /**
