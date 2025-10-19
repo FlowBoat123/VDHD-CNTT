@@ -18,3 +18,14 @@ export async function removeMovie(id: string | number) {
   const res = await api.delete(`${CHATBOT_API_BASE_URL}/collection/${id}`);
   return res.data;
 }
+
+export async function rateMovie(id: string | number, rating: number) {
+  // send rating for a movie to backend
+  const res = await api.post(`${CHATBOT_API_BASE_URL}/collection/${id}/rating`, { rating });
+  return res.data;
+}
+
+export async function getMovieRating(id: string | number) {
+  const res = await api.get(`${CHATBOT_API_BASE_URL}/collection/${id}/rating`);
+  return res.data?.data || null;
+}

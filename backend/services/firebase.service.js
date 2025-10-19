@@ -161,3 +161,71 @@ export async function removeMovieFromCollection(uid, movieId) {
   await ref.delete();
   return id;
 }
+
+/**
+ * Set rating for a movie by a user. This will store rating info under
+ * users/{uid}/ratings/{movieId} and also merge rating into the collections doc
+ * if the movie exists there.
+ * @param {string} uid
+ * @param {string|number} movieId
+ * @param {number} rating
+ * @param {object} movie (optional) - movie metadata to store alongside rating
+ */
+export async function setMovieRating(uid, movieId, rating, movie = {}) {
+  if (!uid) throw new Error("UID is required");
+  if (!movieId) throw new Error("movieId is required");
+  if (typeof rating !== 'number') throw new Error("rating must be a number");
+
+  const id = String(movieId);
+
+  // store in a dedicated ratings subcollection for easy querying
+  const ratingsRef = db.collection('users').doc(uid).collection('ratings').doc(id);
+  const payload = {
+    movieId: id,
+    rating,
+    ratedAt: admin.firestore.FieldValue.serverTimestamp(),
+    ...movie,
+  };
+
+  await ratingsRef.set(payload, { merge: true });
+
+  // also merge rating into collections/{movieId} if present
+  const collectionRef = db.collection('users').doc(uid).collection('collections').doc(id);
+  const collSnap = await collectionRef.get();
+  if (collSnap.exists) {
+    await collectionRef.set({ rating }, { merge: true });
+  }
+
+  return { movieId: id, rating };
+}
+
+/**
+ * Get rating for a movie by a user. Checks ratings subcollection first,
+ * then falls back to collections/{movieId}.rating if present.
+ * @param {string} uid
+ * @param {string|number} movieId
+ */
+export async function getMovieRating(uid, movieId) {
+  if (!uid) throw new Error("UID is required");
+  if (!movieId) throw new Error("movieId is required");
+
+  const id = String(movieId);
+
+  const ratingsRef = db.collection('users').doc(uid).collection('ratings').doc(id);
+  const snap = await ratingsRef.get();
+  if (snap.exists) {
+    return { id: snap.id, ...snap.data() };
+  }
+
+  // fallback to collections doc
+  const collRef = db.collection('users').doc(uid).collection('collections').doc(id);
+  const collSnap = await collRef.get();
+  if (collSnap.exists) {
+    const data = collSnap.data();
+    if (data && typeof data.rating !== 'undefined') {
+      return { movieId: id, rating: data.rating };
+    }
+  }
+
+  return null;
+}

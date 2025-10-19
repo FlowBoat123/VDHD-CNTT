@@ -48,6 +48,8 @@ export default function App() {
     movieDetail_close,
     movieDetail_movie,
     movieDetail_toggleSave,
+    movieDetail_rate,
+    movieDetail_rating,
   } = usemovieDetail();
 
   // keep currentView synced with the URL so direct navigation works
@@ -122,6 +124,11 @@ export default function App() {
         isSaved={movieDetail_isSaved}
         onToggleSave={() => movieDetail_toggleSave()}
         loading={movieDetail_loading}
+        onRate={(movieId, rating) => {
+          console.log('App: onRate called', { movieId, rating });
+          movieDetail_rate(movieId, rating);
+        }}
+        initialRating={movieDetail_rating}
       />
     </div>
   );
