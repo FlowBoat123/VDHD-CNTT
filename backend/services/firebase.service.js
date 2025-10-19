@@ -230,13 +230,6 @@ export async function setMovieRating(uid, movieId, rating, movie = {}) {
 
   await ratingsRef.set(payload, { merge: true });
 
-  // also merge rating into collections/{movieId} if present
-  const collectionRef = db.collection('users').doc(uid).collection('collections').doc(id);
-  const collSnap = await collectionRef.get();
-  if (collSnap.exists) {
-    await collectionRef.set({ rating }, { merge: true });
-  }
-
   return { movieId: id, rating };
 }
 

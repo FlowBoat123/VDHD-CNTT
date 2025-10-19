@@ -36,6 +36,8 @@ export function usemovieDetail() {
                         ? `https://image.tmdb.org/t/p/w500${d.poster_path}`
                         : undefined,
                     genres: Array.isArray(d.genres) ? d.genres.map((g: any) => g.name) : undefined,
+                    // include TMDB vote_average as the movie's rating (for display/save)
+                    rating: typeof d.vote_average === 'number' ? String(d.vote_average) : undefined,
                 });
             })
             .catch((e) => { console.error(`Failed to fetch movie ${e.id}`); setError(String(e)); })
@@ -110,7 +112,7 @@ export function usemovieDetail() {
                     id: Number(movieDetail_movie.id),
                     title: movieDetail_movie.title,
                     poster: movieDetail_movie.posterUrl,
-                    rating: undefined,
+                    rating: movieDetail_movie.rating,
                 } as unknown as MovieType);
                 movieDetail_setIsSaved(true);
             }
