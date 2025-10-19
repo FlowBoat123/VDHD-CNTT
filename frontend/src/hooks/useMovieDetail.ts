@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Movie as MovieType } from "@/types/movie.type";
 import type { Movie as DetailMovie } from "@/components/Window.MovieDetail";
-import { saveMovie, removeMovie, getCollection } from "@/services/collection.service";
+import { saveMovie, removeMovie, getCollection, rateMovie } from "@/services/collection.service";
+import { getMovieRating } from "@/services/collection.service";
 
 const CHATBOT_API_BASE_URL = "http://localhost:3000/api";
 
@@ -12,6 +13,7 @@ export function usemovieDetail() {
     const [movieDetail_movie, setMovie] = useState<DetailMovie | null>(null);
     const [movieDetail_loading, setLoading] = useState(false);
     const [movieDetail_error, setError] = useState<string | null>(null);
+    const [movieDetail_rating, setMovieDetailRating] = useState<number | null>(null);
 
     useEffect(() => {
         if (!movieDetail_id) return;
@@ -21,20 +23,47 @@ export function usemovieDetail() {
 
         fetch(`${CHATBOT_API_BASE_URL}/fetch/movie/${encodeURIComponent(movieDetail_id)}`)
             .then((res) => (res.ok ? res.json() : Promise.reject(`HTTP ${res.status}`)))
-            .then((d) =>
+            .then((d) => {
+                console.log(`Fetch movie: ${d.id}`);
                 setMovie({
                     id: String(d.id),
                     title: d.title,
                     year: d.release_date?.slice(0, 4),
+                    release_date: d.release_date,
+                    production: d.production_companies.map((obj: { name: any; }) => obj.name).join(" | "),
                     description: d.overview,
                     posterUrl: d.poster_path
                         ? `https://image.tmdb.org/t/p/w500${d.poster_path}`
                         : undefined,
-                })
-            )
-            .catch((e) => setError(String(e)))
+                    genres: Array.isArray(d.genres) ? d.genres.map((g: any) => g.name) : undefined,
+                });
+            })
+            .catch((e) => { console.error(`Failed to fetch movie ${e.id}`); setError(String(e)); })
             .finally(() => setLoading(false));
     }, [movieDetail_id]);
+
+    // fetch rating for this movie for current user
+    useEffect(() => {
+        if (!movieDetail_movie?.id) {
+            setMovieDetailRating(null);
+            return;
+        }
+
+        let mounted = true;
+        (async () => {
+            try {
+                const r = await getMovieRating(String(movieDetail_movie.id));
+                if (!mounted) return;
+                if (r && typeof r.rating === 'number') setMovieDetailRating(r.rating);
+                else setMovieDetailRating(null);
+            } catch (e) {
+                console.error('Failed to fetch movie rating:', e);
+                setMovieDetailRating(null);
+            }
+        })();
+
+        return () => { mounted = false; };
+    }, [movieDetail_movie]);
 
     // check if current movie is saved when movie changes
     useEffect(() => {
@@ -90,6 +119,20 @@ export function usemovieDetail() {
         }
     };
 
+    const movieDetail_rate = async (movieId?: string, rating?: number) => {
+        if (!movieId || typeof rating !== 'number') {
+            console.log('movieDetail_rate: missing movieId or rating', { movieId, rating });
+            return;
+        }
+        try {
+            console.log(`Sending rating ${rating} for movie ${movieId}`);
+            const res = await rateMovie(movieId, rating);
+            console.log('Rating response:', res);
+        } catch (e) {
+            console.error('Failed to send rating:', e);
+        }
+    };
+
     return {
         movieDetail_id,
         movieDetail_setId,
@@ -103,5 +146,7 @@ export function usemovieDetail() {
         movieDetail_loading,
         movieDetail_error,
         movieDetail_toggleSave,
+        movieDetail_rate,
+        movieDetail_rating,
     };
 }

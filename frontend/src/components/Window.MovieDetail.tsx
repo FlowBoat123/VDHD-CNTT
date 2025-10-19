@@ -1,14 +1,51 @@
-import React, { useEffect, useRef } from "react";
-import { X, Bookmark, BookmarkCheck, ExternalLink } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { X, Bookmark, BookmarkCheck, ExternalLink, Star } from "lucide-react";
+import { Loader } from "@/components/ai-elements/loader";
 
 function cn(...classes: Array<string | undefined | false>) {
   return classes.filter(Boolean).join(" ");
+}
+
+function RatingControl({ initialValue = 0, onRate }: { initialValue?: number; onRate?: (v: number) => void }) {
+  const [value, setValue] = useState<number>(initialValue);
+  const [hover, setHover] = useState<number | null>(null);
+
+  // update internal value when parent provides a new initialValue (e.g., loaded from backend)
+  useEffect(() => {
+    setValue(initialValue ?? 0);
+  }, [initialValue]);
+
+  return (
+    <div className="flex items-center gap-2">
+      {[1, 2, 3, 4, 5].map((s) => {
+        const filled = hover !== null ? s <= hover : s <= value;
+        return (
+          <button
+            key={s}
+            onMouseEnter={() => setHover(s)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => {
+              setValue(s);
+              // call provided handler if present
+              try { onRate?.(s); } catch (e) { /* ignore */ }
+            }}
+            aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
+            className="p-1"
+          >
+            <Star fill={filled ? "currentColor" : "none"} size={28} className={filled ? "text-yellow-400" : "text-yellow-400/30"} />
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export type Movie = {
   id?: string;
   title: string;
   year?: number | string;
+  release_date?: string;
+  production?: string;
   description?: string;
   posterUrl?: string;
   genres?: string[];
@@ -24,7 +61,10 @@ export type MovieDetailProps = {
   isSaved?: boolean;
   onToggleSave?: (movieId?: string) => void;
   actions?: React.ReactNode;
+  loading?: boolean;
   className?: string;
+  onRate?: (movieId?: string, rating?: number) => void;
+  initialRating?: number | null;
 };
 
 export function MovieDetailWindow({
@@ -34,7 +74,10 @@ export function MovieDetailWindow({
   isSaved,
   onToggleSave,
   actions,
+  loading,
   className,
+  onRate,
+  initialRating,
 }: MovieDetailProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -89,7 +132,14 @@ export function MovieDetailWindow({
           className
         )}
       >
+        {loading ? (
+          <div className="flex items-center justify-center h-96">
+            <Loader size={48} />
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-8 p-8">
+        {loading ? null : (
+          <>
           <div className="flex flex-col items-stretch">
             <div className="aspect-[2/3] w-full overflow-hidden rounded-xl shadow-sm border border-black/10 dark:border-white/10 bg-neutral-100 dark:bg-neutral-800">
               {safeMovie.posterUrl ? (
@@ -104,20 +154,39 @@ export function MovieDetailWindow({
               )}
             </div>
 
-            <button
-              onClick={() => onToggleSave?.(safeMovie.id)}
-              className={cn(
-                "mt-5 inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-medium shadow-sm transition active:scale-[0.98]",
-                isSaved
-                  ? "border-emerald-600/20 bg-emerald-600 text-white hover:bg-emerald-700"
-                  : "border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-              )}
-              aria-pressed={isSaved}
-            >
-              {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
-              {isSaved ? "Saved" : "Save"}
-            </button>
+            <div className="mt-5">
+              <button
+                onClick={() => onToggleSave?.(safeMovie.id)}
+                className={cn(
+                  "w-full inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-medium shadow-sm transition active:scale-[0.98]",
+                  isSaved
+                    ? "border-emerald-600/20 bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                )}
+                aria-pressed={isSaved}
+              >
+                {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                {isSaved ? "Saved" : "Save"}
+              </button>
+
+              {/* Local-only rating UI (no backend) */}
+              <div className="mt-3 flex items-center justify-center">
+                <RatingControl
+                  initialValue={
+                    typeof initialRating === "number"
+                      ? initialRating
+                      : safeMovie.rating
+                      ? Number(safeMovie.rating)
+                      : 0
+                  }
+                  onRate={(v) => {
+                    onRate?.(safeMovie.id, v);
+                  }}
+                />
+              </div>
+            </div>
           </div>
+
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-start justify-between gap-4">
@@ -128,6 +197,12 @@ export function MovieDetailWindow({
                     <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
                   ) : null}
                 </h2>
+                {safeMovie.production && (
+                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+                    <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
+                  </p>
+                )}
+
                 {metaBits.length > 0 && (
                   <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
                     {metaBits.join(" • ")}
@@ -152,6 +227,9 @@ export function MovieDetailWindow({
               {safeMovie.description ?? "No description provided."}
             </div>
           </div>
+          </>
+        )}
+
         </div>
 
         <button

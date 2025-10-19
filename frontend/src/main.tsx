@@ -20,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
                   <Route path="/" element={<Navigate to="/chat" replace />} />
                   <Route path="/chat" element={<ChatLayout />} />
                   <Route path="/chat/:id" element={<ChatLayout />} />
+                  <Route path="/collection" element={<ChatLayout />} />
                   <Route path="/logout" element={<Logout />} />
                   <Route path="*" element={<Navigate to="/chat" replace />} />
                 </Routes>
