@@ -3,9 +3,10 @@ import express from "express";
 import { handleDialogflow } from "../services/dialogflow.service.js";
 import {
   getChatMessages,
-  getUserChatsId,
+  getUserChats,
   getUserPreferences,
   saveChatMessage,
+  updateChatTitle,
 } from "../services/firebase.service.js";
 import { authenticateOptional } from "../middleware/authenticate.js";
 const router = express.Router();
@@ -70,9 +71,8 @@ router.get("/chats", authenticateOptional, async (req, res) => {
   const { uid } = req.user || {};
   if (!uid) return res.status(401).json({ error: "Unauthorized" });
   try {
-    getUserChatsId(uid).then((chatIds) => {
-      res.json({ chatIds });
-    });
+    const chatsInfo = await getUserChats(uid);
+    res.json(chatsInfo);
   } catch (err) {
     console.error("Error in /chats:", err);
     res.status(500).json({ error: err.message });
@@ -108,5 +108,32 @@ router.get(
     }
   }
 );
+
+// POST /chats/:chatId/title: Cập nhật tiêu đề của một cuộc trò chuyện
+router.post("/chats/:chatId/title", authenticateOptional, async (req, res) => {
+  try {
+    // 1. Xác thực người dùng từ middleware
+    const uid = req.user?.uid;
+    if (!uid) return res.status(401).json({ error: "Unauthorized" });
+
+    // 2. Lấy chatId từ URL và title từ body của request
+    const { chatId } = req.params;
+    const { title } = req.body;
+
+    // 3. Kiểm tra xem title có được cung cấp không
+    if (!title) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+
+    // 4. Gọi hàm dịch vụ để cập nhật vào Firestore
+    await updateChatTitle(uid, chatId, title);
+
+    // 5. Trả về phản hồi thành công cho frontend
+    res.json({ id: chatId, title: title });
+  } catch (err) {
+    console.error("Error updating chat title:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

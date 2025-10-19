@@ -33,143 +33,86 @@ export function useChat(user: User | null) {
     };
   };
 
-  // Set active chat from route param for logged-in users
-  useEffect(() => {
-    const routeChatId = params.id || null;
-    if (isGuest) return; // guests are on /chat only
-    setActiveChat(routeChatId);
-  }, [params.id, isGuest]);
+  const initializeChats = async () => {
+    setIsLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    const initializeChats = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        if (!user) {
-          // Guest user: use local session
-          let sessionId = localStorage.getItem("sessionId");
-          if (!sessionId) {
-            sessionId = uuidv1();
-            localStorage.setItem("sessionId", sessionId);
-          }
-
-          const guestChat: Chat = {
-            id: sessionId,
-            title: "Cuộc trò chuyện mới",
-            messages: [],
-          };
-
-          setChats([guestChat]);
-          setActiveChat(sessionId);
-        } else {
-          // Authenticated user: fetch chats from backend
-          const response = await chatService.fetchChats();
-          if (Array.isArray(response)) {
-            setChats(response);
-          } else if (Array.isArray((response as any).chats)) {
-            // Handle different response structure
-            setChats((response as any).chats);
-          } else if (Array.isArray((response as any).chatIds)) {
-            const ids: string[] = (response as any).chatIds;
-            const mapped: Chat[] = ids.map((id) => ({
-              id,
-              title: "Cuộc trò chuyện",
-              messages: [],
-            }));
-            setChats(mapped);
-          } else {
-            setChats([]);
-          }
+    try {
+      if (!user) {
+        // Guest user: use local session
+        let sessionId = localStorage.getItem("sessionId");
+        if (!sessionId) {
+          sessionId = uuidv1();
+          localStorage.setItem("sessionId", sessionId);
         }
-      } catch (err) {
-        console.error("Failed to initialize chats:", err);
-        setError("Không thể tải danh sách cuộc trò chuyện");
-        setChats([]);
-      } finally {
-        setIsLoading(false);
+
+        const guestChat: Chat = {
+          id: sessionId,
+          title: "Cuộc trò chuyện mới",
+          messages: [],
+        };
+
+        setChats([guestChat]);
+        setActiveChat(sessionId);
+      } else {
+        // Authenticated user: fetch chats from backend
+        const response = await chatService.fetchChats();
+        console.log("this is chat response: ", response);
+        setChats(response);
       }
-    };
+    } catch (err) {
+      console.error("Failed to initialize chats:", err);
+      setError("Không thể tải danh sách cuộc trò chuyện");
+      setChats([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    initializeChats();
-  }, [user]);
-
-  // Load messages for active chat (authenticated users only)
-  useEffect(() => {
-    if (!activeChat || !user) return;
-
-    const loadMessages = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const messages = await chatService.fetchMessages(activeChat);
-        setChats((prev) => {
-          const existingChat = prev.find((chat) => chat.id === activeChat);
-          if (existingChat) {
-            // Nếu đã có messages cục bộ (ví dụ: tin nhắn người dùng mới gửi), giữ nguyên để không bị ghi đè
-            if (existingChat.messages && existingChat.messages.length > 0) {
-              return prev;
-            }
-            // Nếu không có messages cục bộ, cập nhật bằng messages từ server
-            return prev.map((chat) =>
-              chat.id === activeChat ? { ...chat, messages } : chat
-            );
-          } else {
-            const newChat: Chat = {
-              id: activeChat,
-              title: "Cuộc trò chuyện mới",
-              messages,
-            };
-            return [newChat, ...prev];
-          }
-        });
-      } catch (err) {
-        console.error("Failed to fetch messages:", err);
-        setError("Không thể tải tin nhắn");
-        setChats((prev) => {
-          const existingChat = prev.find((chat) => chat.id === activeChat);
-          // Nếu đã có chat cục bộ (với messages), giữ nguyên để không mất tin nhắn người dùng
-          if (existingChat) {
+  const loadMessages = async (activeChat: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const messages = await chatService.fetchMessages(activeChat);
+      setChats((prev) => {
+        const existingChat = prev.find((chat) => chat.id === activeChat);
+        if (existingChat) {
+          // Nếu đã có messages cục bộ (ví dụ: tin nhắn người dùng mới gửi), giữ nguyên để không bị ghi đè
+          if (existingChat.messages && existingChat.messages.length > 0) {
             return prev;
           }
+          // Nếu không có messages cục bộ, cập nhật bằng messages từ server
+          return prev.map((chat) =>
+            chat.id === activeChat ? { ...chat, messages } : chat
+          );
+        } else {
           const newChat: Chat = {
             id: activeChat,
             title: "Cuộc trò chuyện mới",
-            messages: [],
+            messages,
           };
           return [newChat, ...prev];
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadMessages();
-  }, [activeChat, user]);
-
-  const createNewChat = () => {
-    if (!user) {
-      // Guest mode — keep only one chat
-      setChats((prev) => {
-        if (prev.length === 0) {
-          const guestChat: Chat = {
-            id: "guest-chat",
-            title: "Cuộc trò chuyện khách",
-            messages: [],
-          };
-          return [guestChat];
         }
-        // clear messages for guest chat
-        const single = { ...prev[0], messages: [] };
-        return [single];
       });
-      setActiveChat(null); // “model” state
-      navigate("/chat/?model=auto");
-      return;
+    } catch (err) {
+      console.error("Failed to fetch messages:", err);
+      setError("Không thể tải tin nhắn");
+      setChats((prev) => {
+        const existingChat = prev.find((chat) => chat.id === activeChat);
+        // Nếu đã có chat cục bộ (với messages), giữ nguyên để không mất tin nhắn người dùng
+        if (existingChat) {
+          return prev;
+        }
+        const newChat: Chat = {
+          id: activeChat,
+          title: "Cuộc trò chuyện mới",
+          messages: [],
+        };
+        return [newChat, ...prev];
+      });
+    } finally {
+      setIsLoading(false);
     }
-
-    // Logged-in: don't actually create chat until first message
-    setActiveChat(null); // open blank “model” page
   };
 
   const sendMessage = async (content: string) => {
@@ -184,7 +127,6 @@ export function useChat(user: User | null) {
 
     let chatId = activeChat;
     const userMessage = createMessage(content, "user");
-
 
     // --- If user hasn't created a chat yet (ChatGPT-style first message logic) ---
     if (!chatId) {
@@ -202,7 +144,7 @@ export function useChat(user: User | null) {
           },
         ]);
       } else {
-        // Logged-in: create new chat
+        // Logged-in: create new chat and add to sidebar
         setChats((prev) => [
           {
             id: chatId!,
@@ -211,6 +153,10 @@ export function useChat(user: User | null) {
           },
           ...prev,
         ]);
+        chatService.createChatWithTitle(chatId, title).catch((err) => {
+          console.error("Lỗi khi tạo chat ở backend:", err);
+          // Tùy chọn: Bạn có thể thêm logic để hiển thị lỗi cho người dùng ở đây
+        });
       }
 
       setActiveChat(chatId);
@@ -235,7 +181,9 @@ export function useChat(user: User | null) {
         sessionId,
         chatId
       );
+
       console.log("Chatbot response:", response.data);
+      navigate(`/chat/${chatId}`);
 
       const fulfillmentMessages = response.data.fulfillmentMessages || [];
 
@@ -295,8 +243,34 @@ export function useChat(user: User | null) {
 
   const getCurrentMessages = (): Message[] => {
     if (!activeChat) return [];
-    const chat = chats.find((c) => c.id === activeChat);
+    const chat = (chats || []).find((c) => c.id === activeChat);
     return chat?.messages || [];
+  };
+
+  // Set active chat from route param for logged-in users and id changes
+  useEffect(() => {
+    if (user) {
+      setActiveChat(params.id || null);
+      console.log("active chat: ", activeChat);
+    }
+  }, [params.id, user]);
+
+  // something
+  useEffect(() => {
+    initializeChats();
+    console.log(chats);
+  }, [user]);
+
+  // Load messages for active chat (authenticated users only)
+  useEffect(() => {
+    if (!activeChat || !user) return;
+    console.log("active chat: ", activeChat);
+    loadMessages(activeChat);
+  }, [activeChat, user]);
+
+  const createNewChat = () => {
+    // Chỉ cần điều hướng đến route gốc, useEffect sẽ xử lý việc đặt activeChat thành null
+    navigate("/chat");
   };
 
   return {
