@@ -45,21 +45,30 @@ export async function handleDialogflow(
 
   const { intent, allRequiredParamsPresent, parameters } = unified;
 
-  // console.log("unified :", unified);
+  console.log("🔍 Debug Info:");
+  console.log("Intent:", intent);
+  console.log("All params present:", allRequiredParamsPresent);
+  console.log("Parameters:", parameters);
 
   // Pass-through intents (welcome, fallback, etc.)
   if (PASSTHROUGH_INTENTS.includes(intent)) {
+    console.log("⏭️ Passthrough intent");
     return unified;
   }
 
-  // Not all parameters present → return Dialogflow’s own response
+  // Not all parameters present → return Dialogflow's own response
   if (!allRequiredParamsPresent) {
+    console.log("❌ Not all required params present");
     return unified;
   }
 
   const handler = intentHandlers[intent];
-  if (!handler) return unified;
+  if (!handler) {
+    console.log("⚠️ No handler found for intent:", intent);
+    return unified;
+  }
 
+  console.log("✅ Calling handler for:", intent);
   // Call the handler
   const handled = await handler(unified);
 
