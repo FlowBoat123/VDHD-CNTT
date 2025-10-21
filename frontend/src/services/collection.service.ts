@@ -29,3 +29,13 @@ export async function getMovieRating(id: string | number) {
   const res = await api.get(`${CHATBOT_API_BASE_URL}/collection/${id}/rating`);
   return res.data?.data || null;
 }
+
+export async function getRatedMovieAggregate(id: string | number) {
+  const res = await api.get(`${CHATBOT_API_BASE_URL}/rated-movie/${id}`);
+  return res.data?.data || null;
+}
+
+export async function getMovieAverage(id: string | number) {
+  const res = await api.get(`${CHATBOT_API_BASE_URL}/movie/${id}/average`);
+  return res.data?.data || null;
+}

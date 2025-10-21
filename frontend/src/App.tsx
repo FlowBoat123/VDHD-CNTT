@@ -47,6 +47,8 @@ export default function App() {
     movieDetail_toggleSave,
     movieDetail_rate,
     movieDetail_rating,
+    movieDetail_aggregate,
+    movieDetail_average,
   } = usemovieDetail();
 
   // keep currentView synced with the URL so direct navigation works
@@ -135,6 +137,8 @@ export default function App() {
           movieDetail_rate(movieId, rating);
         }}
         initialRating={movieDetail_rating}
+        communityAggregate={movieDetail_aggregate}
+        average={movieDetail_average}
       />
     </div>
   );

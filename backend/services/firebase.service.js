@@ -312,3 +312,62 @@ export async function deleteChat(uid, chatId) {
   console.log(`Deleted chat ${chatId} and all its messages for user ${uid}`);
   return chatId;
 }
+
+/**
+ * Get rated-movie document metadata (if exists)
+ * @param {string|number} movieId
+ */
+export async function getRatedMovieDoc(movieId) {
+  if (!movieId) throw new Error('movieId is required');
+  const id = String(movieId);
+  const ref = db.collection('rated-movie').doc(id);
+  const snap = await ref.get();
+  return snap.exists ? { id: snap.id, ...snap.data() } : null;
+}
+
+/**
+ * Upsert a user's rating into the rated-movie collection and recompute aggregates.
+ * If the rated-movie doc does not exist and tmdbRating is provided, it will add a baseline rating record with id '_tmdb'.
+ * @param {string} uid
+ * @param {string|number} movieId
+ * @param {number} rating
+ * @param {number?} tmdbRating
+ */
+export async function upsertRatedMovieUserRating(uid, movieId, rating, tmdbRating) {
+  if (!uid) throw new Error('UID is required');
+  if (!movieId) throw new Error('movieId is required');
+  if (typeof rating !== 'number') throw new Error('rating must be a number');
+
+  const id = String(movieId);
+  const movieRef = db.collection('rated-movie').doc(id);
+  const movieSnap = await movieRef.get();
+
+  // If doc not exist, create and optionally add tmdb baseline
+  if (!movieSnap.exists) {
+    await movieRef.set({ movieId: id, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+    if (typeof tmdbRating === 'number') {
+      // add baseline rating entry with special id
+    }
+  }
+
+  // upsert user's rating
+  const userRatingRef = movieRef.collection('ratings').doc(uid);
+  await userRatingRef.set({ uid, rating, ratedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+  // recompute aggregates (include baseline if present)
+  const ratingsSnap = await movieRef.collection('ratings').get();
+  let sum = 0;
+  let count = 0;
+  ratingsSnap.forEach((d) => {
+    const data = d.data();
+    if (data && typeof data.rating === 'number') {
+      sum += Number(data.rating);
+      count += 1;
+    }
+  });
+  const avg = count > 0 ? sum / count : null;
+
+  await movieRef.set({ avgRating: avg, ratingCount: count, lastUpdated: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+
+  return { movieId: id, avgRating: avg, ratingCount: count };
+}

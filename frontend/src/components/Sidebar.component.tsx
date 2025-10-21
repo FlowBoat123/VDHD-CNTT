@@ -49,22 +49,15 @@ export function Sidebar({
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex w-64 border-r bg-muted/10 flex-col">
-        <div className="p-4 border-b">
-          <Button onClick={onNewChat} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Cuộc trò chuyện mới
-          </Button>
-        </div>
-
         <div className="p-4 border-b space-y-2">
-          <Button onClick={onSearchUse} className="w-full">
-            <Search className="h-4 w-4 mr-2" />
-            Tìm kiếm
-          </Button>
-
           <Button onClick={() => onOpenCollection?.()} className="w-full">
             <MessageSquare className="h-4 w-4 mr-2" />
             Bộ sưu tập
+          </Button>
+
+          <Button onClick={onNewChat} className="w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Cuộc trò chuyện mới
           </Button>
         </div>
 

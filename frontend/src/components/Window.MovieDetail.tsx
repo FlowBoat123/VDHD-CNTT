@@ -51,6 +51,7 @@ export type Movie = {
   genres?: string[];
   runtimeMins?: number;
   rating?: string;
+  director?: string;
   homepageUrl?: string;
 };
 
@@ -65,6 +66,8 @@ export type MovieDetailProps = {
   className?: string;
   onRate?: (movieId?: string, rating?: number) => void;
   initialRating?: number | null;
+  communityAggregate?: { avgRating: number | null; ratingCount: number } | null;
+  average?: number | null; // combined TMDB + user average
 };
 
 export function MovieDetailWindow({
@@ -78,6 +81,8 @@ export function MovieDetailWindow({
   className,
   onRate,
   initialRating,
+  communityAggregate,
+  average,
 }: MovieDetailProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
@@ -108,7 +113,6 @@ export function MovieDetailWindow({
   };
 
   const metaBits: string[] = [];
-  if (safeMovie.rating) metaBits.push(String(safeMovie.rating));
   if (safeMovie.runtimeMins) metaBits.push(`${safeMovie.runtimeMins} min`);
   if (safeMovie.genres?.length) metaBits.push(safeMovie.genres.join(" • "));
 
@@ -178,6 +182,16 @@ export function MovieDetailWindow({
                       }}
                     />
                   </div>
+                  {communityAggregate ? (
+                    <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 text-center">
+                      Community rating: {communityAggregate.avgRating !== null ? communityAggregate.avgRating.toFixed(1) : "-"} ({communityAggregate.ratingCount} votes)
+                    </p>
+                  ) : null}
+                  {typeof average === 'number' ? (
+                    <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300 text-center font-medium">
+                      Average: {average.toFixed(1)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -188,18 +202,25 @@ export function MovieDetailWindow({
                     <h2 className="text-3xl md:text-4xl font-semibold tracking-tight break-words">
                       {safeMovie.title}
                       {safeMovie.year ? (
-                        <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
+                      <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
                       ) : null}
                     </h2>
+
+                    {safeMovie.director && (
+                      <p className="mt-4 text-sm text-neutral-700 dark:text-neutral-300">
+                      <strong>Đạo diễn:</strong> <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.director}</span>
+                      </p>
+                    )}
+
                     {safeMovie.production && (
                       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                        <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
+                        <strong>Đội ngũ sản xuất:</strong><span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
                       </p>
                     )}
 
                     {metaBits.length > 0 && (
                       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
-                        {metaBits.join(" • ")}
+                        <strong>Thể loại:</strong><span className="ml-2 text-neutral-500 dark:text-neutral-400"></span>{metaBits.join(" • ")}
                       </p>
                     )}
                   </div>

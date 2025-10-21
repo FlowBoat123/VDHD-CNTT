@@ -55,7 +55,8 @@ export class TMDbService {
 
   // 📖 Get details
   async getMovieDetails(movieId) {
-    return await this.fetchFromTMDb(`/movie/${movieId}`);
+    // include credits (cast/crew) so callers can extract director
+    return await this.fetchFromTMDb(`/movie/${movieId}?append_to_response=credits`);
   }
 
   // 🎭 Discover movies by genre
