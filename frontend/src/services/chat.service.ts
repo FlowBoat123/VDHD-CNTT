@@ -44,6 +44,11 @@ class ChatService {
     );
     return res.data;
   }
+
+  async deleteChat(chatId: string) {
+    // Gọi endpoint DELETE mới
+    return api.delete(`${CHATBOT_API_BASE_URL}/chats/${chatId}`);
+  }
 }
 
 export const chatService = new ChatService();
