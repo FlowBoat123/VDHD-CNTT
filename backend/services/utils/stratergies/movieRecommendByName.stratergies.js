@@ -106,10 +106,10 @@ export async function handleMovieRecommendByName(request) {
         id: m.id ?? null,
         title: m.title ?? null,
         poster: posterUrl,
-        rating: (m.rating != null && !Number.isNaN(Number(m.rating))) ? Number(m.rating) : null,
+        rating: m.rating ?? null,
         explanation: m.explanation ?? "",
         tmdb_id: m.tmdb_id ?? null,
-        score: typeof m.score === "number" ? m.score : null
+        score: m.score ?? null
       };
     });
 

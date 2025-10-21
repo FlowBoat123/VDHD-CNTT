@@ -16,12 +16,14 @@ const PASSTHROUGH_INTENTS = ["Default Fallback Intent"];
  * @param {*} message
  * @param {*} sessionId
  * @param {*} languageCode
+ * @param {*} uid - Firebase user ID (optional)
  * @returns Dialogflow-like response enhanced by custom handlers
  */
 export async function handleDialogflow(
   message,
   sessionId,
-  languageCode = "en"
+  languageCode = "en",
+  uid = null
 ) {
   if (!message) throw new Error("Message is required");
 
@@ -42,6 +44,9 @@ export async function handleDialogflow(
 
   // --- Normalize intent and parameters ---
   const unified = DialogflowAdapter.toUnifiedRequest(responses[0], sid);
+  
+  // ✅ Attach uid to request so handlers can use it
+  unified.uid = uid;
 
   const { intent, allRequiredParamsPresent, parameters } = unified;
 
