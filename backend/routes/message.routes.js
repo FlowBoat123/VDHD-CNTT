@@ -19,8 +19,8 @@ router.post("/message", authenticateOptional, async (req, res) => {
 
     const uid = req.user?.uid || null; // trusted uid (null if guest)
 
-    // Call Dialogflow
-    const dfResponse = await handleDialogflow(content, sessionId, "vi");
+    // Call Dialogflow with uid
+    const dfResponse = await handleDialogflow(content, sessionId, "vi", uid);
 
     // Respond to client
     res.json(dfResponse);
