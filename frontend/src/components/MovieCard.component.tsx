@@ -40,7 +40,7 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
               className="bg-black/70 text-white border-0"
             >
               <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-              {movie.rating.toFixed(1)}
+              {movie.rating ? movie.rating.toFixed(1) : "N/A"}
             </Badge>
           </div>
         )}
