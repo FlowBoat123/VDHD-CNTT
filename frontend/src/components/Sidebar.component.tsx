@@ -6,8 +6,21 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, Search, MessageSquare } from "lucide-react";
+import {
+  Plus,
+  Search,
+  MessageSquare,
+  MoreVertical,
+  TrashIcon,
+} from "lucide-react";
 import type { Chat } from "@/types/chat.type";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import ChatListItem from "./ChatListItem.component";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,6 +29,7 @@ interface SidebarProps {
   activeChat: string | null;
   onChatSelect: (chatId: string) => void;
   onNewChat: () => void;
+  onChatDelete: (chatId: string) => void;
   onSearchUse: () => void;
   onOpenCollection?: () => void;
 }
@@ -29,12 +43,12 @@ export function Sidebar({
   onNewChat,
   onSearchUse,
   onOpenCollection,
+  onChatDelete,
 }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex w-64 border-r bg-muted/10 flex-col">
-
         <div className="p-4 border-b">
           <Button onClick={onNewChat} className="w-full">
             <Plus className="h-4 w-4 mr-2" />
@@ -63,18 +77,13 @@ export function Sidebar({
               </div>
             ) : (
               chats.map((chat) => (
-                <Button
+                <ChatListItem
                   key={chat.id}
-                  variant={activeChat === chat.id ? "secondary" : "ghost"}
-                  className="w-full justify-start text-left h-auto p-3"
-                  onClick={() => onChatSelect(chat.id)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate text-sm font-medium">
-                      {chat.title}
-                    </div>
-                  </div>
-                </Button>
+                  chat={chat}
+                  activeChat={activeChat}
+                  onChatSelect={onChatSelect}
+                  onDelete={onChatDelete}
+                />
               ))
             )}
           </div>

@@ -31,6 +31,7 @@ export default function App() {
     getCurrentMessages,
     sendMessage,
     createNewChat,
+    deleteChat,
   } = useChat(user);
 
   const { isSearchOpen, openSearchWindow, closeSearchWindow } = useSearch();
@@ -62,6 +63,7 @@ export default function App() {
             setCurrentView("chat");
             createNewChat();
           }}
+          onChatDelete={deleteChat}
           onSearchUse={() => {
             openSearchWindow();
           }}

@@ -7,6 +7,7 @@ import {
   getUserPreferences,
   saveChatMessage,
   updateChatTitle,
+  deleteChat,
 } from "../services/firebase.service.js";
 import { authenticateOptional } from "../middleware/authenticate.js";
 const router = express.Router();
@@ -132,6 +133,24 @@ router.post("/chats/:chatId/title", authenticateOptional, async (req, res) => {
     res.json({ id: chatId, title: title });
   } catch (err) {
     console.error("Error updating chat title:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /chats/:chatId → delete a specific chat and its messages
+router.delete("/chats/:chatId", authenticateOptional, async (req, res) => {
+  try {
+    const uid = req.user?.uid;
+    if (!uid) return res.status(401).json({ error: "Unauthorized" });
+
+    const { chatId } = req.params;
+    if (!chatId) return res.status(400).json({ error: "Chat ID is required" });
+
+    await deleteChat(uid, chatId);
+
+    res.status(200).json({ id: chatId, message: "Chat deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting chat:", err);
     res.status(500).json({ error: err.message });
   }
 });

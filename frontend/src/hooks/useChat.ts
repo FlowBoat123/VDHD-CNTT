@@ -273,6 +273,39 @@ export function useChat(user: User | null) {
     navigate("/chat");
   };
 
+  const deleteChat = async (chatId: string) => {
+    if (!chatId) return;
+
+    // 1. Lưu lại state gốc để rollback nếu thất bại
+    const originalChats = chats;
+
+    // 2. Cập nhật giao diện ngay lập tức (Optimistic Update)
+    setChats((prev) => prev.filter((chat) => chat.id !== chatId));
+
+    // 3. Nếu chat đang hoạt động bị xóa, điều hướng về trang chủ
+    if (activeChat === chatId) {
+      navigate("/chat");
+      setActiveChat(null);
+    }
+
+    try {
+      // 4. Gọi API ở backend
+      await chatService.deleteChat(chatId);
+      // Xóa thành công, không cần làm gì thêm
+    } catch (err) {
+      console.error("Failed to delete chat:", err);
+      setError("Không thể xóa cuộc trò chuyện. Đang hoàn tác...");
+
+      // 5. Rollback: Nếu API thất bại, khôi phục lại state gốc
+      setChats(originalChats);
+
+      // Nếu người dùng đã bị điều hướng đi, điều hướng họ trở lại
+      if (activeChat === chatId) {
+        navigate(`/chat/${chatId}`);
+      }
+    }
+  };
+
   return {
     chats,
     activeChat,
@@ -282,6 +315,7 @@ export function useChat(user: User | null) {
     isGuest,
     setActiveChat,
     createNewChat,
+    deleteChat,
     sendMessage,
     getCurrentMessages,
   };

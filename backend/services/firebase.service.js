@@ -202,3 +202,49 @@ export async function removeMovieFromCollection(uid, movieId) {
   await ref.delete();
   return id;
 }
+
+/**
+ * Xóa toàn bộ tin nhắn trong một subcollection
+ * @param {FirebaseFirestore.CollectionReference} collectionRef
+ */
+async function deleteCollection(collectionRef) {
+  const snapshot = await collectionRef.limit(50).get(); // Xóa theo batch 50
+  if (snapshot.empty) {
+    return;
+  }
+
+  const batch = db.batch();
+  snapshot.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+
+  // Gọi đệ quy nếu collection còn tài liệu
+  await deleteCollection(collectionRef);
+}
+
+/**
+ * Xóa một cuộc trò chuyện, bao gồm tất cả tin nhắn
+ * @param {string} uid - ID user Firebase
+ * @param {string} chatId - ID của chat cần xóa
+ */
+export async function deleteChat(uid, chatId) {
+  if (!uid) throw new Error("UID is required");
+  if (!chatId) throw new Error("chatId is required");
+
+  const chatDocRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("chats")
+    .doc(chatId);
+  const messagesRef = chatDocRef.collection("messages");
+
+  // 1. Xóa subcollection 'messages'
+  await deleteCollection(messagesRef);
+
+  // 2. Xóa document 'chat'
+  await chatDocRef.delete();
+
+  console.log(`Deleted chat ${chatId} and all its messages for user ${uid}`);
+  return chatId;
+}
