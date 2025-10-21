@@ -13,7 +13,7 @@ export function matchGenre(userGenres, tmdbGenres) {
       console.warn("normalize() expected string but got:", str);
       return "";
     }
-    str
+    return str
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "") // remove accents
