@@ -17,7 +17,7 @@ function RatingControl({ initialValue = 0, onRate }: { initialValue?: number; on
 
   return (
     <div className="flex items-center gap-2">
-      {[1, 2, 3, 4, 5].map((s) => {
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((s) => {
         const filled = hover !== null ? s <= hover : s <= value;
         return (
           <button
@@ -30,9 +30,9 @@ function RatingControl({ initialValue = 0, onRate }: { initialValue?: number; on
               try { onRate?.(s); } catch (e) { /* ignore */ }
             }}
             aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
-            className="p-1"
+            className="p-0.5"
           >
-            <Star fill={filled ? "currentColor" : "none"} size={28} className={filled ? "text-yellow-400" : "text-yellow-400/30"} />
+            <Star fill={filled ? "currentColor" : "none"} size={20} className={filled ? "text-yellow-400" : "text-yellow-400/30"} />
           </button>
         );
       })}
