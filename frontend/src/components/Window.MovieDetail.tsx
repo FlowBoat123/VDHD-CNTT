@@ -138,97 +138,91 @@ export function MovieDetailWindow({
           </div>
         ) : null}
         <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-8 p-8">
-        {loading ? null : (
-          <>
-          <div className="flex flex-col items-stretch">
-            <div className="aspect-[2/3] w-full overflow-hidden rounded-xl shadow-sm border border-black/10 dark:border-white/10 bg-neutral-100 dark:bg-neutral-800">
-              {safeMovie.posterUrl ? (
-                <img
-                  src={safeMovie.posterUrl}
-                  alt={`${safeMovie.title} poster`}
-                  className="h-full w-full object-cover"
-                  draggable={false}
-                />
-              ) : (
-                <div className="h-full w-full grid place-items-center text-neutral-500">No poster</div>
-              )}
-            </div>
+          {loading ? null : (
+            <>
+              <div className="flex flex-col items-stretch">
+                <div className="aspect-[2/3] w-full overflow-hidden rounded-xl shadow-sm border border-black/10 dark:border-white/10 bg-neutral-100 dark:bg-neutral-800">
+                  {safeMovie.posterUrl ? (
+                    <img
+                      src={safeMovie.posterUrl}
+                      alt={`${safeMovie.title} poster`}
+                      className="h-full w-full object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="h-full w-full grid place-items-center text-neutral-500">No poster</div>
+                  )}
+                </div>
 
-            <div className="mt-5">
-              <button
-                onClick={() => onToggleSave?.(safeMovie.id)}
-                className={cn(
-                  "w-full inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-medium shadow-sm transition active:scale-[0.98]",
-                  isSaved
-                    ? "border-emerald-600/20 bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                )}
-                aria-pressed={isSaved}
-              >
-                {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
-                {isSaved ? "Saved" : "Save"}
-              </button>
+                <div className="mt-5">
+                  <button
+                    onClick={() => onToggleSave?.(safeMovie.id)}
+                    className={cn(
+                      "w-full inline-flex items-center justify-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-medium shadow-sm transition active:scale-[0.98]",
+                      isSaved
+                        ? "border-emerald-600/20 bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                    )}
+                    aria-pressed={isSaved}
+                  >
+                    {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                    {isSaved ? "Saved" : "Save"}
+                  </button>
 
-              {/* Local-only rating UI (no backend) */}
-              <div className="mt-3 flex items-center justify-center">
-                <RatingControl
-                  initialValue={
-                    typeof initialRating === "number"
-                      ? initialRating
-                      : safeMovie.rating
-                      ? Number(safeMovie.rating)
-                      : 0
-                  }
-                  onRate={(v) => {
-                    onRate?.(safeMovie.id, v);
-                  }}
-                />
+                  {/* Local-only rating UI (no backend) */}
+                  <div className="mt-3 flex items-center justify-center">
+                    <RatingControl
+                      initialValue={typeof initialRating === "number" ? initialRating : 0}
+                      onRate={(v) => {
+                        onRate?.(safeMovie.id, v);
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight break-words">
-                  {safeMovie.title}
-                  {safeMovie.year ? (
-                    <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
-                  ) : null}
-                </h2>
-                {safeMovie.production && (
-                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                    <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
-                  </p>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight break-words">
+                      {safeMovie.title}
+                      {safeMovie.year ? (
+                        <span className="ml-2 text-neutral-500 dark:text-neutral-400 font-normal text-2xl">({safeMovie.year})</span>
+                      ) : null}
+                    </h2>
+                    {safeMovie.production && (
+                      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+                        <span className="ml-2 text-neutral-500 dark:text-neutral-400">{safeMovie.production ? safeMovie.production : ""}</span>
+                      </p>
+                    )}
+
+                    {metaBits.length > 0 && (
+                      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
+                        {metaBits.join(" • ")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2">{actions}</div>
+                </div>
+
+                {safeMovie.homepageUrl && (
+                  <a
+                    href={safeMovie.homepageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
+                  >
+                    Official site <ExternalLink className="size-4" />
+                  </a>
                 )}
 
-                {metaBits.length > 0 && (
-                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
-                    {metaBits.join(" • ")}
-                  </p>
-                )}
+                <div className="mt-5 text-base leading-7 text-neutral-800 dark:text-neutral-200 whitespace-pre-line">
+                  {safeMovie.description ?? "No description provided."}
+                </div>
               </div>
-              <div className="shrink-0 flex items-center gap-2">{actions}</div>
-            </div>
-
-            {safeMovie.homepageUrl && (
-              <a
-                href={safeMovie.homepageUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
-              >
-                Official site <ExternalLink className="size-4" />
-              </a>
-            )}
-
-            <div className="mt-5 text-base leading-7 text-neutral-800 dark:text-neutral-200 whitespace-pre-line">
-              {safeMovie.description ?? "No description provided."}
-            </div>
-          </div>
-          </>
-        )}
+            </>
+          )}
 
         </div>
 
