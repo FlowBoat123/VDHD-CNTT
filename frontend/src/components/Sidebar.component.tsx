@@ -6,21 +6,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Plus,
-  Search,
-  MessageSquare,
-  MoreVertical,
-  TrashIcon,
-} from "lucide-react";
+import { Plus, Search, MessageSquare } from "lucide-react";
 import type { Chat } from "@/types/chat.type";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import ChatListItem from "./ChatListItem.component";
+import { TypingIndicator } from "@/components/TypingIndicator.component";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -125,18 +114,13 @@ export function Sidebar({
                 </div>
               ) : (
                 chats.map((chat) => (
-                  <Button
+                  <ChatListItem
                     key={chat.id}
-                    variant={activeChat === chat.id ? "secondary" : "ghost"}
-                    className="w-full justify-start text-left h-auto p-3"
-                    onClick={() => onChatSelect(chat.id)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate text-sm font-medium">
-                        {chat.title}
-                      </div>
-                    </div>
-                  </Button>
+                    chat={chat}
+                    activeChat={activeChat}
+                    onChatSelect={onChatSelect}
+                    onDelete={onChatDelete}
+                  />
                 ))
               )}
             </div>
