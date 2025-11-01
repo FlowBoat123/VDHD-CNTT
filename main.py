@@ -62,6 +62,15 @@ TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
 app = Flask(__name__)
 
+# Ensure models directory exists for caching model files
+MODELS_DIR = os.path.dirname(MODEL_CACHE) or "models"
+if not os.path.exists(MODELS_DIR):
+    try:
+        os.makedirs(MODELS_DIR, exist_ok=True)
+        print(f"Created models directory: {MODELS_DIR}")
+    except Exception as e:
+        print(f"Failed to create models directory {MODELS_DIR}: {e}")
+
 # Globals
 _df = None
 _vectorizer = None
