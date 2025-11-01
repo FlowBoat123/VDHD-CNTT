@@ -30,6 +30,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import implicit
 from scipy.sparse import coo_matrix, csr_matrix
+from sentence_transformers import SentenceTransformer
+import faiss
 
 # Cấu hình Firebase (thêm file service account key)
 firebase_db = None
@@ -50,9 +52,9 @@ KEYWORDS_CSV = os.environ.get("KEYWORDS_CSV", "archive/keywords.csv")
 RATINGS_CSV = os.environ.get("RATINGS_CSV", "archive/ratings.csv")
 # ---------------- IGNORE ----------------
 FIREBASE_API= os.environ.get("FIREBASE_API", "backend/serviceAccountKey.json")
-MODEL_CACHE = os.environ.get("MODEL_CACHE", "model_movies.joblib")
-MERGED_RATINGS_CACHE = os.environ.get("MERGED_RATINGS_CACHE", "merged_ratings.joblib")
-ALS_MODEL_CACHE = os.environ.get("ALS_MODEL_CACHE", "als_model.joblib")
+MODEL_CACHE = os.environ.get("MODEL_CACHE", "models/model_movies.joblib")
+MERGED_RATINGS_CACHE = os.environ.get("MERGED_RATINGS_CACHE", "models/merged_ratings.joblib")
+ALS_MODEL_CACHE = os.environ.get("ALS_MODEL_CACHE", "models/als_model.joblib")
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", None)
 TMDB_API = os.environ.get("TMDB_API", "https://api.themoviedb.org/3")
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
@@ -66,11 +68,125 @@ _vectorizer = None
 _tfidf = None
 _title_index = None
 _knn = None
+_sentence_model = None
+_faiss_index = None
+_movie_embeddings = None
 _TMDB_CACHE = {}
 movies_data = None
 user_profiles = {} 
 user_movie_ratings = None
 als_model = None 
+ensemble_models = {}  # ✨ THÊM: Dictionary chứa các models
+thompson_bandits = {}  # ✨ THÊM: Thompson Sampling state
+
+# ✨ THÊM: Class Sentence Transformer Recommender
+class SentenceTransformerRecommender:
+    """
+    Deep content-based recommender using Sentence Transformers
+    - Better semantic understanding than TF-IDF
+    - Fast similarity search with FAISS
+    """
+    def __init__(self, model_name='paraphrase-MiniLM-L6-v2'):
+        print(f"Loading Sentence Transformer: {model_name}")
+        self.model = SentenceTransformer(model_name)
+        self.index = None
+        self.embeddings = None
+        self.movie_ids = []
+    
+    def build_index(self, movies_df, cache_path="models/sentence_embeddings.joblib"):
+        """Build FAISS index for fast similarity search"""
+        
+        # Try load from cache
+        if os.path.exists(cache_path):
+            try:
+                print("Loading sentence embeddings from cache:", cache_path)
+                cached = load(cache_path)
+                self.embeddings = cached['embeddings']
+                self.movie_ids = cached['movie_ids']
+                self._build_faiss_index()
+                print(f"✅ Loaded {len(self.movie_ids)} movie embeddings from cache")
+                return
+            except Exception as e:
+                print("Failed to load cache, rebuilding. Error:", e)
+        
+        print("🔄 Encoding movies with Sentence Transformer...")
+        
+        # Combine features với trọng số
+        texts = []
+        valid_indices = []
+        
+        for idx, row in movies_df.iterrows():
+            title = str(row.get('title', ''))
+            genres = str(row.get('genres', ''))
+            keywords = str(row.get('keywords', ''))
+            overview = str(row.get('overview', ''))
+            
+            if not title:
+                continue
+            
+            # Weighted combination
+            text = (
+                f"{title} " * 3 +  # Title quan trọng nhất
+                f"{genres} " * 2 +
+                f"{keywords} " * 2 +
+                f"{overview}"
+            )
+            texts.append(text)
+            valid_indices.append(idx)
+        
+        # Encode batch (nhanh hơn)
+        print(f"Encoding {len(texts)} movies...")
+        self.embeddings = self.model.encode(
+            texts,
+            batch_size=32,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+            normalize_embeddings=True  # Normalize for cosine similarity
+        )
+        
+        self.movie_ids = [movies_df.iloc[idx]['id'] for idx in valid_indices]
+        
+        # Build FAISS index
+        self._build_faiss_index()
+        
+        # Cache embeddings
+        try:
+            dump({
+                'embeddings': self.embeddings,
+                'movie_ids': self.movie_ids
+            }, cache_path)
+            print("Sentence embeddings cached ->", cache_path)
+        except Exception as e:
+            print("Failed to cache embeddings:", e)
+    
+    def _build_faiss_index(self):
+        """Build FAISS index from embeddings"""
+        dimension = self.embeddings.shape[1]
+        
+        # Use IndexFlatIP for Inner Product (= cosine similarity with normalized vectors)
+        self.index = faiss.IndexFlatIP(dimension)
+        self.index.add(self.embeddings.astype('float32'))
+        
+        print(f"✅ FAISS index built: {len(self.movie_ids)} movies, {dimension}D embeddings")
+    
+    def find_similar(self, movie_idx, top_k=20):
+        """Tìm phim tương tự bằng FAISS"""
+        if self.index is None:
+            raise ValueError("Index not built yet")
+        
+        # Get embedding của movie
+        query_embedding = self.embeddings[movie_idx:movie_idx+1].astype('float32')
+        
+        # Search
+        distances, indices = self.index.search(query_embedding, top_k + 1)
+        
+        # Remove self và return
+        results = []
+        for idx, dist in zip(indices[0], distances[0]):
+            if idx != movie_idx:
+                results.append((int(idx), float(dist)))
+        
+        return results[:top_k]
 
 # ---------------- utilities ----------------
 def parse_genres_field(s):
@@ -113,14 +229,19 @@ def _normalize_imdb_tt(value):
 
 # ---------------- model build ----------------
 def build_model(csv_path=MOVIES_CSV, links_path=LINKS_CSV, cache_path=MODEL_CACHE, force=False):
-    """Read CSVs, merge with links.csv via imdbID, build TF-IDF and cache."""
-    global _df, _vectorizer, _tfidf, _title_index, _knn
+    """Read CSVs, merge with links.csv via imdbID, build TF-IDF and Sentence Transformers."""
+    global _df, _vectorizer, _tfidf, _title_index, _knn, _sentence_model, _faiss_index
 
     if not force and os.path.exists(cache_path):
         try:
             print("Loading model from cache:", cache_path)
             d = load(cache_path)
             _df, _vectorizer, _tfidf, _title_index, _knn = d["df"], d["vectorizer"], d["tfidf"], d["title_index"], d.get("knn")
+            
+            # ✨ THÊM: Load Sentence Transformer
+            _sentence_model = SentenceTransformerRecommender()
+            _sentence_model.build_index(_df)
+            
             return _df, _vectorizer, _tfidf
         except Exception as e:
             print("Failed to load cache, rebuilding. Error:", e)
@@ -253,6 +374,11 @@ def build_model(csv_path=MOVIES_CSV, links_path=LINKS_CSV, cache_path=MODEL_CACH
     title_index = {t: idx for idx, t in enumerate(df["title_norm"].tolist())}
 
     _df, _vectorizer, _tfidf, _title_index, _knn = df, vectorizer, tfidf, title_index, knn
+    
+    # ✨ THÊM: Build Sentence Transformer index
+    _sentence_model = SentenceTransformerRecommender()
+    _sentence_model.build_index(_df)
+    
     dump({"df": df, "vectorizer": vectorizer, "tfidf": tfidf, "title_index": title_index, "knn": knn}, cache_path)
     print("Model built and cached ->", cache_path)
     return df, vectorizer, tfidf
@@ -307,45 +433,62 @@ def find_movie_index_by_name(name, fuzzy_cutoff=0.7):
             return idx, _df.loc[idx, "title"]
     return None, None
 
-def recommend_similar_by_index(idx, top_n=5):
-    global _df, _tfidf, _knn
+# ✨ CẢI THIỆN: Recommend với Sentence Transformers
+def recommend_similar_by_index(idx, top_n=5, use_semantic=True):
+    """
+    Recommend similar movies
+    use_semantic=True: Use Sentence Transformers (better semantic)
+    use_semantic=False: Use TF-IDF (fallback)
+    """
+    global _df, _tfidf, _knn, _sentence_model
+
     if _df is None or _tfidf is None:
         build_model()
 
     results = []
     base_movie = _df.iloc[idx].to_dict()
 
-    # Prefer KNN (NearestNeighbors) if available
+    # ✨ CẢI THIỆN: Use Sentence Transformers nếu available
     neighbor_indices = []
-    similarities = None
-    if _knn is not None:
+    similarities = {}
+    
+    if use_semantic and _sentence_model is not None:
         try:
-            # request extra neighbors to get up to 20 neighbors (include self)
-            max_return = 21  # include the movie itself so we can exclude it
-            k = min(getattr(_knn, 'n_neighbors', max_return) or max_return, max_return)
-            neigh = _knn.kneighbors(_tfidf[idx], n_neighbors=k, return_distance=True)
-            distances = neigh[0].flatten()
-            indices = neigh[1].flatten()
-            # convert cosine distance to similarity
-            sims = 1.0 - distances
-            # remove self (distance 0) if present, then take up to 20 neighbors
-            pairs = [(int(i), float(s)) for i, s in zip(indices, sims) if int(i) != int(idx)]
-            pairs = sorted(pairs, key=lambda x: -x[1])[:20]
-            neighbor_indices = [p[0] for p in pairs]
-            similarities = {p[0]: p[1] for p in pairs}
+            print("Using Sentence Transformer for semantic search...")
+            semantic_results = _sentence_model.find_similar(idx, top_k=20)
+            neighbor_indices = [i for i, _ in semantic_results]
+            similarities = {i: s for i, s in semantic_results}
+            print(f"✅ Found {len(neighbor_indices)} semantic neighbors")
         except Exception as e:
-            print("KNN lookup failed, falling back to cosine kernel:", e)
-            neighbor_indices = []
+            print(f"Sentence Transformer failed, falling back to TF-IDF: {e}")
+            use_semantic = False
+    
+    # Fallback to TF-IDF/KNN
+    if not use_semantic or not neighbor_indices:
+        if _knn is not None:
+            try:
+                max_return = 21
+                k = min(getattr(_knn, 'n_neighbors', max_return) or max_return, max_return)
+                neigh = _knn.kneighbors(_tfidf[idx], n_neighbors=k, return_distance=True)
+                distances = neigh[0].flatten()
+                indices = neigh[1].flatten()
+                sims = 1.0 - distances
+                pairs = [(int(i), float(s)) for i, s in zip(indices, sims) if int(i) != int(idx)]
+                pairs = sorted(pairs, key=lambda x: -x[1])[:20]
+                neighbor_indices = [p[0] for p in pairs]
+                similarities = {p[0]: p[1] for p in pairs}
+            except Exception as e:
+                print("KNN lookup failed, falling back to cosine kernel:", e)
+                neighbor_indices = []
 
-    # Fallback: cosine similarity via linear_kernel — compute top 20
-    if not neighbor_indices or len(neighbor_indices) < min(20, top_n):
-        cosine_similarities = linear_kernel(_tfidf[idx:idx+1], _tfidf).flatten()
-        cosine_similarities[idx] = -1
-        top_idx = np.argsort(-cosine_similarities)[:20]
-        neighbor_indices = [int(i) for i in top_idx]
-        similarities = {int(i): float(cosine_similarities[int(i)]) for i in neighbor_indices}
+        if not neighbor_indices:
+            cosine_similarities = linear_kernel(_tfidf[idx:idx+1], _tfidf).flatten()
+            cosine_similarities[idx] = -1
+            top_idx = np.argsort(-cosine_similarities)[:20]
+            neighbor_indices = [int(i) for i in top_idx]
+            similarities = {int(i): float(cosine_similarities[int(i)]) for i in neighbor_indices}
 
-    # Shuffle the top-20 neighbors, then pick the requested top_n from the shuffled list
+    # Shuffle và pick top_n
     if neighbor_indices:
         shuffled = neighbor_indices.copy()
         random.shuffle(shuffled)
@@ -353,7 +496,6 @@ def recommend_similar_by_index(idx, top_n=5):
     else:
         selected = []
 
-    # ensure similarities map covers selected indices (it should)
     neighbor_indices = selected
 
     for i in neighbor_indices:
@@ -374,7 +516,6 @@ def recommend_similar_by_index(idx, top_n=5):
         poster = (TMDB_IMAGE_BASE + tmdb["poster_path"]) if tmdb and tmdb.get("poster_path") else None
         rating = tmdb.get("vote_average") if tmdb and tmdb.get("vote_average") is not None else None
 
-        # shared genres: use parsed genres if available, otherwise try to split genres string
         shared_genres = set()
         try:
             base_genres = set(base_movie.get("genres_parsed", []) or [])
@@ -390,7 +531,10 @@ def recommend_similar_by_index(idx, top_n=5):
         explanation = []
         if shared_genres:
             explanation.append("Shares genres: " + ", ".join(sorted(shared_genres)))
-        explanation.append(f"Content similarity: {score:.3f}")
+        
+        # ✨ THÊM: Explain method used
+        method = "Semantic similarity" if use_semantic and _sentence_model else "Content similarity"
+        explanation.append(f"{method}: {score:.3f}")
 
         results.append({
             "id": int(rec.get("id")) if pd.notna(rec.get("id")) else None,
@@ -399,7 +543,8 @@ def recommend_similar_by_index(idx, top_n=5):
             "rating": rating,
             "score": score,
             "explanation": "; ".join(explanation),
-            "tmdb_id": int(rec.get("tmdb_id")) if pd.notna(rec.get("tmdb_id")) else None
+            "tmdb_id": int(rec.get("tmdb_id")) if pd.notna(rec.get("tmdb_id")) else None,
+            "method": method  # ✨ THÊM metadata
         })
 
     return results
@@ -551,14 +696,217 @@ def load_and_merge_ratings(force=False):
     return user_movie_ratings
 
 # ---------------- personalize recommendations ----------------
+class ThompsonSamplingRecommender:
+    """
+    Multi-armed bandit cho exploration/exploitation balance
+    Mỗi phim = 1 arm với Beta distribution
+    """
+    def __init__(self):
+        self.alpha = {}  # Successes (clicks, high ratings)
+        self.beta_param = {}  # Failures (skips, low ratings)
+    
+    def update(self, movie_id, reward):
+        """
+        Update belief về movie dựa trên feedback
+        reward: 1 if liked (rating >= 3.5), 0 if disliked
+        """
+        if movie_id not in self.alpha:
+            self.alpha[movie_id] = 1  # Prior
+            self.beta_param[movie_id] = 1
+        
+        if reward > 0.5:
+            self.alpha[movie_id] += 1
+        else:
+            self.beta_param[movie_id] += 1
+    
+    def sample_movies(self, candidate_movies, n_samples=10, explore_rate=0.2):
+        """
+        Sample movies từ Beta distribution
+        explore_rate: tỷ lệ phim explore (mới, ít người xem)
+        """
+        n_explore = int(n_samples * explore_rate)
+        n_exploit = n_samples - n_explore
+        
+        # 1. Exploitation: Sample từ Beta distribution
+        exploit_scores = {}
+        for movie_id in candidate_movies:
+            if movie_id not in self.alpha:
+                self.alpha[movie_id] = 1
+                self.beta_param[movie_id] = 1
+            
+            # Sample từ Beta(alpha, beta)
+            sampled_score = np.random.beta(
+                self.alpha[movie_id], 
+                self.beta_param[movie_id]
+            )
+            exploit_scores[movie_id] = sampled_score
+        
+        # Top-K exploitation
+        exploit_recs = sorted(exploit_scores.items(), key=lambda x: -x[1])[:n_exploit]
+        
+        # 2. Exploration: Random sample phim mới/ít được xem
+        low_confidence_movies = [
+            m for m in candidate_movies 
+            if (self.alpha.get(m, 1) + self.beta_param.get(m, 1)) < 10  # Ít feedback
+        ]
+        
+        if low_confidence_movies and n_explore > 0:
+            explore_sample = np.random.choice(
+                low_confidence_movies, 
+                min(n_explore, len(low_confidence_movies)), 
+                replace=False
+            )
+            explore_recs = [(m, 0.5) for m in explore_sample]
+        else:
+            explore_recs = []
+        
+        # 3. Combine
+        all_recs = exploit_recs + explore_recs
+        random.shuffle(all_recs)
+        
+        return [movie_id for movie_id, _ in all_recs]
+
+# ✨ CẢI THIỆN: Train Ensemble ALS models
+def train_ensemble_als_models(rating_matrix, force=False):
+    """
+    Train ensemble of 3 models: ALS, BPR, LMF
+    Returns dictionary of trained models
+    """
+    global ensemble_models
+    
+    ensemble_cache = "models/ensemble_models.joblib"
+    
+    # if not force and os.path.exists(ensemble_cache):
+    #     try:
+    #         print("Loading ensemble models from cache:", ensemble_cache)
+    #         ensemble_models = load(ensemble_cache)
+    #         print("✅ Ensemble models loaded from cache")
+    #         return ensemble_models
+    #     except Exception as e:
+    #         print("Failed to load ensemble cache, retraining. Error:", e)
+    
+    # print("🔄 Training ensemble models (ALS + BPR + LMF)...")
+    
+    models = {
+        'als': implicit.als.AlternatingLeastSquares(
+            factors=100,          # ✨ Tăng factors
+            regularization=0.05,  # ✨ Tăng regularization
+            iterations=30,        # ✨ Tăng iterations
+            use_gpu=False,
+            calculate_training_loss=True
+        ),
+        'bpr': implicit.bpr.BayesianPersonalizedRanking(
+            factors=100,
+            learning_rate=0.01,
+            regularization=0.01,
+            iterations=100,
+            use_gpu=False
+        ),
+        'lmf': implicit.lmf.LogisticMatrixFactorization(
+            factors=50,
+            learning_rate=1.0,
+            regularization=0.6,
+            iterations=30,
+            use_gpu=False
+        )
+    }
+    
+    trained_models = {}
+    for name, model in models.items():
+        try:
+            print(f"Training {name.upper()}...")
+            start = time.time()
+            model.fit(rating_matrix)
+            elapsed = time.time() - start
+            trained_models[name] = model
+            print(f"✅ {name.upper()} trained in {elapsed:.1f}s")
+        except Exception as e:
+            print(f"❌ Failed to train {name}: {e}")
+    
+    ensemble_models = trained_models
+    
+    # Lưu cache
+    try:
+        dump(ensemble_models, ensemble_cache)
+        print("Ensemble models cached ->", ensemble_cache)
+    except Exception as e:
+        print("Failed to cache ensemble models:", e)
+    
+    return ensemble_models
+
+# ✨ CẢI THIỆN: Ensemble recommendations
+def ensemble_recommendations(user_idx, user_items, movie_ids, N=20):
+    """
+    Ensemble predictions từ nhiều models với weighted voting
+    """
+    global ensemble_models
+    
+    all_recs = {}
+    weights = {'als': 0.5, 'bpr': 0.3, 'lmf': 0.2}  # Trọng số models
+    
+    # ✨ FIX: Validate user_idx và matrix shape
+    n_users = user_items.shape[0] if hasattr(user_items, 'shape') else 1
+    n_movies = len(movie_ids)
+    
+    print(f"Debug: user_idx={user_idx}, matrix_users={n_users}, matrix_movies={n_movies}")
+    
+    for name, model in ensemble_models.items():
+        try:
+            # ✨ FIX: Kiểm tra xem user_idx có valid không
+            if user_idx >= model.user_factors.shape[0]:
+                print(f"⚠️ {name}: user_idx {user_idx} >= model users {model.user_factors.shape[0]}, skipping")
+                continue
+            
+            # ✨ FIX: Kiểm tra shape của user_items
+            if hasattr(user_items, 'shape'):
+                if user_items.shape[1] != model.item_factors.shape[0]:
+                    print(f"⚠️ {name}: user_items shape {user_items.shape} != model items {model.item_factors.shape[0]}, skipping")
+                    continue
+            
+            recs = model.recommend(
+                user_idx, 
+                user_items, 
+                N=min(N*2, model.item_factors.shape[0]),  # ✨ FIX: Limit N by available items
+                filter_already_liked_items=True
+            )
+            
+            for movie_idx, score in zip(recs[0], recs[1]):
+                if movie_idx not in all_recs:
+                    all_recs[movie_idx] = 0
+                all_recs[movie_idx] += weights[name] * score
+            
+            print(f"✅ {name}: recommended {len(recs[0])} movies")
+                
+        except Exception as e:
+            print(f"❌ Error with {name}: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # ✨ FIX: Fallback nếu không có recommendations
+    if not all_recs:
+        print("⚠️ No ensemble recommendations, using fallback")
+        # Fallback: Return popular items
+        return [], []
+    
+    # Sort by ensemble score
+    sorted_recs = sorted(all_recs.items(), key=lambda x: -x[1])[:N]
+    movie_indices = [idx for idx, _ in sorted_recs]
+    scores = [score for _, score in sorted_recs]
+    
+    return movie_indices, scores
+
 def recommend_personalization_logic(payload):
-    """Logic để tạo personalized recommendations dựa trên user ratings từ Firebase."""
-    global user_movie_ratings, _df, als_model
+    """Logic để tạo personalized recommendations với Ensemble + Thompson Sampling."""
+    global user_movie_ratings, _df, ensemble_models, thompson_bandits
+    
+    ensemble_cache = "models/ensemble_models.joblib"
+    print("Loading ensemble models from cache:", ensemble_cache)
+    ensemble_models = load(ensemble_cache)
+    print("✅ Ensemble models loaded from cache")
 
     if _df is None:
         build_model()
     
-    # Load và merge ratings nếu chưa có
     if user_movie_ratings is None:
         load_and_merge_ratings()
 
@@ -566,7 +914,19 @@ def recommend_personalization_logic(payload):
     if not user_id:
         return {"ok": False, "error": "user_id is required"}, 400
 
-    # Load ratings của user từ Firebase: users/{user_id}/ratings
+    # ✨ THÊM: Initialize Thompson Sampling cho user này
+    if user_id not in thompson_bandits:
+        thompson_bandits[user_id] = ThompsonSamplingRecommender()
+        
+        # Pre-populate bandit với historical ratings
+        user_history = user_movie_ratings[user_movie_ratings['user_id'] == user_id]
+        for _, row in user_history.iterrows():
+            movie_id = str(row['movie_id'])
+            rating = float(row['rating'])
+            reward = 1 if rating >= 3.5 else 0
+            thompson_bandits[user_id].update(movie_id, reward)
+
+    # Load ratings của user từ Firebase
     user_ratings = []
     if FIREBASE_ENABLED:
         try:
@@ -581,6 +941,9 @@ def recommend_personalization_logic(payload):
                         'movie_id': str(movie_id),
                         'rating': float(rating)
                     })
+                    # ✨ Update Thompson Sampling
+                    reward = 1 if float(rating) >= 3.5 else 0
+                    thompson_bandits[user_id].update(str(movie_id), reward)
         except Exception as e:
             print(f"Error loading user ratings from Firebase: {e}")
             return {"ok": False, "error": "Failed to load user ratings"}, 500
@@ -588,14 +951,12 @@ def recommend_personalization_logic(payload):
     if not user_ratings:
         return {"ok": False, "error": "No ratings found for user"}, 400
 
-    # Chuyển thành DataFrame
     user_ratings_df = pd.DataFrame(user_ratings)
     user_ratings_df['user_id'] = user_id
 
-    # Kết hợp với ratings đã có
     combined_ratings = pd.concat([user_movie_ratings, user_ratings_df], ignore_index=True)
 
-    # Tạo sparse matrix cho implicit model
+    # Tạo sparse matrix
     movie_ids = combined_ratings['movie_id'].astype(str).unique()
     movie_id_to_idx = {mid: idx for idx, mid in enumerate(movie_ids)}
     user_ids = combined_ratings['user_id'].astype(str).unique()
@@ -609,47 +970,88 @@ def recommend_personalization_logic(payload):
 
     force_retrain = payload.get("force_retrain", False)
     
-    # Huấn luyện model implicit ALS nếu chưa có cache hoặc force
-    if als_model is None or force_retrain:
-        # Kiểm tra cache file
-        if not force_retrain and os.path.exists(ALS_MODEL_CACHE):
-            try:
-                print("Loading ALS model from cache:", ALS_MODEL_CACHE)
-                als_model = load(ALS_MODEL_CACHE)
-                print("ALS model loaded from cache.")
-            except Exception as e:
-                print("Failed to load ALS model cache, retraining. Error:", e)
-                als_model = None
-        
-        if als_model is None:
-            print("Training ALS model...")
-            als_model = implicit.als.AlternatingLeastSquares(factors=50, regularization=0.01, iterations=20)
-            als_model.fit(rating_matrix)
-            print("ALS model trained.")
-            
-            # Lưu cache
-            try:
-                dump(als_model, ALS_MODEL_CACHE)
-                print("ALS model cached ->", ALS_MODEL_CACHE)
-            except Exception as e:
-                print("Failed to cache ALS model:", e)
+    # ✨ CẢI THIỆN: Train ensemble models thay vì single ALS
+    # ✨ FIX: Kiểm tra xem cached model có compatible với current matrix không
+    need_retrain = force_retrain or not ensemble_models
+    
+    if ensemble_models and not force_retrain:
+        # Kiểm tra shape compatibility
+        try:
+            first_model = list(ensemble_models.values())[0]
+            if (first_model.user_factors.shape[0] != len(user_ids) or 
+                first_model.item_factors.shape[0] != len(movie_ids)):
+                print(f"⚠️ Model shape mismatch: model users={first_model.user_factors.shape[0]} vs current={len(user_ids)}")
+                print(f"⚠️ Model shape mismatch: model movies={first_model.item_factors.shape[0]} vs current={len(movie_ids)}")
+                need_retrain = True
+        except Exception as e:
+            print(f"⚠️ Error checking model compatibility: {e}")
+            need_retrain = True
+    
+    if need_retrain:
+        print("🔄 Training/Retraining ensemble models...")
+        ensemble_models = train_ensemble_als_models(rating_matrix, force=True)
 
-    # Dự đoán cho user
+    # ✨ CẢI THIỆN: Get ensemble recommendations
     user_idx = user_id_to_idx[user_id]
     user_items = rating_matrix[user_idx]
-    recommendations = als_model.recommend(user_idx, user_items, N=20, filter_already_liked_items=True)
+    
+    print(f"Debug: Calling ensemble_recommendations with user_idx={user_idx}, n_movies={len(movie_ids)}")
+    
+    movie_indices, scores = ensemble_recommendations(
+        user_idx, 
+        user_items, 
+        movie_ids, 
+        N=40  # Get more candidates for Thompson Sampling
+    )
 
-    print(f"ALS recommended {len(recommendations[0])} movies for user {user_id}")
+    print(f"Ensemble recommended {len(movie_indices)} movies for user {user_id}")
 
-    # Chuyển recommendations thành list phim
+    # ✨ FIX: Fallback nếu ensemble không trả về recommendations
+    if not movie_indices:
+        print("⚠️ No ensemble recommendations, using content-based fallback")
+        # Fallback: Recommend popular movies user chưa xem
+        user_rated_movies = set(user_ratings_df['movie_id'].tolist())
+        
+        # Get popular movies từ _df
+        popular_movies = _df[_df['tmdb_id'].notna()].copy()
+        popular_movies['popularity_score'] = popular_movies.get('vote_count', 0).fillna(0)
+        popular_movies = popular_movies.sort_values('popularity_score', ascending=False)
+        
+        # Filter movies user chưa xem
+        candidate_movie_ids = []
+        for _, movie in popular_movies.iterrows():
+            tmdb_id = str(int(movie['tmdb_id']))
+            if tmdb_id not in user_rated_movies:
+                candidate_movie_ids.append(tmdb_id)
+            if len(candidate_movie_ids) >= 40:
+                break
+        
+        print(f"Fallback: Found {len(candidate_movie_ids)} popular unwatched movies")
+    else:
+        # ✨ THÊM: Apply Thompson Sampling cho diversity
+        candidate_movie_ids = [movie_ids[idx] for idx in movie_indices]
+    
+    sampled_movie_ids = thompson_bandits[user_id].sample_movies(
+        candidate_movie_ids, 
+        n_samples=min(20, len(candidate_movie_ids)),
+        explore_rate=0.2  # 20% exploration
+    )
+    
+    print(f"Thompson Sampling selected {len(sampled_movie_ids)} movies (20% exploration)")
+
+    # Build results từ sampled movies
     results = []
-    for movie_idx, score in zip(recommendations[0], recommendations[1]):
-        movie_id = movie_ids[movie_idx]
+    for movie_id in sampled_movie_ids:
+        # ✨ FIX: Handle case where movie_id might not be in movie_id_to_idx (fallback case)
+        if movie_id in movie_id_to_idx:
+            movie_idx = movie_id_to_idx[movie_id]
+            score = scores[movie_indices.index(movie_idx)] if movie_idx in movie_indices else 0.5
+        else:
+            # Fallback case: movie from popular recommendations
+            movie_idx = None
+            score = 0.5
         
-        # Tìm movie trong _df - thử cả tmdb_id và movieId
         movie_row = _df[_df['tmdb_id'] == pd.to_numeric(movie_id, errors='coerce')]
-        
-        # Nếu không tìm thấy bằng tmdb_id, thử tìm bằng movieId
         if movie_row.empty:
             movie_row = _df[_df['movieId'] == pd.to_numeric(movie_id, errors='coerce')]
         
@@ -657,7 +1059,6 @@ def recommend_personalization_logic(payload):
             title = movie_row.iloc[0]['title']
             tmdb_id = movie_row.iloc[0].get('tmdb_id')
             
-            # Fetch thông tin từ TMDB
             tmdb_data = None
             if pd.notna(tmdb_id):
                 try:
@@ -665,12 +1066,21 @@ def recommend_personalization_logic(payload):
                 except Exception as e:
                     print(f"Error fetching TMDB data for {tmdb_id}: {e}")
             
-            # Nếu không có tmdb_data, thử search by title
             if not tmdb_data:
                 tmdb_data = fetch_tmdb_by_search(title)
             
             poster = (TMDB_IMAGE_BASE + tmdb_data["poster_path"]) if tmdb_data and tmdb_data.get("poster_path") else None
             rating = tmdb_data.get("vote_average") if tmdb_data else None
+            
+            # ✨ THÊM: Explanation chi tiết hơn
+            bandit_state = thompson_bandits[user_id]
+            total_feedback = bandit_state.alpha.get(movie_id, 1) + bandit_state.beta_param.get(movie_id, 1) - 2
+            confidence = bandit_state.alpha.get(movie_id, 1) / (bandit_state.alpha.get(movie_id, 1) + bandit_state.beta_param.get(movie_id, 1))
+            
+            explanation_parts = [
+                f"Ensemble score: {score:.3f}",
+                f"Confidence: {confidence:.2f} ({total_feedback} ratings)"
+            ]
             
             results.append({
                 "movie_id": movie_id,
@@ -679,16 +1089,13 @@ def recommend_personalization_logic(payload):
                 "poster": poster,
                 "rating": rating,
                 "score": float(score),
-                "explanation": f"Personalized recommendation based on your ratings (score: {score:.3f})"
+                "explanation": " | ".join(explanation_parts),
+                "is_exploration": total_feedback < 5  # ✨ Flag exploration movies
             })
-        else:
-            print(f"Movie {movie_id} not found in _df")
 
-    # Giới hạn 8
     results = results[:8]
-    print(f"Returning {len(results)} recommendations")
+    print(f"Returning {len(results)} recommendations ({sum(1 for r in results if r['is_exploration'])} exploration)")
     
-    # ✅ FIX: Thêm return statement
     return {"ok": True, "user_id": user_id, "results": results}, 200
 
 # --------- Flask endpoints ----------
@@ -721,26 +1128,6 @@ def recommend_personalization_endpoint():
     payload = request.get_json(force=True) or {}
     result, status = recommend_personalization_logic(payload)
     return jsonify(result), status
-
-@app.route("/test_merge", methods=["POST"])
-def test_merge_endpoint():
-    """Test endpoint để kiểm tra merge ratings từ CSV và Firebase"""
-    try:
-        force = request.args.get('force', 'false').lower() == 'true'
-        merged_ratings = load_and_merge_ratings(force=force)
-        firebase_samples = merged_ratings[merged_ratings['source'] == 'firebase'].head(5).to_dict('records')
-        csv_samples = merged_ratings[merged_ratings['source'] == 'csv'].head(5).to_dict('records')
-        return jsonify({
-            "ok": True,
-            "message": f"Merged {len(merged_ratings)} ratings",
-            "firebase_samples": firebase_samples,
-            "csv_samples": csv_samples,
-            "total_firebase": len(firebase_samples),
-            "total_csv": len(csv_samples),
-            "total_merged": len(merged_ratings)
-        })
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     # Nếu bạn muốn build model trước khi khởi động server, bật dòng dưới
