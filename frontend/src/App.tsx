@@ -97,6 +97,7 @@ export default function App() {
                 <ChatArea
                   messages={getCurrentMessages()}
                   isLoading={isLoading}
+                  isTyping={isTyping}
                   onClickMovieCard={(id) => {
                     movieDetail_open(id.toString());
                   }}
@@ -109,7 +110,9 @@ export default function App() {
             ) : null}
             {currentView === "collection" ? (
               <>
-                <Collection onOpenMovie={(id) => movieDetail_open(id.toString())} />
+                <Collection
+                  onOpenMovie={(id) => movieDetail_open(id.toString())}
+                />
               </>
             ) : null}
           </div>
@@ -133,7 +136,7 @@ export default function App() {
         onToggleSave={() => movieDetail_toggleSave()}
         loading={movieDetail_loading}
         onRate={(movieId, rating) => {
-          console.log('App: onRate called', { movieId, rating });
+          console.log("App: onRate called", { movieId, rating });
           movieDetail_rate(movieId, rating);
         }}
         initialRating={movieDetail_rating}

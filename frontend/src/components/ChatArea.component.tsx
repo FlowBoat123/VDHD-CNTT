@@ -9,15 +9,29 @@ import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { Loader } from "./ai-elements/loader";
 import { MovieCard } from "@/components/MovieCard.component";
+import { TypingIndicator } from "./TypingIndicator";
+import { Actions, Action } from "@/components/ai-elements/actions";
+import {
+  CopyIcon,
+  RefreshCcwIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "lucide-react";
 
 export interface ChatAreaProps {
   messages: MessageType[];
   isLoading?: boolean;
+  isTyping?: boolean;
 
   onClickMovieCard?: (id: number) => void;
 }
 
-export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProps) {
+export function ChatArea({
+  messages,
+  isLoading,
+  isTyping,
+  onClickMovieCard,
+}: ChatAreaProps) {
   const hasMessages = messages.length > 0;
 
   return (
@@ -30,28 +44,58 @@ export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProp
           </div>
         ) : hasMessages ? (
           messages.map((m) => (
-            <Message key={m.id} from={m.sender}>
-              <MessageContent variant="contained">
-                {m.sender === "user" ? (
-                  m.content
-                ) : (
-                  <div className="space-y-3">
-                    <Response>{m.content}</Response>
-                    {m.movieSuggestions && m.movieSuggestions.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {m.movieSuggestions.map((movie) => (
-                          <MovieCard onClick={onClickMovieCard ? () => onClickMovieCard(movie.id) : undefined} key={movie.id} movie={movie} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
+            <div>
+              <Message key={m.id} from={m.sender}>
+                <MessageContent variant="contained">
+                  {m.sender === "user" ? (
+                    m.content
+                  ) : (
+                    <div className="space-y-3">
+                      <Response>{m.content}</Response>
+                      {m.movieSuggestions && m.movieSuggestions.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {m.movieSuggestions.map((movie) => (
+                            <MovieCard
+                              onClick={
+                                onClickMovieCard
+                                  ? () => onClickMovieCard(movie.id)
+                                  : undefined
+                              }
+                              key={movie.id}
+                              movie={movie}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </MessageContent>
+              </Message>
+              <Actions>
+                {m.sender === "user" ? null : (
+                  <Actions>
+                    <Action label="Like">
+                      <ThumbsUpIcon className="size-3" />
+                    </Action>
+                    <Action label="Dislike">
+                      <ThumbsDownIcon className="size-3" />
+                    </Action>
+                    <Action label="Retry">
+                      <RefreshCcwIcon className="size-3" />
+                    </Action>
+                    <Action label="Copy">
+                      <CopyIcon className="size-3" />
+                    </Action>
+                  </Actions>
                 )}
-              </MessageContent>
-            </Message>
+              </Actions>
+            </div>
           ))
         ) : (
           <ConversationEmptyState className="pb-24" />
         )}
+
+        {isTyping && <TypingIndicator />}
       </ConversationContent>
 
       {/* stick-to-bottom button */}
