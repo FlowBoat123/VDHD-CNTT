@@ -9,6 +9,7 @@ import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { Loader } from "./ai-elements/loader";
 import { MovieCard } from "@/components/MovieCard.component";
+import { TypingIndicator } from "./TypingIndicator";
 
 export interface ChatAreaProps {
   messages: MessageType[];
@@ -66,6 +67,8 @@ export function ChatArea({
         ) : (
           <ConversationEmptyState className="pb-24" />
         )}
+
+        {isTyping && <TypingIndicator />}
       </ConversationContent>
 
       {/* stick-to-bottom button */}
