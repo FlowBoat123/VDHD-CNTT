@@ -198,10 +198,24 @@ export function useChat(user: User | null) {
 
       // Parse backend messages
       for (const msg of fulfillmentMessages) {
+        // Text messages
         if (msg?.text?.text?.length) {
           textMessage += msg.text.text.join("\n");
         }
 
+        // movieCard or personCard: these carry text inside a different field
+        if (msg?.movieCard) {
+          // movieCard: { id, poster, text, layout }
+          if (msg.movieCard.text) textMessage += (textMessage ? "\n" : "") + String(msg.movieCard.text);
+          // preserve the card payload on the bot message later
+          // we will attach it to botMessage after creation
+        }
+
+        if (msg?.personCard) {
+          if (msg.personCard.text) textMessage += (textMessage ? "\n" : "") + String(msg.personCard.text);
+        }
+
+        // movieSuggestions (clickable posters)
         if (Array.isArray(msg?.movieSuggestions)) {
           moviesPayload = msg.movieSuggestions;
         }
@@ -212,7 +226,20 @@ export function useChat(user: User | null) {
         textMessage || "Không có phản hồi.",
         "assistant"
       );
-      if (moviesPayload.length > 0) botMessage.movieSuggestions = moviesPayload;
+      // Attach movie suggestions if present
+      if (moviesPayload.length > 0) (botMessage as any).movieSuggestions = moviesPayload;
+
+      // Attach any card payloads so UI can render image-left cards if needed
+      // Find a movieCard / personCard in fulfillmentMessages and attach the first one
+      try {
+        const firstCard = fulfillmentMessages.find(m => m.movieCard || m.personCard);
+        if (firstCard) {
+          if (firstCard.movieCard) (botMessage as any).card = firstCard.movieCard;
+          else if (firstCard.personCard) (botMessage as any).card = firstCard.personCard;
+        }
+      } catch (err) {
+        // ignore
+      }
 
       // Update chat with assistant response
       setChats((prev) =>

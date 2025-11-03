@@ -1,3 +1,5 @@
+import translate from "@vitalets/google-translate-api";
+
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
@@ -6,34 +8,46 @@ const MOVIES_PER_REQUEST = 8;
 
 export class TMDbService {
   constructor() {
-    this.genreCache = null; // 🧠 Cache genre list in memory
-    this.genreMap = {}; // Optional: id → name map
+    this.genreCache = null;
+    this.genreMap = {};
   }
 
-  // 🧩 Generic fetcher with automatic API key + language
-  async fetchFromTMDb(endpoint) {
-    const url = `${TMDB_BASE_URL}${endpoint}${endpoint.includes("?") ? "&" : "?"
-      }api_key=${TMDB_API_KEY}&language=vi-VN`;
+  // Generic fetch wrapper for TMDb
+  async fetchFromTMDb(endpoint, opts = {}) {
+    const hasLang = Object.prototype.hasOwnProperty.call(opts, "language");
+    const lang = opts.language;
 
+    const url =
+      `${TMDB_BASE_URL}${endpoint}` +
+      `${endpoint.includes("?") ? "&" : "?"}api_key=${TMDB_API_KEY}` +
+      (hasLang ? (lang ? `&language=${lang}` : "") : "&language=null");
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`TMDb API error: ${res.status}`);
+    return res.json();
+  }
+
+  // Translate helper using google-translate-api
+  async translateText(text, targetLang = "vi") {
+    if (!text) return "";
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`TMDb API error: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("TMDb API Error:", error);
-      throw error;
+      const result = await translate(text, { to: targetLang });
+      return result.text;
+    } catch (err) {
+      console.warn("Translate failed, fallback to original:", err.message);
+      return text;
     }
   }
 
-  // 🔥 Get trending movies
+  // ---------------------------------------------------------------------
+  // Movie lists
+  // ---------------------------------------------------------------------
+
   async getTrendingMovies(timeWindow = "week") {
     const data = await this.fetchFromTMDb(`/trending/movie/${timeWindow}`);
     return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 🔍 Search movies
   async searchMovies(query) {
     const data = await this.fetchFromTMDb(
       `/search/movie?query=${encodeURIComponent(query)}`
@@ -41,25 +55,51 @@ export class TMDbService {
     return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 🎬 Get popular movies
   async getPopularMovies() {
     const data = await this.fetchFromTMDb("/movie/popular");
     return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 🌟 Get top-rated movies
   async getTopRatedMovies() {
     const data = await this.fetchFromTMDb("/movie/top_rated");
     return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 📖 Get details
-  async getMovieDetails(movieId) {
-    // include credits (cast/crew) so callers can extract director
-    return await this.fetchFromTMDb(`/movie/${movieId}?append_to_response=credits`);
+  async getSimilarMovies(movieId) {
+    const data = await this.fetchFromTMDb(`/movie/${movieId}/similar`);
+    return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 🎭 Discover movies by genre
+  // Movie detail with automatic fallback and translation
+  async getMovieDetails(movieId) {
+    const vi = await this.fetchFromTMDb(
+      `/movie/${movieId}?append_to_response=credits,external_ids`,
+      { language: "vi-VN" }
+    );
+
+    const needFallback =
+      !vi.overview ||
+      !vi.title ||
+      (vi.overview && vi.overview.trim().length < 10);
+
+    if (!needFallback) return vi;
+
+    const en = await this.fetchFromTMDb(
+      `/movie/${movieId}?append_to_response=credits,external_ids`,
+      { language: "en-US" }
+    );
+
+    return {
+      ...vi,
+      overview: await this.translateText(vi.overview || en.overview),
+      title: vi.title || en.title
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Discover
+  // ---------------------------------------------------------------------
+
   async discoverMoviesByGenre(genreId) {
     const data = await this.fetchFromTMDb(
       `/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`
@@ -67,139 +107,180 @@ export class TMDbService {
     return data.results.slice(0, MOVIES_PER_REQUEST);
   }
 
-  // 🔎 Discover movies by release year or year range (standalone helper)
-  // releaseYear: number (exact year)
-  // releaseYearRange: [startYear, endYear]
-  // options: { personId, genreId, page, maxResults }
-  async discoverMoviesByYear(releaseYear, releaseYearRange, options = {}) {
-    if (!releaseYear && !(Array.isArray(releaseYearRange) && releaseYearRange.length >= 2)) return [];
-    const { personId, genreId, page = 1, maxResults = MOVIES_PER_REQUEST } = options;
+  async discoverMoviesByYear(releaseYear, range, opts = {}) {
+    const { page = 1, maxResults = MOVIES_PER_REQUEST, personId, genreId } =
+      opts;
     const parts = [];
+
     if (personId) parts.push(`with_people=${personId}`);
     if (genreId) parts.push(`with_genres=${genreId}`);
+
     if (releaseYear) {
-      parts.push(`primary_release_year=${encodeURIComponent(releaseYear)}`);
-    } else if (Array.isArray(releaseYearRange) && releaseYearRange.length >= 2) {
-      parts.push(`primary_release_date.gte=${encodeURIComponent(`${releaseYearRange[0]}-01-01`)}`);
-      parts.push(`primary_release_date.lte=${encodeURIComponent(`${releaseYearRange[1]}-12-31`)}`);
+      parts.push(`primary_release_year=${releaseYear}`);
+    } else {
+      parts.push(`primary_release_date.gte=${range[0]}-01-01`);
+      parts.push(`primary_release_date.lte=${range[1]}-12-31`);
     }
-    parts.push('sort_by=popularity.desc');
+
+    parts.push("sort_by=popularity.desc");
     parts.push(`page=${page}`);
-    const data = await this.fetchFromTMDb(`/discover/movie?${parts.join('&')}`);
-    const results = data && data.results ? data.results : [];
-    return results.slice(0, maxResults);
+
+    const data = await this.fetchFromTMDb(`/discover/movie?${parts.join("&")}`);
+    return data.results.slice(0, maxResults);
   }
 
-  // � Discover by rating (supports comparator and optional genre/person)
-  // comparator: 'gte' | 'gt' | 'lte' | 'lt' | 'eq'
-  async discoverMoviesByRating(value, comparator = 'gte', options = {}) {
+  async discoverMoviesByRating(value, comparator = "gte", opts = {}) {
     if (value == null) return [];
-    const { genreId, personId, page = 1, maxResults = MOVIES_PER_REQUEST, releaseYear, releaseYearRange } = options;
 
-    // Map comparator to TMDb query params. For 'gt'/'lt' use a tiny epsilon shift.
-    let gte = null;
-    let lte = null;
+    const parts = [];
     const eps = 0.01;
-    const comp = (comparator || 'gte').toString().toLowerCase();
-    if (comp === 'gte') gte = value;
-    else if (comp === 'gt') gte = Number((value + eps).toFixed(2));
-    else if (comp === 'lte') lte = value;
-    else if (comp === 'lt') lte = Number((value - eps).toFixed(2));
-    else if (comp === 'eq') {
-      gte = Number((value - eps).toFixed(2));
-      lte = Number((value + eps).toFixed(2));
+
+    let gte = null,
+      lte = null;
+    if (comparator === "gte") gte = value;
+    else if (comparator === "gt") gte = value + eps;
+    else if (comparator === "lte") lte = value;
+    else if (comparator === "lt") lte = value - eps;
+    else if (comparator === "eq") {
+      gte = value - eps;
+      lte = value + eps;
     } else gte = value;
 
-    const parts = [];
-    if (genreId) parts.push(`with_genres=${genreId}`);
-    if (personId) parts.push(`with_people=${personId}`);
-    if (gte != null) parts.push(`vote_average.gte=${encodeURIComponent(gte)}`);
-    if (lte != null) parts.push(`vote_average.lte=${encodeURIComponent(lte)}`);
-    // support release year (single year) or releaseYearRange [start, end]
-    if (releaseYear) {
-      // TMDb supports primary_release_year for exact year
-      parts.push(`primary_release_year=${encodeURIComponent(releaseYear)}`);
-    } else if (Array.isArray(releaseYearRange) && releaseYearRange.length >= 2) {
-      const start = releaseYearRange[0];
-      const end = releaseYearRange[1];
-      // Use primary_release_date range
-      parts.push(`primary_release_date.gte=${encodeURIComponent(`${start}-01-01`)}`);
-      parts.push(`primary_release_date.lte=${encodeURIComponent(`${end}-12-31`)}`);
-    }
-    parts.push('sort_by=popularity.desc');
-    parts.push(`page=${page}`);
+    if (opts.genreId) parts.push(`with_genres=${opts.genreId}`);
+    if (opts.personId) parts.push(`with_people=${opts.personId}`);
+    if (gte != null) parts.push(`vote_average.gte=${gte}`);
+    if (lte != null) parts.push(`vote_average.lte=${lte}`);
 
-    // console.log('Discover Movies by Rating - Endpoint Parts:', parts);
-
-    const endpoint = `/discover/movie?${parts.join('&')}`;
-    try {
-      const data = await this.fetchFromTMDb(endpoint);
-      const results = data && data.results ? data.results : [];
-      return results.slice(0, maxResults);
-    } catch (err) {
-      console.warn('discoverMoviesByRating failed', err);
-      return [];
+    if (opts.releaseYear) {
+      parts.push(`primary_release_year=${opts.releaseYear}`);
+    } else if (opts.releaseYearRange) {
+      parts.push(`primary_release_date.gte=${opts.releaseYearRange[0]}-01-01`);
+      parts.push(`primary_release_date.lte=${opts.releaseYearRange[1]}-12-31`);
     }
+
+    parts.push("sort_by=popularity.desc");
+    parts.push(`page=${opts.page || 1}`);
+
+    const data = await this.fetchFromTMDb(`/discover/movie?${parts.join("&")}`);
+    return data.results.slice(0, opts.maxResults || MOVIES_PER_REQUEST);
   }
 
-  // �🔎 Discover movies by person (actor/crew) and genre
-  // Uses the discover endpoint with with_people and with_genres
-  async discoverMoviesByPersonAndGenre(personId, genreId, maxResults = MOVIES_PER_REQUEST) {
-    if (!personId) return [];
-    const data = await this.fetchFromTMDb(
-      `/discover/movie?with_people=${personId}&with_genres=${genreId}&sort_by=popularity.desc`
-    );
-    const results = data && data.results ? data.results : [];
-    return results.slice(0, maxResults);
-  }
+  // ---------------------------------------------------------------------
+  // Genres
+  // ---------------------------------------------------------------------
 
-  // 🏷️ Dynamically fetch & cache genres
   async getGenres() {
-    // If cached, reuse it
     if (this.genreCache) return this.genreCache;
-
     const data = await this.fetchFromTMDb("/genre/movie/list");
-    this.genreCache = data.genres; // save full array
-    this.genreMap = Object.fromEntries(data.genres.map((g) => [g.id, g.name])); // map id → name
-
+    this.genreCache = data.genres;
+    this.genreMap = Object.fromEntries(data.genres.map((g) => [g.id, g.name]));
     return this.genreCache;
   }
 
-  // 🔢 Get genre name by ID (auto fetch if needed)
-  async getGenreName(genreId) {
+  async getGenreName(id) {
     if (!this.genreCache) await this.getGenres();
-    return this.genreMap[genreId] || "Không xác định";
+    return this.genreMap[id] || "Không xác định";
   }
 
-  // 🎞️ Get similar movies
-  async getSimilarMovies(movieId) {
-    const data = await this.fetchFromTMDb(`/movie/${movieId}/similar`);
-    return data.results.slice(0, MOVIES_PER_REQUEST);
+  // ---------------------------------------------------------------------
+  // Person API
+  // ---------------------------------------------------------------------
+
+  async searchPerson(name, opts = {}) {
+    const data = await this.fetchFromTMDb(
+      `/search/person?query=${encodeURIComponent(name)}&page=1`
+    );
+    return (data.results || []).slice(0, opts.maxResults || MOVIES_PER_REQUEST);
   }
 
-  // 🖼️ Build full image URL
+  async findPersonByName(name) {
+    if (name == null) return null;
+
+    const qstr = Array.isArray(name)
+      ? name
+        .map((x) =>
+          x && typeof x === "object" ? x.name || String(x) : String(x)
+        )
+        .join(" ")
+        .trim()
+      : typeof name === "object"
+        ? name.name || String(name)
+        : String(name);
+
+    if (!qstr) return null;
+
+    const raw = await this.fetchFromTMDb(
+      `/search/person?query=${encodeURIComponent(
+        qstr
+      )}&include_adult=false&page=1`
+    );
+    const results = raw && Array.isArray(raw.results) ? raw.results : [];
+    if (!results.length) return null;
+
+    const normalize = (s) =>
+      String(s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    const qnorm = normalize(qstr);
+
+    let best = results.find(
+      (p) => p && p.name && normalize(p.name) === qnorm
+    );
+    if (best) return best;
+
+    best = results.find(
+      (p) => p && p.name && normalize(p.name).includes(qnorm)
+    );
+    if (best) return best;
+
+    results.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+    return results[0];
+  }
+
+  async getPersonMovieCredits(personId) {
+    const data = await this.fetchFromTMDb(`/person/${personId}/movie_credits`);
+    return {
+      cast: data.cast || [],
+      crew: data.crew || []
+    };
+  }
+
+  // Person detail with fallback + translation
+  async getPersonDetails(personId) {
+    const vi = await this.fetchFromTMDb(
+      `/person/${personId}?append_to_response=movie_credits,external_ids`,
+      { language: "vi-VN" }
+    );
+
+    const needFallback =
+      !vi.biography || vi.biography.trim().length < 10;
+
+    if (!needFallback) return vi;
+
+    const en = await this.fetchFromTMDb(
+      `/person/${personId}?append_to_response=movie_credits,external_ids`,
+      { language: "en-US" }
+    );
+
+    return {
+      ...vi,
+      biography: await this.translateText(vi.biography || en.biography),
+      name: vi.name || en.name
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Utilities
+  // ---------------------------------------------------------------------
+
   getImageUrl(path, size = "w500") {
     if (!path) return null;
     return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
   }
-
-  // 🔎 Search person by name
-  async searchPerson(query) {
-    if (!query) return [];
-    const data = await this.fetchFromTMDb(`/search/person?query=${encodeURIComponent(query)}`);
-    const results = data.results || [];
-    return results.slice(0, MOVIES_PER_REQUEST);
-  }
-
-  // 🎞️ Get movie credits for a person by ID
-  async getPersonMovieCredits(personId) {
-    if (!personId) return { cast: [], crew: [] };
-    const data = await this.fetchFromTMDb(`/person/${personId}/movie_credits`);
-    return { cast: data.cast || [], crew: data.crew || [] };
-  }
 }
 
 export const tmdbService = new TMDbService();
-
-// Also provide a default export for consumers that import the module as default
 export default tmdbService;

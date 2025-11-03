@@ -7,6 +7,7 @@ import {
 import type { Message as MessageType } from "@/types/message.type";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
+import InfoCard from "@/components/InfoCard.component";
 import { Loader } from "./ai-elements/loader";
 import { MovieCard } from "@/components/MovieCard.component";
 
@@ -36,7 +37,15 @@ export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProp
                   m.content
                 ) : (
                   <div className="space-y-3">
-                    <Response>{m.content}</Response>
+                    {m.card ? (
+                      <InfoCard
+                        card={m.card}
+                        onClick={onClickMovieCard ? ((id?: string | number) => onClickMovieCard(Number(id))) : undefined}
+                      />
+                    ) : (
+                      <Response>{m.content}</Response>
+                    )}
+
                     {m.movieSuggestions && m.movieSuggestions.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {m.movieSuggestions.map((movie) => (
