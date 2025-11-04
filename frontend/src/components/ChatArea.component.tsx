@@ -40,7 +40,14 @@ export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProp
                     {m.card ? (
                       <InfoCard
                         card={m.card}
-                        onClick={onClickMovieCard ? ((id?: string | number) => onClickMovieCard(Number(id))) : undefined}
+                        onClick={onClickMovieCard ? ((id?: string | number) => {
+                          // Only open movie detail when the card is a movie (avoid opening movie modal for person cards)
+                          try {
+                            if (m.card?.type === "movie") onClickMovieCard(Number(id));
+                          } catch (e) {
+                            // ignore
+                          }
+                        }) : undefined}
                       />
                     ) : (
                       <Response>{m.content}</Response>

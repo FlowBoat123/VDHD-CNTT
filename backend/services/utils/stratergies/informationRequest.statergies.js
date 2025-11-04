@@ -99,7 +99,8 @@ export async function handleInformationRequest(request) {
           title: details?.title || movie?.title || null,
           subtitle: details?.release_date ? String(details.release_date).slice(0, 4) : null,
           text: String(msg),
-          imdbUrl
+          imdbUrl,
+          type: "movie"
         },
         text: { text: [msg] }
       });
@@ -208,8 +209,6 @@ export async function handleInformationRequest(request) {
 
       const details = await tmdbService.getPersonDetails(p.id);
 
-      console.log("PERSON DETAILS:", details);
-
       const profilePath =
         details?.profile_path || p?.profile_path || null;
 
@@ -245,7 +244,8 @@ export async function handleInformationRequest(request) {
           title: p.name,
           subtitle: birthday !== "Không rõ" ? birthday : undefined,
           text: String(msg),
-          imdbUrl: personImdbUrl
+          imdbUrl: personImdbUrl,
+          type: "person"
         },
         text: { text: [msg] }
       });
@@ -277,10 +277,7 @@ export async function handleInformationRequest(request) {
       if (wantsFilmography) {
         const titles = credits.map((c) => c.title || c.name).join(", ");
         return {
-          fulfillmentMessages: [
-            buildCard(`Một số phim của ${p.name}: ${titles}.`),
-            { movieSuggestions: filmSuggestions }
-          ]
+          fulfillmentMessages: [buildCard(`Một số phim của ${p.name}: ${titles}.`)]
         };
       }
 
@@ -292,10 +289,7 @@ export async function handleInformationRequest(request) {
         `${truncate(bio, 800)}`;
 
       return {
-        fulfillmentMessages: [
-          buildCard(msg),
-          { movieSuggestions: filmSuggestions }
-        ]
+        fulfillmentMessages: [buildCard(msg)]
       };
     }
 
