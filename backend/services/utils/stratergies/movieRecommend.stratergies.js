@@ -192,8 +192,15 @@ export async function handleMovieRecommendation(request) {
     matchedGenreIds = matchedGenres.map((g) => g.id);
   }
 
-  const MAX_SUGGESTIONS = 8;
-  const MAX_POOL = 24; // cap for internal pool and to stop further fetching
+  // Increase suggestion limits so frontend can paginate across multiple pages.
+  // MAX_SUGGESTIONS: number of suggestions returned to the client (can be paginated client-side)
+  // MAX_POOL: internal collection cap while fetching/discovering results (keeps some headroom)
+  const MAX_SUGGESTIONS = 40;
+  const MAX_POOL = 60; // cap for internal pool and to stop further fetching
+  // Performance tuning: do a quick pass first, only run heavier extra-page discovery when
+  // candidate count is low. This avoids long waits for narrow queries.
+  const INITIAL_POOL_CAP = 24; // quick initial cap for fast responses
+  const MIN_ACCEPTABLE_FOR_FAST_RETURN = 12; // if we have >= this many candidates, skip heavy scanning
 
   // --- If persons provided, resolve them and collect movie credits (role-aware) ---
   const personNotFound = [];
@@ -628,10 +635,11 @@ export async function handleMovieRecommendation(request) {
   }
 
   // If still not enough candidates, try fetching additional discover pages
-  if (candidates.length < MAX_SUGGESTIONS) {
+  // Only perform heavy extra-page discovery if candidates are still quite low.
+  if (candidates.length < MIN_ACCEPTABLE_FOR_FAST_RETURN) {
 
     const extra = [];
-    const PAGES_TO_TRY = 12; // try up to 10 pages to collect more results
+    const PAGES_TO_TRY = 6; // keep smaller by default to avoid long waits; can be increased if needed
     for (let page = 1; page <= PAGES_TO_TRY && candidates.length + extra.length < MAX_POOL; page++) {
       try {
         let endpoint = '/discover/movie?';
