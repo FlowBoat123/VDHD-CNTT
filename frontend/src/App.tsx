@@ -101,6 +101,7 @@ export default function App() {
                   onClickMovieCard={(id) => {
                     movieDetail_open(id.toString());
                   }}
+                  onSuggestionClick={sendMessage}
                 />
                 <MessageInput
                   onSend={sendMessage}
