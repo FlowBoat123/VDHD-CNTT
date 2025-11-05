@@ -183,7 +183,9 @@ export function useChat(user: User | null) {
       );
 
       console.log("Chatbot response:", response.data);
-      navigate(`/chat/${chatId}`);
+      if (user) {
+        navigate(`/chat/${chatId}`);
+      }
 
       const fulfillmentMessages = response.data.fulfillmentMessages || [];
 

@@ -11,15 +11,29 @@ import InfoCard from "@/components/InfoCard.component";
 import { useState } from "react";
 import { Loader } from "./ai-elements/loader";
 import { MovieCard } from "@/components/MovieCard.component";
+import { TypingIndicator } from "./TypingIndicator";
+import { Actions, Action } from "@/components/ai-elements/actions";
+import {
+  CopyIcon,
+  RefreshCcwIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "lucide-react";
 
 export interface ChatAreaProps {
   messages: MessageType[];
   isLoading?: boolean;
+  isTyping?: boolean;
 
   onClickMovieCard?: (id: number) => void;
 }
 
-export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProps) {
+export function ChatArea({
+  messages,
+  isLoading,
+  isTyping,
+  onClickMovieCard,
+}: ChatAreaProps) {
   const hasMessages = messages.length > 0;
 
   // per-message pagination state
@@ -48,78 +62,110 @@ export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProp
           </div>
         ) : hasMessages ? (
           messages.map((m) => (
-            <Message key={m.id} from={m.sender}>
-              <MessageContent variant="contained">
-                {m.sender === "user" ? (
-                  m.content
-                ) : (
-                  <div className="space-y-3">
-                    {m.card ? (
-                      <InfoCard
-                        card={m.card}
-                        onClick={onClickMovieCard ? ((id?: string | number) => {
-                          try {
-                            if (m.card?.type === "movie") onClickMovieCard(Number(id));
-                          } catch (e) {
-                            // ignore
+            <div key={m.id}>
+              <Message from={m.sender}>
+                <MessageContent variant="contained">
+                  {m.sender === "user" ? (
+                    m.content
+                  ) : (
+                    <div className="space-y-3">
+                      {m.card ? (
+                        <InfoCard
+                          card={m.card}
+                          onClick={
+                            onClickMovieCard
+                              ? (id?: string | number) => {
+                                try {
+                                  if (m.card?.type === "movie" && id != null) {
+                                    onClickMovieCard(Number(id));
+                                  }
+                                } catch (e) {
+                                  // ignore
+                                }
+                              }
+                              : undefined
                           }
-                        }) : undefined}
-                      />
-                    ) : (
-                      <Response>{m.content}</Response>
-                    )}
+                        />
+                      ) : (
+                        <Response>{m.content}</Response>
+                      )}
 
-                    {m.movieSuggestions && m.movieSuggestions.length > 0 && (() => {
-                      const all = m.movieSuggestions || [];
-                      const limited = all.slice(0, Math.min(all.length, MAX_SUGGESTIONS));
-                      const totalPages = Math.max(1, Math.min(MAX_PAGES, Math.ceil(limited.length / PAGE_SIZE)));
-                      let currentPage = getPage(m.id);
-                      if (currentPage > totalPages) currentPage = totalPages;
-                      const start = (currentPage - 1) * PAGE_SIZE;
-                      const pageItems = limited.slice(start, start + PAGE_SIZE);
+                      {m.movieSuggestions && m.movieSuggestions.length > 0 && (() => {
+                        const all = m.movieSuggestions || [];
+                        const limited = all.slice(0, Math.min(all.length, MAX_SUGGESTIONS));
+                        const totalPages = Math.max(1, Math.min(MAX_PAGES, Math.ceil(limited.length / PAGE_SIZE)));
+                        let currentPage = getPage(m.id);
+                        if (currentPage > totalPages) currentPage = totalPages;
+                        const start = (currentPage - 1) * PAGE_SIZE;
+                        const pageItems = limited.slice(start, start + PAGE_SIZE);
 
-                      return (
-                        <div>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {pageItems.map((movie) => (
-                              <MovieCard onClick={onClickMovieCard ? () => onClickMovieCard(movie.id) : undefined} key={movie.id} movie={movie} />
-                            ))}
-                          </div>
-
-                          {totalPages > 1 && (
-                            <div className="flex justify-end mt-2">
-                              <div className="flex items-center space-x-2">
-                                <div className="text-sm text-slate-500">{`${currentPage}/${totalPages}`}</div>
-                                <button
-                                  type="button"
-                                  onClick={() => setPage(m.id, Math.max(1, currentPage - 1))}
-                                  disabled={currentPage <= 1}
-                                  className={`w-8 h-8 flex items-center justify-center rounded-md ${currentPage <= 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100"}`}
-                                >
-                                  &lt;
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setPage(m.id, Math.min(totalPages, currentPage + 1))}
-                                  disabled={currentPage >= totalPages}
-                                  className={`w-8 h-8 flex items-center justify-center rounded-md ${currentPage >= totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100"}`}
-                                >
-                                  &gt;
-                                </button>
-                              </div>
+                        return (
+                          <div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                              {pageItems.map((movie) => (
+                                <MovieCard
+                                  onClick={onClickMovieCard ? () => onClickMovieCard(movie.id) : undefined}
+                                  key={movie.id}
+                                  movie={movie}
+                                />
+                              ))}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-              </MessageContent>
-            </Message>
+
+                            {totalPages > 1 && (
+                              <div className="flex justify-end mt-2">
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-sm text-slate-500">{`${currentPage}/${totalPages}`}</div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPage(m.id, Math.max(1, currentPage - 1))}
+                                    disabled={currentPage <= 1}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-md ${currentPage <= 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100"}`}
+                                  >
+                                    &lt;
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPage(m.id, Math.min(totalPages, currentPage + 1))}
+                                    disabled={currentPage >= totalPages}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-md ${currentPage >= totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-100"}`}
+                                  >
+                                    &gt;
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </MessageContent>
+              </Message>
+
+              {/* Actions for assistant/system messages */}
+              {m.sender === "user" ? null : (
+                <Actions>
+                  <Action label="Like">
+                    <ThumbsUpIcon className="size-3" />
+                  </Action>
+                  <Action label="Dislike">
+                    <ThumbsDownIcon className="size-3" />
+                  </Action>
+                  <Action label="Retry">
+                    <RefreshCcwIcon className="size-3" />
+                  </Action>
+                  <Action label="Copy">
+                    <CopyIcon className="size-3" />
+                  </Action>
+                </Actions>
+              )}
+            </div>
           ))
         ) : (
           <ConversationEmptyState className="pb-24" />
         )}
+
+        {isTyping && <TypingIndicator />}
       </ConversationContent>
 
       {/* stick-to-bottom button */}
