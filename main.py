@@ -28,7 +28,7 @@ from flask import Flask, request, jsonify
 import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
-import implicit
+# import implicit
 from scipy.sparse import coo_matrix, csr_matrix
 
 # Cấu hình Firebase (thêm file service account key)
