@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "created_at": "2025-11-05T17:11:58.452039",
+    "total_intents": 2,
+    "total_phrases": 18,
+    "high_quality_only": true,
+    "medium_samples_count": 0
+  },
+  "training_data": {
+    "recommend_movie_by_name": [
+      {
+        "text": "Gợi ý phim giống Inception",
+        "type": "original",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Đề xuất phim tương tự Inception",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Có phim nào giống Inception không",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Gợi ý cho tôi phim như Inception",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Phim nào có nội dung tương tự Inception",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Tôi muốn xem phim giống Inception",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Tìm phim tương tự Avatar",
+        "type": "original",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Tìm phim tương tự Avatar",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Đề xuất phim giống Avatar",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Có phim nào như Avatar không",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Phim nào giống với Avatar",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Gợi ý cho tôi phim tương tự Avatar",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      }
+    ],
+    "recommend_personalization": [
+      {
+        "text": "Gợi ý phim cá nhân cho tôi",
+        "type": "original",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Đề xuất phim cá nhân hóa cho tôi",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Gợi ý phim phù hợp với sở thích của tôi",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Cho tôi đề xuất phim được cá nhân hóa",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Phim nào hợp với tôi nhất",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      },
+      {
+        "text": "Đưa ra gợi ý phim dựa trên profile của tôi",
+        "type": "paraphrase",
+        "quality": "HIGH"
+      }
+    ]
+  },
+  "medium_samples_for_review": []
+}

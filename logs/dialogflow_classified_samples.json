@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "classified_at": "2025-11-05T17:10:56.105701",
+    "total_samples": 7,
+    "by_quality": {
+      "HIGH": 3,
+      "MEDIUM": 2,
+      "NOISE": 2
+    },
+    "by_intent": {
+      "recommend_movie_by_name": 2,
+      "recommend_personalization": 1,
+      "default_fallback": 2
+    },
+    "ready_for_dialogflow": 3
+  },
+  "samples": [
+    {
+      "query": "Gợi ý phim giống Inception",
+      "original_intent": "recommend_movie_by_name",
+      "dialogflow_intent": "recommend_movie_by_name",
+      "quality": "HIGH",
+      "training_phrases": [
+        "Đề xuất phim tương tự Inception",
+        "Có phim nào giống Inception không",
+        "Gợi ý cho tôi phim như Inception",
+        "Phim nào có nội dung tương tự Inception",
+        "Tôi muốn xem phim giống Inception"
+      ],
+      "reasoning": "Query 'Gợi ý phim giống Inception' rõ ràng, đầy đủ thông tin với tên phim cụ thể 'Inception', phù hợp trực tiếp với intent recommend_movie_by_name. Có đủ thông tin cần thiết (movie_name) và có thể dùng ngay làm training phrase.",
+      "entities": {
+        "@movie_name": "Inception"
+      },
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "keyword",
+      "confidence": 1,
+      "timestamp": "2025-11-02T05:20:17.740Z"
+    },
+    {
+      "query": "Tìm phim tương tự Avatar",
+      "original_intent": "recommend_movie_by_name",
+      "dialogflow_intent": "recommend_movie_by_name",
+      "quality": "HIGH",
+      "training_phrases": [
+        "Tìm phim tương tự Avatar",
+        "Đề xuất phim giống Avatar",
+        "Có phim nào như Avatar không",
+        "Phim nào giống với Avatar",
+        "Gợi ý cho tôi phim tương tự Avatar"
+      ],
+      "reasoning": "Query 'Tìm phim tương tự Avatar' rõ ràng, đầy đủ thông tin với tên phim cụ thể 'Avatar', phù hợp trực tiếp làm training phrase cho intent recommend_movie_by_name. Có đủ thông tin cần thiết (movie_name) và không cần chỉnh sửa.",
+      "entities": {
+        "@movie_name": "Avatar"
+      },
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "keyword",
+      "confidence": 1,
+      "timestamp": "2025-11-02T05:20:17.767Z"
+    },
+    {
+      "query": "Gợi ý phim cá nhân cho tôi",
+      "original_intent": "recommend_personalization",
+      "dialogflow_intent": "recommend_personalization",
+      "quality": "HIGH",
+      "training_phrases": [
+        "Đề xuất phim cá nhân hóa cho tôi",
+        "Gợi ý phim phù hợp với sở thích của tôi",
+        "Cho tôi đề xuất phim được cá nhân hóa",
+        "Phim nào hợp với tôi nhất",
+        "Đưa ra gợi ý phim dựa trên profile của tôi"
+      ],
+      "reasoning": "Query 'Gợi ý phim cá nhân cho tôi' rõ ràng, đầy đủ và trực tiếp yêu cầu đề xuất phim được cá nhân hóa. Câu này khớp hoàn toàn với intent 'recommend_personalization' và có thể sử dụng trực tiếp làm training phrase mà không cần chỉnh sửa. Query thể hiện rõ nhu cầu về đề xuất phù hợp với cá nhân người dùng.",
+      "entities": {},
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "keyword",
+      "confidence": 1,
+      "timestamp": "2025-11-02T05:20:17.774Z"
+    },
+    {
+      "query": "Phim hành động nào hay",
+      "original_intent": "movie_recommendation_request",
+      "dialogflow_intent": null,
+      "quality": "MEDIUM",
+      "training_phrases": [],
+      "reasoning": "",
+      "entities": {},
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "keyword",
+      "confidence": 1,
+      "timestamp": "2025-11-02T05:20:17.778Z"
+    },
+    {
+      "query": "Tôi buồn quá",
+      "original_intent": "movie_recommendation_request",
+      "dialogflow_intent": "default_fallback",
+      "quality": "NOISE",
+      "training_phrases": [],
+      "reasoning": "Query 'Tôi buồn quá' không liên quan đến việc gợi ý phim hoặc yêu cầu thông tin về phim. Đây là biểu đạt cảm xúc cá nhân chung chung, không đề cập đến thể loại phim, tên phim, diễn viên, rating, hay bất kỳ yếu tố nào liên quan đến các intent về phim. Query này phù hợp với default_fallback intent vì nó off-topic so với chức năng chính của chatbot.",
+      "entities": {},
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "deepseek",
+      "confidence": 0.85,
+      "timestamp": "2025-11-02T05:20:19.836Z"
+    },
+    {
+      "query": "Cuối tuần xem gì",
+      "original_intent": "movie_recommendation_request",
+      "dialogflow_intent": null,
+      "quality": "MEDIUM",
+      "training_phrases": [],
+      "reasoning": "",
+      "entities": {},
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "deepseek",
+      "confidence": 0.95,
+      "timestamp": "2025-11-02T05:20:21.775Z"
+    },
+    {
+      "query": "tôi chán quá tôi muốn xem sex",
+      "original_intent": "movie_recommendation_request",
+      "dialogflow_intent": "default_fallback",
+      "quality": "NOISE",
+      "training_phrases": [],
+      "reasoning": "Query 'tôi chán quá tôi muốn xem sex' không liên quan đến việc gợi ý phim hợp lý. Từ 'sex' có thể hiểu là nội dung khiêu dâm, không phù hợp với hệ thống gợi ý phim thông thường. Đây là query off-topic và spam, nên được xử lý bằng default_fallback intent như đã có trong training examples.",
+      "entities": {},
+      "suggested_edits": [],
+      "missing_info": "",
+      "method": "deepseek",
+      "confidence": 0.9,
+      "timestamp": "2025-11-02T09:26:46.815Z"
+    }
+  ]
+}

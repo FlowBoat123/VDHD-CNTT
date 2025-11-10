@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "lastUpdated": "2025-11-02T09:26:46.815Z",
+    "totalSamples": 7,
+    "byMethod": {
+      "keyword": 4,
+      "deepseek": 3
+    },
+    "byIntent": {
+      "recommend_movie_by_name": 2,
+      "recommend_personalization": 1,
+      "movie_recommendation_request": 4
+    }
+  },
+  "samples": {
+    "keyword": {
+      "recommend_movie_by_name": [
+        {
+          "query": "Gợi ý phim giống Inception",
+          "confidence": 1,
+          "timestamp": "2025-11-02T05:20:17.740Z"
+        },
+        {
+          "query": "Tìm phim tương tự Avatar",
+          "confidence": 1,
+          "timestamp": "2025-11-02T05:20:17.767Z"
+        }
+      ],
+      "recommend_personalization": [
+        {
+          "query": "Gợi ý phim cá nhân cho tôi",
+          "confidence": 1,
+          "timestamp": "2025-11-02T05:20:17.774Z"
+        }
+      ],
+      "movie_recommendation_request": [
+        {
+          "query": "Phim hành động nào hay",
+          "confidence": 1,
+          "timestamp": "2025-11-02T05:20:17.778Z"
+        }
+      ]
+    },
+    "deepseek": {
+      "movie_recommendation_request": [
+        {
+          "query": "Tôi buồn quá",
+          "confidence": 0.85,
+          "timestamp": "2025-11-02T05:20:19.836Z"
+        },
+        {
+          "query": "Cuối tuần xem gì",
+          "confidence": 0.95,
+          "timestamp": "2025-11-02T05:20:21.775Z"
+        }, 
+        {
+          "query": "tôi chán quá tôi muốn xem sex",
+          "confidence": 0.9,
+          "timestamp": "2025-11-02T09:26:46.815Z"
+        }
+      ]
+    }
+  }
+}
