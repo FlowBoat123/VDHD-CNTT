@@ -3,3 +3,7 @@ key.json
 .venv
 package-lock.json
 node_modules
+docs
+models
+archive
+__pycache__

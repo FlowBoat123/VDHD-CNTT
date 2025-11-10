@@ -135,8 +135,8 @@ class SentenceTransformerRecommender:
             
             # Weighted combination
             text = (
-                f"{title} " * 3 +  # Title quan trọng nhất
-                f"{genres} " * 2 +
+                f"{title} " * 2 +
+                f"{genres} " * 3 +
                 f"{keywords} " * 2 +
                 f"{overview}"
             )
@@ -1126,6 +1126,35 @@ def recommend_by_name_endpoint():
 @app.route("/health")
 def health():
     return jsonify({"ok": True, "msg": "alive"})
+
+@app.route("/classify_intent", methods=["POST"])
+def classify_intent_endpoint():
+    """
+    Classify intent using Sentence Transformers
+    POST body: {"query": "gợi ý phim hành động"}
+    Returns: {"intent": "movie_recommendation_request", "confidence": 0.95, "method": "sentence_transformer"}
+    """
+    try:
+        from intent_classifier import classify_intent
+        
+        payload = request.get_json(force=True) or {}
+        query = payload.get("query") or payload.get("text")
+        
+        if not query:
+            return jsonify({"ok": False, "error": "Missing 'query' field"}), 400
+        
+        result = classify_intent(query)
+        result["ok"] = True
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "ok": False, 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
 
 @app.route("/recommend_personalization", methods=["POST"])
 def recommend_personalization_endpoint():

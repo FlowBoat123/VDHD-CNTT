@@ -66,7 +66,7 @@ export async function handleRecommendPersonalization(request) {
         force_retrain: forceRetrain,
         n: n
       },
-      { timeout: 60000 } // Increased timeout since ALS model training may take time
+      { timeout: 90000 } // Increased timeout since resemblance model training may take time
     );
 
     const data = resp && resp.data ? resp.data : null;
@@ -124,12 +124,12 @@ export async function handleRecommendPersonalization(request) {
       }
 
       return {
-        id: m.movie_id ?? m.id ?? null,
+        id: m.tmdb_id ?? null,
         title: m.title ?? null,
         poster: posterUrl,
         rating: m.rating ?? null,
         explanation: m.explanation ?? "Personalized recommendation based on your ratings",
-        tmdb_id: m.tmdb_id ?? null,
+        // tmdb_id: m.tmdb_id ?? null,
         score: m.score ?? null
       };
     });
