@@ -4,3 +4,7 @@ key.json
 package-lock.json
 node_modules
 archive
+docs
+models
+archive
+__pycache__

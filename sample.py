@@ -28,10 +28,15 @@ from flask import Flask, request, jsonify
 import requests
 import firebase_admin
 from firebase_admin import credentials, firestore
-# import implicit
+import implicit
 from scipy.sparse import coo_matrix, csr_matrix
 from sentence_transformers import SentenceTransformer
 import faiss
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
 
 # Cấu hình Firebase (thêm file service account key)
 firebase_db = None
@@ -62,15 +67,6 @@ TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 
 app = Flask(__name__)
 
-# Ensure models directory exists for caching model files
-MODELS_DIR = os.path.dirname(MODEL_CACHE) or "models"
-if not os.path.exists(MODELS_DIR):
-    try:
-        os.makedirs(MODELS_DIR, exist_ok=True)
-        print(f"Created models directory: {MODELS_DIR}")
-    except Exception as e:
-        print(f"Failed to create models directory {MODELS_DIR}: {e}")
-
 # Globals
 _df = None
 _vectorizer = None
@@ -87,6 +83,217 @@ user_movie_ratings = None
 als_model = None 
 ensemble_models = {}  # ✨ THÊM: Dictionary chứa các models
 thompson_bandits = {}  # ✨ THÊM: Thompson Sampling state
+ncf_model = None  # ✨ THÊM: Neural Collaborative Filtering model
+
+# ✨ THÊM: Neural Collaborative Filtering Model
+class NCFModel(nn.Module):
+    """
+    Neural Collaborative Filtering (NCF) with GMF + MLP
+    Paper: "Neural Collaborative Filtering" (He et al., 2017)
+    
+    Architecture:
+    - GMF (Generalized Matrix Factorization): Element-wise product of embeddings
+    - MLP: Multi-layer perceptron on concatenated embeddings
+    - NeuMF: Fusion of GMF and MLP
+    """
+    def __init__(self, num_users, num_items, embedding_dim=64, hidden_layers=[128, 64, 32]):
+        super(NCFModel, self).__init__()
+        
+        self.num_users = num_users
+        self.num_items = num_items
+        self.embedding_dim = embedding_dim
+        
+        # GMF embeddings
+        self.gmf_user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.gmf_item_embedding = nn.Embedding(num_items, embedding_dim)
+        
+        # MLP embeddings
+        self.mlp_user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.mlp_item_embedding = nn.Embedding(num_items, embedding_dim)
+        
+        # MLP layers
+        mlp_modules = []
+        input_size = embedding_dim * 2
+        for hidden_size in hidden_layers:
+            mlp_modules.append(nn.Linear(input_size, hidden_size))
+            mlp_modules.append(nn.ReLU())
+            mlp_modules.append(nn.BatchNorm1d(hidden_size))
+            mlp_modules.append(nn.Dropout(0.2))
+            input_size = hidden_size
+        self.mlp_layers = nn.Sequential(*mlp_modules)
+        
+        # Final prediction layer (combine GMF and MLP)
+        self.predict_layer = nn.Linear(embedding_dim + hidden_layers[-1], 1)
+        
+        self._init_weights()
+    
+    def _init_weights(self):
+        """Initialize weights with Xavier initialization"""
+        nn.init.xavier_uniform_(self.gmf_user_embedding.weight)
+        nn.init.xavier_uniform_(self.gmf_item_embedding.weight)
+        nn.init.xavier_uniform_(self.mlp_user_embedding.weight)
+        nn.init.xavier_uniform_(self.mlp_item_embedding.weight)
+        
+        for m in self.mlp_layers:
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
+        
+        nn.init.xavier_uniform_(self.predict_layer.weight)
+        nn.init.constant_(self.predict_layer.bias, 0)
+    
+    def forward(self, user_ids, item_ids):
+        """
+        Forward pass
+        Args:
+            user_ids: (batch_size,)
+            item_ids: (batch_size,)
+        Returns:
+            predictions: (batch_size, 1)
+        """
+        # GMF part
+        gmf_user = self.gmf_user_embedding(user_ids)
+        gmf_item = self.gmf_item_embedding(item_ids)
+        gmf_output = gmf_user * gmf_item  # Element-wise product
+        
+        # MLP part
+        mlp_user = self.mlp_user_embedding(user_ids)
+        mlp_item = self.mlp_item_embedding(item_ids)
+        mlp_input = torch.cat([mlp_user, mlp_item], dim=-1)
+        mlp_output = self.mlp_layers(mlp_input)
+        
+        # Concatenate GMF and MLP outputs
+        concat = torch.cat([gmf_output, mlp_output], dim=-1)
+        prediction = self.predict_layer(concat)
+        
+        return prediction.squeeze()
+    
+    def predict(self, user_ids, item_ids):
+        """Predict ratings for given user-item pairs"""
+        self.eval()
+        with torch.no_grad():
+            user_tensor = torch.LongTensor(user_ids)
+            item_tensor = torch.LongTensor(item_ids)
+            predictions = self.forward(user_tensor, item_tensor)
+            return predictions.numpy()
+    
+    def recommend(self, user_idx, user_items, N=20, filter_already_liked_items=True):
+        """
+        Recommend top-N items for a user
+        Compatible interface with implicit library models
+        
+        Args:
+            user_idx: User index
+            user_items: Sparse matrix of user-item interactions (not used, for compatibility)
+            N: Number of recommendations
+            filter_already_liked_items: Whether to filter out already liked items
+        
+        Returns:
+            (item_indices, scores): Tuple of recommended item indices and their scores
+        """
+        self.eval()
+        with torch.no_grad():
+            # Create tensor for all items
+            user_tensor = torch.LongTensor([user_idx] * self.num_items)
+            item_tensor = torch.LongTensor(range(self.num_items))
+            
+            # Predict scores for all items
+            scores = self.forward(user_tensor, item_tensor).numpy()
+            
+            # Filter already liked items if needed
+            if filter_already_liked_items and user_items is not None:
+                user_items_dense = user_items.toarray().flatten()
+                liked_items = np.where(user_items_dense > 0)[0]
+                scores[liked_items] = -np.inf
+            
+            # Get top-N items
+            top_indices = np.argsort(-scores)[:N]
+            top_scores = scores[top_indices]
+            
+            return top_indices, top_scores
+
+class RatingsDataset(Dataset):
+    """PyTorch Dataset for NCF training"""
+    def __init__(self, user_ids, item_ids, ratings):
+        self.user_ids = torch.LongTensor(user_ids)
+        self.item_ids = torch.LongTensor(item_ids)
+        self.ratings = torch.FloatTensor(ratings)
+    
+    def __len__(self):
+        return len(self.ratings)
+    
+    def __getitem__(self, idx):
+        return self.user_ids[idx], self.item_ids[idx], self.ratings[idx]
+
+def train_ncf_model(rating_matrix, user_id_to_idx, movie_id_to_idx, epochs=10, batch_size=256, lr=0.001):
+    """
+    Train Neural Collaborative Filtering model
+    
+    Args:
+        rating_matrix: Sparse CSR matrix of user-item ratings
+        user_id_to_idx: Dictionary mapping user IDs to indices
+        movie_id_to_idx: Dictionary mapping movie IDs to indices
+        epochs: Number of training epochs
+        batch_size: Batch size for training
+        lr: Learning rate
+    
+    Returns:
+        Trained NCF model
+    """
+    print("🔄 Training Neural Collaborative Filtering model...")
+    
+    num_users = rating_matrix.shape[0]
+    num_items = rating_matrix.shape[1]
+    
+    # Convert sparse matrix to COO format for easier extraction
+    rating_coo = rating_matrix.tocoo()
+    user_ids = rating_coo.row
+    item_ids = rating_coo.col
+    ratings = rating_coo.data
+    
+    # Normalize ratings to [0, 1]
+    ratings = (ratings - ratings.min()) / (ratings.max() - ratings.min())
+    
+    print(f"Training data: {len(ratings)} interactions, {num_users} users, {num_items} items")
+    
+    # Create dataset and dataloader
+    dataset = RatingsDataset(user_ids, item_ids, ratings)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+    
+    # Initialize model
+    model = NCFModel(num_users, num_items, embedding_dim=64, hidden_layers=[128, 64, 32])
+    
+    # Loss and optimizer
+    criterion = nn.MSELoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    
+    # Training loop
+    model.train()
+    for epoch in range(epochs):
+        total_loss = 0
+        batch_count = 0
+        
+        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch+1}/{epochs}")
+        for batch_users, batch_items, batch_ratings in progress_bar:
+            # Forward pass
+            predictions = model(batch_users, batch_items)
+            loss = criterion(predictions, batch_ratings)
+            
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
+            batch_count += 1
+            
+            progress_bar.set_postfix({'loss': loss.item()})
+        
+        avg_loss = total_loss / batch_count
+        print(f"Epoch {epoch+1}/{epochs}, Avg Loss: {avg_loss:.4f}")
+    
+    print("✅ NCF model trained successfully")
+    return model
 
 # ✨ THÊM: Class Sentence Transformer Recommender
 class SentenceTransformerRecommender:
@@ -135,8 +342,8 @@ class SentenceTransformerRecommender:
             
             # Weighted combination
             text = (
-                f"{title} " * 2 +
-                f"{genres} " * 3 +
+                f"{title} " * 3 +  # Title quan trọng nhất
+                f"{genres} " * 2 +
                 f"{keywords} " * 2 +
                 f"{overview}"
             )
@@ -776,25 +983,36 @@ class ThompsonSamplingRecommender:
         return [movie_id for movie_id, _ in all_recs]
 
 # ✨ CẢI THIỆN: Train Ensemble ALS models
-def train_ensemble_als_models(rating_matrix, force=False):
+def train_ensemble_als_models(rating_matrix, user_id_to_idx=None, movie_id_to_idx=None, force=False):
     """
-    Train ensemble of 3 models: ALS, BPR, LMF
+    Train ensemble of 4 models: ALS, BPR, LMF, NCF
     Returns dictionary of trained models
     """
-    global ensemble_models
+    global ensemble_models, ncf_model
     
     ensemble_cache = "models/ensemble_models.joblib"
+    ncf_cache = "models/ncf_model.pth"
     
     # if not force and os.path.exists(ensemble_cache):
     #     try:
     #         print("Loading ensemble models from cache:", ensemble_cache)
     #         ensemble_models = load(ensemble_cache)
+    #         
+    #         # Load NCF model separately (PyTorch model)
+    #         if os.path.exists(ncf_cache):
+    #             num_users, num_items = rating_matrix.shape
+    #             ncf_model = NCFModel(num_users, num_items)
+    #             ncf_model.load_state_dict(torch.load(ncf_cache))
+    #             ncf_model.eval()
+    #             ensemble_models['ncf'] = ncf_model
+    #             print("✅ NCF model loaded from cache")
+    #         
     #         print("✅ Ensemble models loaded from cache")
     #         return ensemble_models
     #     except Exception as e:
     #         print("Failed to load ensemble cache, retraining. Error:", e)
     
-    # print("🔄 Training ensemble models (ALS + BPR + LMF)...")
+    print("🔄 Training ensemble models (ALS + BPR + LMF + NCF)...")
     
     models = {
         'als': implicit.als.AlternatingLeastSquares(
@@ -832,11 +1050,43 @@ def train_ensemble_als_models(rating_matrix, force=False):
         except Exception as e:
             print(f"❌ Failed to train {name}: {e}")
     
+    # ✨ THÊM: Train NCF model
+    if user_id_to_idx is not None and movie_id_to_idx is not None:
+        try:
+            print("Training NCF (Neural Collaborative Filtering)...")
+            start = time.time()
+            ncf_model = train_ncf_model(
+                rating_matrix, 
+                user_id_to_idx, 
+                movie_id_to_idx,
+                epochs=5,  # Giảm epochs cho nhanh (có thể tăng lên 10-20 cho better results)
+                batch_size=256,
+                lr=0.001
+            )
+            elapsed = time.time() - start
+            trained_models['ncf'] = ncf_model
+            print(f"✅ NCF trained in {elapsed:.1f}s")
+            
+            # Save NCF model separately
+            try:
+                torch.save(ncf_model.state_dict(), ncf_cache)
+                print(f"NCF model cached -> {ncf_cache}")
+            except Exception as e:
+                print(f"Failed to cache NCF model: {e}")
+                
+        except Exception as e:
+            print(f"❌ Failed to train NCF: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        print("⚠️ Skipping NCF training (user_id_to_idx or movie_id_to_idx not provided)")
+    
     ensemble_models = trained_models
     
-    # Lưu cache
+    # Lưu cache (excluding NCF, saved separately)
     try:
-        dump(ensemble_models, ensemble_cache)
+        models_to_cache = {k: v for k, v in trained_models.items() if k != 'ncf'}
+        dump(models_to_cache, ensemble_cache)
         print("Ensemble models cached ->", ensemble_cache)
     except Exception as e:
         print("Failed to cache ensemble models:", e)
@@ -847,11 +1097,18 @@ def train_ensemble_als_models(rating_matrix, force=False):
 def ensemble_recommendations(user_idx, user_items, movie_ids, N=20):
     """
     Ensemble predictions từ nhiều models với weighted voting
+    Hỗ trợ: ALS, BPR, LMF, NCF
     """
     global ensemble_models
     
     all_recs = {}
-    weights = {'als': 0.5, 'bpr': 0.3, 'lmf': 0.2}  # Trọng số models
+    # ✨ UPDATE: Thêm NCF vào weights
+    weights = {
+        'als': 0.35,   # ALS: robust, fast
+        'bpr': 0.20,   # BPR: ranking optimization
+        'lmf': 0.15,   # LMF: logistic feedback
+        'ncf': 0.30    # NCF: deep learning, best for complex patterns
+    }
     
     # ✨ FIX: Validate user_idx và matrix shape
     n_users = user_items.shape[0] if hasattr(user_items, 'shape') else 1
@@ -862,27 +1119,32 @@ def ensemble_recommendations(user_idx, user_items, movie_ids, N=20):
     for name, model in ensemble_models.items():
         try:
             # ✨ FIX: Kiểm tra xem user_idx có valid không
-            if user_idx >= model.user_factors.shape[0]:
-                print(f"⚠️ {name}: user_idx {user_idx} >= model users {model.user_factors.shape[0]}, skipping")
-                continue
-            
-            # ✨ FIX: Kiểm tra shape của user_items
-            if hasattr(user_items, 'shape'):
-                if user_items.shape[1] != model.item_factors.shape[0]:
-                    print(f"⚠️ {name}: user_items shape {user_items.shape} != model items {model.item_factors.shape[0]}, skipping")
+            if hasattr(model, 'user_factors'):  # Matrix factorization models
+                if user_idx >= model.user_factors.shape[0]:
+                    print(f"⚠️ {name}: user_idx {user_idx} >= model users {model.user_factors.shape[0]}, skipping")
+                    continue
+                
+                # ✨ FIX: Kiểm tra shape của user_items
+                if hasattr(user_items, 'shape'):
+                    if user_items.shape[1] != model.item_factors.shape[0]:
+                        print(f"⚠️ {name}: user_items shape {user_items.shape} != model items {model.item_factors.shape[0]}, skipping")
+                        continue
+            elif isinstance(model, NCFModel):  # NCF model
+                if user_idx >= model.num_users:
+                    print(f"⚠️ {name}: user_idx {user_idx} >= model users {model.num_users}, skipping")
                     continue
             
             recs = model.recommend(
                 user_idx, 
                 user_items, 
-                N=min(N*2, model.item_factors.shape[0]),  # ✨ FIX: Limit N by available items
+                N=min(N*2, model.item_factors.shape[0] if hasattr(model, 'item_factors') else model.num_items),
                 filter_already_liked_items=True
             )
             
             for movie_idx, score in zip(recs[0], recs[1]):
                 if movie_idx not in all_recs:
                     all_recs[movie_idx] = 0
-                all_recs[movie_idx] += weights[name] * score
+                all_recs[movie_idx] += weights.get(name, 0.25) * score
             
             print(f"✅ {name}: recommended {len(recs[0])} movies")
                 
@@ -998,7 +1260,13 @@ def recommend_personalization_logic(payload):
     
     if need_retrain:
         print("🔄 Training/Retraining ensemble models...")
-        ensemble_models = train_ensemble_als_models(rating_matrix, force=True)
+        # ✨ FIX: Pass mappings to train NCF
+        ensemble_models = train_ensemble_als_models(
+            rating_matrix, 
+            user_id_to_idx=user_id_to_idx,
+            movie_id_to_idx=movie_id_to_idx,
+            force=True
+        )
 
     # ✨ CẢI THIỆN: Get ensemble recommendations
     user_idx = user_id_to_idx[user_id]
@@ -1127,35 +1395,6 @@ def recommend_by_name_endpoint():
 def health():
     return jsonify({"ok": True, "msg": "alive"})
 
-@app.route("/classify_intent", methods=["POST"])
-def classify_intent_endpoint():
-    """
-    Classify intent using Sentence Transformers
-    POST body: {"query": "gợi ý phim hành động"}
-    Returns: {"intent": "movie_recommendation_request", "confidence": 0.95, "method": "sentence_transformer"}
-    """
-    try:
-        from intent_classifier import classify_intent
-        
-        payload = request.get_json(force=True) or {}
-        query = payload.get("query") or payload.get("text")
-        
-        if not query:
-            return jsonify({"ok": False, "error": "Missing 'query' field"}), 400
-        
-        result = classify_intent(query)
-        result["ok"] = True
-        
-        return jsonify(result), 200
-        
-    except Exception as e:
-        import traceback
-        return jsonify({
-            "ok": False, 
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }), 500
-
 @app.route("/recommend_personalization", methods=["POST"])
 def recommend_personalization_endpoint():
     """Flask endpoint wrapper for personalization recommendations.
@@ -1166,6 +1405,111 @@ def recommend_personalization_endpoint():
     payload = request.get_json(force=True) or {}
     result, status = recommend_personalization_logic(payload)
     return jsonify(result), status
+
+@app.route("/test_merge", methods=["POST"])
+def test_merge_endpoint():
+    """Test endpoint để kiểm tra merge ratings từ CSV và Firebase"""
+    try:
+        force = request.args.get('force', 'false').lower() == 'true'
+        merged_ratings = load_and_merge_ratings(force=force)
+        firebase_samples = merged_ratings[merged_ratings['source'] == 'firebase'].head(5).to_dict('records')
+        csv_samples = merged_ratings[merged_ratings['source'] == 'csv'].head(5).to_dict('records')
+        return jsonify({
+            "ok": True,
+            "message": f"Merged {len(merged_ratings)} ratings",
+            "firebase_samples": firebase_samples,
+            "csv_samples": csv_samples,
+            "total_firebase": len(firebase_samples),
+            "total_csv": len(csv_samples),
+            "total_merged": len(merged_ratings)
+        })
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+    
+# Test Sentence Transformers
+@app.route("/test_semantic", methods=["POST"])
+def test_semantic():
+    payload = request.get_json(force=True)
+    movie_name = payload.get("movie_name", "Inception")
+    
+    idx, matched = find_movie_index_by_name(movie_name)
+    if idx is None:
+        return jsonify({"error": "Movie not found"}), 404
+    
+    # Compare TF-IDF vs Semantic
+    tfidf_recs = recommend_similar_by_index(idx, top_n=5, use_semantic=False)
+    semantic_recs = recommend_similar_by_index(idx, top_n=5, use_semantic=True)
+    
+    return jsonify({
+        "matched": matched,
+        "tfidf_recommendations": tfidf_recs,
+        "semantic_recommendations": semantic_recs
+    })
+
+# Test Thompson Sampling diversity
+@app.route("/test_diversity", methods=["POST"])
+def test_diversity():
+    payload = request.get_json(force=True)
+    user_id = payload.get("user_id")
+    
+    # Get 2 recommendation sets
+    result1, _ = recommend_personalization_logic({"user_id": user_id})
+    result2, _ = recommend_personalization_logic({"user_id": user_id})
+    
+    # Check diversity
+    movies1 = set([r['title'] for r in result1.get('results', [])])
+    movies2 = set([r['title'] for r in result2.get('results', [])])
+    overlap = len(movies1 & movies2)
+    
+    return jsonify({
+        "run1": list(movies1),
+        "run2": list(movies2),
+        "overlap": overlap,
+        "diversity_score": 1 - (overlap / max(len(movies1), 1))
+    })
+
+# ✨ THÊM: Test NCF model performance
+@app.route("/test_ncf", methods=["POST"])
+def test_ncf():
+    """Test NCF model và so sánh với traditional models"""
+    global ensemble_models, ncf_model
+    
+    payload = request.get_json(force=True)
+    user_id = payload.get("user_id")
+    
+    if not user_id:
+        return jsonify({"error": "user_id required"}), 400
+    
+    # Get recommendations from each model
+    result, _ = recommend_personalization_logic({"user_id": user_id})
+    
+    # Check if NCF is in ensemble
+    has_ncf = 'ncf' in ensemble_models
+    
+    model_info = {}
+    for name, model in ensemble_models.items():
+        if isinstance(model, NCFModel):
+            model_info[name] = {
+                "type": "Neural Collaborative Filtering",
+                "num_users": model.num_users,
+                "num_items": model.num_items,
+                "embedding_dim": model.embedding_dim
+            }
+        elif hasattr(model, 'user_factors'):
+            model_info[name] = {
+                "type": "Matrix Factorization",
+                "num_users": model.user_factors.shape[0],
+                "num_items": model.item_factors.shape[0],
+                "factors": model.user_factors.shape[1]
+            }
+    
+    return jsonify({
+        "ok": True,
+        "ncf_enabled": has_ncf,
+        "models": model_info,
+        "recommendations": result.get('results', [])[:5],
+        "total_recommendations": len(result.get('results', []))
+    })
 
 if __name__ == "__main__":
     # Nếu bạn muốn build model trước khi khởi động server, bật dòng dưới

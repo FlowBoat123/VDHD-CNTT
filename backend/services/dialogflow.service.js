@@ -48,10 +48,13 @@ export async function handleDialogflow(
   // ✅ Attach uid to request so handlers can use it
   unified.uid = uid;
 
+  unified.text = unified.text || message;
+
   const { intent, allRequiredParamsPresent, parameters } = unified;
 
   console.log("🔍 Debug Info:");
   console.log("Intent:", intent);
+  console.log("Message:", message);
   console.log("All params present:", allRequiredParamsPresent);
   console.log("Parameters:", parameters);
 

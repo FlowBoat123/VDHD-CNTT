@@ -1,0 +1,189 @@
+{
+  "intents": {
+    "default_fallback": {
+      "display_name": "default_fallback",
+      "action": "input.unknown",
+      "training_examples": [
+        "lmao",
+        "bruh",
+        "thoi tiet hom nay the nao vay",
+        "hehe",
+        "tôi chán quá tôi muốn xem sex"
+      ],
+      "parameters": [],
+      "num_training_phrases": 7
+    },
+    "movie_recommendation_request": {
+      "display_name": "movie_recommendation_request",
+      "action": "",
+      "training_examples": [
+        "đề xuất phim chính kịch từ năm 2024",
+        "cho tôi phim chính kịch",
+        "Gợi ý phim anime mới",
+        "Tôi muốn xem phim hành động",
+        "Phim hành động có Tom Cruise có rating từ 8 trở lên từ năm 2015 trở về"
+      ],
+      "parameters": [
+        {
+          "name": "rating_comparator",
+          "entity_type": "@rating_comparator",
+          "required": false
+        },
+        {
+          "name": "rating",
+          "entity_type": "@sys.number",
+          "required": false
+        },
+        {
+          "name": "publish_date",
+          "entity_type": "@publish_date",
+          "required": false
+        },
+        {
+          "name": "genre",
+          "entity_type": "@genre",
+          "required": false
+        },
+        {
+          "name": "date_comparator",
+          "entity_type": "@date_comparator",
+          "required": false
+        },
+        {
+          "name": "person",
+          "entity_type": "@sys.person",
+          "required": false
+        }
+      ],
+      "num_training_phrases": 74
+    },
+    "recommend_movie_by_name": {
+      "display_name": "recommend_movie_by_name",
+      "action": "",
+      "training_examples": [
+        "đề xuất cho tôi phim giống như inception",
+        "Có phim nào như green miles không",
+        "Bộ phim giống the dark knight",
+        "Phim nào giống the matrix",
+        "Đề xuất cho tôi phim như 12 angry man"
+      ],
+      "parameters": [
+        {
+          "name": "movie_name",
+          "entity_type": "@movie_name",
+          "required": true
+        }
+      ],
+      "num_training_phrases": 8
+    },
+    "information_request": {
+      "display_name": "information_request",
+      "action": "",
+      "training_examples": [
+        "Phim Dust 2 được đánh giá bao nhiêu?",
+        "Diễn viên Robert Downey Jr. quê quán ở đâu?",
+        "Scarlett Johansson bao nhiêu tuổi?",
+        "Tôi muốn biết tiểu sử của Tom Cruise",
+        "Những thành tựu của The Rock"
+      ],
+      "parameters": [
+        {
+          "name": "parameter",
+          "entity_type": "@parameter",
+          "required": false
+        },
+        {
+          "name": "person",
+          "entity_type": "@sys.person",
+          "required": false
+        },
+        {
+          "name": "movie_name",
+          "entity_type": "@movie_name",
+          "required": false
+        }
+      ],
+      "num_training_phrases": 40
+    },
+    "recommend_personalization": {
+      "display_name": "recommend_personalization",
+      "action": "",
+      "training_examples": [
+        "Phim nào hợp với tôi không",
+        "Phim các người dùng khác cũng xem là gì",
+        "Phim gì hợp với tôi vậy",
+        "Đưa tôi đề xuất cá nhân hoá",
+        "Dựa trên thư viện của tôi, phim nào tôi đang thích vậy"
+      ],
+      "parameters": [],
+      "num_training_phrases": 9
+    }
+  },
+  "entity_types": {
+    "rating_comparator": {
+      "display_name": "rating_comparator",
+      "kind": "KIND_MAP",
+      "examples": [
+        ">",
+        "<",
+        "khoảng",
+        "trong khoảng"
+      ]
+    },
+    "movie_name": {
+      "display_name": "movie_name",
+      "kind": "KIND_MAP",
+      "examples": [
+        "Our Fault",
+        "Captain Hook - The Cursed Tides",
+        "War of the Worlds",
+        "Stolen Girl",
+        "Hunting Grounds"
+      ]
+    },
+    "genre": {
+      "display_name": "genre",
+      "kind": "KIND_MAP",
+      "examples": [
+        "hành động",
+        "phiêu lưu",
+        "hoạt hình",
+        "hài",
+        "tội phạm"
+      ]
+    },
+    "publish_date": {
+      "display_name": "publish_date",
+      "kind": "KIND_MAP",
+      "examples": [
+        "1900",
+        "1901",
+        "1902",
+        "1903",
+        "1904"
+      ]
+    },
+    "date_comparator": {
+      "display_name": "date_comparator",
+      "kind": "KIND_MAP",
+      "examples": [
+        "mới",
+        "cũ",
+        "trước",
+        "sau",
+        "hiện đại"
+      ]
+    },
+    "parameter": {
+      "display_name": "parameter",
+      "kind": "KIND_MAP",
+      "examples": [
+        "bối cảnh",
+        "diễn viên",
+        "đạo diễn",
+        "nội dung",
+        "năm"
+      ]
+    }
+  }
+}

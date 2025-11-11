@@ -33,6 +33,7 @@ export function matchGenre(userGenres, tmdbGenres) {
   for (const userGenre of userGenres) {
     console.log(userGenre);
     const normUser = normalize(userGenre);
+    console.log("Available genres:", normalizedGenres.map((g) => g.normName));
 
     // Exact match
     let match = normalizedGenres.find((g) => g.normName === normUser);
