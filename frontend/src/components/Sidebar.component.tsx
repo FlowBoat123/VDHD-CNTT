@@ -10,16 +10,9 @@ import {
   Plus,
   Search,
   MessageSquare,
-  MoreVertical,
-  TrashIcon,
+  Trophy,
 } from "lucide-react";
 import type { Chat } from "@/types/chat.type";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import ChatListItem from "./ChatListItem.component";
 
 interface SidebarProps {
@@ -32,6 +25,7 @@ interface SidebarProps {
   onChatDelete: (chatId: string) => void;
   onSearchUse: () => void;
   onOpenCollection?: () => void;
+  onOpenRanking?: () => void;
 }
 
 export function Sidebar({
@@ -44,12 +38,18 @@ export function Sidebar({
   onSearchUse,
   onOpenCollection,
   onChatDelete,
+  onOpenRanking,
 }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex w-64 border-r bg-muted/10 flex-col">
         <div className="p-4 border-b space-y-2">
+          <Button onClick={() => onOpenRanking?.()} className="w-full">
+            <Trophy className="h-4 w-4 mr-2" />
+            Bảng xếp hạng
+          </Button>
+
           <Button onClick={() => onOpenCollection?.()} className="w-full">
             <MessageSquare className="h-4 w-4 mr-2" />
             Bộ sưu tập
@@ -103,6 +103,11 @@ export function Sidebar({
               Tìm kiếm
             </Button>
 
+            <Button onClick={() => onOpenRanking?.()} className="w-full">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Bảng xếp hạng
+            </Button>
+
             <Button onClick={() => onOpenCollection?.()} className="w-full">
               <MessageSquare className="h-4 w-4 mr-2" />
               Bộ sưu tập
@@ -134,6 +139,16 @@ export function Sidebar({
               )}
             </div>
           </ScrollArea>
+
+          <div className="p-4 border-t">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={onOpenRanking}
+            >
+              Bảng xếp hạng
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
     </>

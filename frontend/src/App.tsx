@@ -6,6 +6,7 @@ import { MessageInput } from "@/components/MessageInput.component";
 import { SearchWindow } from "@/components/Window.SearchWindow";
 import { MovieDetailWindow } from "@/components/Window.MovieDetail";
 import Collection from "@/components/Collection.component";
+import Ranking from "@/components/Ranking.component";
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +14,7 @@ import { useChat } from "@/hooks/useChat";
 import { useSearch } from "@/hooks/useSearch";
 import { usemovieDetail } from "@/hooks/useMovieDetail";
 
-type View = "chat" | "collection";
+type View = "chat" | "collection" | "ranking";
 
 export default function App() {
   const { user } = useAuth();
@@ -55,6 +56,8 @@ export default function App() {
   useEffect(() => {
     if (location.pathname.startsWith("/collection")) {
       setCurrentView("collection");
+    } else if (location.pathname.startsWith("/ranking")) {
+      setCurrentView("ranking");
     } else {
       setCurrentView("chat");
     }
@@ -86,6 +89,10 @@ export default function App() {
             setCurrentView("collection");
             navigate("/collection");
           }}
+          onOpenRanking={() => {
+            setCurrentView("ranking");
+            navigate("/ranking");
+          }}
         />
       )}
 
@@ -114,6 +121,11 @@ export default function App() {
                 <Collection
                   onOpenMovie={(id) => movieDetail_open(id.toString())}
                 />
+              </>
+            ) : null}
+            {currentView === "ranking" ? (
+              <>
+                <Ranking />
               </>
             ) : null}
           </div>
