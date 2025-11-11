@@ -10,6 +10,8 @@ export class TMDbService {
   constructor() {
     this.genreCache = null;
     this.genreMap = {};
+    this.translateCache = new Map(); // cache translations by key `${text}::${targetLang}`
+    this.translateCooldownUntil = 0; // timestamp to avoid repeated 429 attempts
   }
 
   // Generic fetch wrapper for TMDb
@@ -30,11 +32,38 @@ export class TMDbService {
   // Translate helper using google-translate-api
   async translateText(text, targetLang = "vi") {
     if (!text) return "";
+
+    const key = `${text}::${targetLang}`;
+    if (this.translateCache.has(key)) return this.translateCache.get(key);
+
+    const now = Date.now();
+    if (this.translateCooldownUntil && now < this.translateCooldownUntil) {
+      // We're in cooldown due to previous rate-limit — skip trying to translate
+      return text;
+    }
+
     try {
       const result = await translate(text, { to: targetLang });
-      return result.text;
+      const out = result && result.text ? result.text : text;
+      try {
+        this.translateCache.set(key, out);
+      } catch (e) {
+        // ignore cache set failures
+      }
+      return out;
     } catch (err) {
-      console.warn("Translate failed, fallback to original:", err.message);
+      // If rate-limited, set a short cooldown to avoid spamming the translate service
+      try {
+        const status = err && err.message ? err.message : String(err);
+        if (typeof status === 'string' && status.includes('429')) {
+          // 60s cooldown
+          this.translateCooldownUntil = Date.now() + 60 * 1000;
+          console.warn('Translate rate-limited, entering cooldown for 60s');
+        }
+      } catch (e) {
+        // ignore
+      }
+      console.warn("Translate failed, fallback to original:", err && err.message ? err.message : err);
       return text;
     }
   }
@@ -71,7 +100,8 @@ export class TMDbService {
   }
 
   // Movie detail with automatic fallback and translation
-  async getMovieDetails(movieId) {
+  async getMovieDetails(movieId, opts = {}) {
+    const { skipTranslate = false } = opts;
     const vi = await this.fetchFromTMDb(
       `/movie/${movieId}?append_to_response=credits,external_ids`,
       { language: "vi-VN" }
@@ -89,10 +119,18 @@ export class TMDbService {
       { language: "en-US" }
     );
 
+    if (skipTranslate) {
+      return {
+        ...vi,
+        overview: vi.overview || en.overview,
+        title: vi.title || en.title,
+      };
+    }
+
     return {
       ...vi,
       overview: await this.translateText(vi.overview || en.overview),
-      title: vi.title || en.title
+      title: vi.title || en.title,
     };
   }
 
@@ -100,11 +138,33 @@ export class TMDbService {
   // Discover
   // ---------------------------------------------------------------------
 
-  async discoverMoviesByGenre(genreId) {
-    const data = await this.fetchFromTMDb(
-      `/discover/movie?with_genres=${genreId}&sort_by=popularity.desc`
-    );
-    return data.results.slice(0, MOVIES_PER_REQUEST);
+  async discoverMoviesByGenre(genreId, maxResults = MOVIES_PER_REQUEST) {
+    // TMDb returns paginated results (20 per page). We'll fetch multiple pages until we
+    // accumulate up to maxResults or run out of pages. This helps build a larger pool for genre searches.
+    const collected = [];
+    let page = 1;
+    const perPage = 20; // TMDb default page size
+    const maxPages = Math.ceil(maxResults / perPage) + 1; // small safety headroom
+
+    while (collected.length < maxResults && page <= maxPages) {
+      try {
+        const data = await this.fetchFromTMDb(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc&page=${page}`);
+        const results = Array.isArray(data && data.results) ? data.results : [];
+        for (const r of results) {
+          if (!r) continue;
+          collected.push(r);
+          if (collected.length >= maxResults) break;
+        }
+        // stop if there are no more results
+        if (!data || !data.total_pages || page >= data.total_pages) break;
+        page += 1;
+      } catch (e) {
+        console.warn('discoverMoviesByGenre page fetch failed', e && e.message ? e.message : e);
+        break;
+      }
+    }
+
+    return collected.slice(0, maxResults);
   }
 
   async discoverMoviesByYear(releaseYear, range, opts = {}) {
@@ -171,9 +231,41 @@ export class TMDbService {
 
   async getGenres() {
     if (this.genreCache) return this.genreCache;
-    const data = await this.fetchFromTMDb("/genre/movie/list");
-    this.genreCache = data.genres;
-    this.genreMap = Object.fromEntries(data.genres.map((g) => [g.id, g.name]));
+
+    // Try to fetch genres in Vietnamese first, then English; merge by id and prefer Vietnamese name when available.
+    let viGenres = [];
+    let enGenres = [];
+    try {
+      const viData = await this.fetchFromTMDb("/genre/movie/list", { language: "vi-VN" });
+      viGenres = Array.isArray(viData && viData.genres) ? viData.genres : [];
+    } catch (e) {
+      console.warn("getGenres: failed to fetch Vietnamese genres, will try English fallback", e && e.message ? e.message : e);
+      viGenres = [];
+    }
+
+    try {
+      const enData = await this.fetchFromTMDb("/genre/movie/list", { language: "en-US" });
+      enGenres = Array.isArray(enData && enData.genres) ? enData.genres : [];
+    } catch (e) {
+      console.warn("getGenres: failed to fetch English genres", e && e.message ? e.message : e);
+      enGenres = [];
+    }
+
+    // Build a map by id preferring Vietnamese name when present
+    const merged = new Map();
+    for (const g of enGenres) {
+      if (!g || typeof g.id === 'undefined') continue;
+      merged.set(g.id, { id: g.id, name: g.name });
+    }
+    for (const g of viGenres) {
+      if (!g || typeof g.id === 'undefined') continue;
+      const existing = merged.get(g.id) || {};
+      merged.set(g.id, { id: g.id, name: g.name || existing.name });
+    }
+
+    const genres = Array.from(merged.values());
+    this.genreCache = genres;
+    this.genreMap = Object.fromEntries(genres.map((g) => [g.id, g.name]));
     return this.genreCache;
   }
 

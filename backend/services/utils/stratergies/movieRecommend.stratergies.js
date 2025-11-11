@@ -341,7 +341,8 @@ export async function handleMovieRecommendation(request) {
           if (primaryRangeForDiscover) {
             movies = await tmdbService.discoverMoviesByYear(undefined, primaryRangeForDiscover, { genreId: gid, maxResults: 50 });
           } else {
-            movies = await tmdbService.discoverMoviesByGenre(gid);
+            // request more results for genre discover to build a larger pool
+            movies = await tmdbService.discoverMoviesByGenre(gid, 50);
           }
         }
 
@@ -639,7 +640,7 @@ export async function handleMovieRecommendation(request) {
   if (candidates.length < MIN_ACCEPTABLE_FOR_FAST_RETURN) {
 
     const extra = [];
-    const PAGES_TO_TRY = 6; // keep smaller by default to avoid long waits; can be increased if needed
+    const PAGES_TO_TRY = 20; // keep smaller by default to avoid long waits; can be increased if needed
     for (let page = 1; page <= PAGES_TO_TRY && candidates.length + extra.length < MAX_POOL; page++) {
       try {
         let endpoint = '/discover/movie?';
@@ -747,7 +748,7 @@ export async function handleMovieRecommendation(request) {
       await Promise.all(
         toFetch.map(async (m) => {
           try {
-            const details = await tmdbService.getMovieDetails(m.id);
+            const details = await tmdbService.getMovieDetails(m.id, { skipTranslate: true });
             if (details && typeof details.vote_average === 'number') m.vote_average = details.vote_average;
             else if (details && details.data && typeof details.data.vote_average === 'number') m.vote_average = details.data.vote_average;
           } catch (e) {
@@ -791,7 +792,7 @@ export async function handleMovieRecommendation(request) {
       await Promise.all(
         toFetch.map(async (m) => {
           try {
-            const details = await tmdbService.getMovieDetails(m.id);
+            const details = await tmdbService.getMovieDetails(m.id, { skipTranslate: true });
             if (details && details.release_date) m.release_date = details.release_date;
             else if (details && details.data && details.data.release_date) m.release_date = details.data.release_date;
           } catch (e) {
@@ -822,7 +823,7 @@ export async function handleMovieRecommendation(request) {
       await Promise.all(
         toFetch.map(async (m) => {
           try {
-            const details = await tmdbService.getMovieDetails(m.id);
+            const details = await tmdbService.getMovieDetails(m.id, { skipTranslate: true });
             if (details && details.release_date) m.release_date = details.release_date;
             else if (details && details.data && details.data.release_date) m.release_date = details.data.release_date;
           } catch (e) {
@@ -853,11 +854,29 @@ export async function handleMovieRecommendation(request) {
     return arr;
   };
 
-  // Shuffle in-place a copy to avoid mutating upstream arrays unexpectedly
-  let pool = candidates && candidates.length ? shuffleArray([...candidates]) : [];
+  // Shuffle + dedupe + cap logic
+  // We collect up to MAX_POOL candidates earlier. Now dedupe by id, keep one per id,
+  // allow up to MAX_SUGGESTIONS as headroom, then shuffle and take DISPLAY_CAP for final suggestions.
+  let pool = candidates && candidates.length ? [...candidates] : [];
   if (pool.length > MAX_POOL) pool = pool.slice(0, MAX_POOL);
 
-  const suggestions = (pool.slice(0, MAX_SUGGESTIONS) || []).map((m) => ({
+  // dedupe by id (preserve last merged object)
+  const dedupMapFinal = new Map();
+  for (const m of pool) {
+    if (!m || typeof m.id === 'undefined') continue;
+    dedupMapFinal.set(m.id, Object.assign(dedupMapFinal.get(m.id) || {}, m));
+  }
+  let deduped = Array.from(dedupMapFinal.values());
+
+  // cap to MAX_SUGGESTIONS as headroom, then shuffle and pick DISPLAY_CAP for final display
+  const head = deduped.slice(0, Math.min(deduped.length, MAX_SUGGESTIONS));
+  const shuffledHead = shuffleArray(head);
+  const DISPLAY_CAP = 24;
+  const finalList = shuffledHead.slice(0, Math.min(DISPLAY_CAP, shuffledHead.length));
+
+  console.log(`[movieRecommend] pool=${pool.length} deduped=${deduped.length} head=${head.length} final=${finalList.length}`);
+
+  const suggestions = finalList.map((m) => ({
     id: m.id,
     title: m.title,
     poster: tmdbService.getImageUrl(m.poster_path),
@@ -924,6 +943,8 @@ export async function handleMovieRecommendation(request) {
   } catch (e) {
     /* ignore logging errors */
   }
+
+  console.log(`[movieRecommend] Returning ${suggestions.length} suggestions.`);
 
   return {
     fulfillmentMessages: [
