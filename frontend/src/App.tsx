@@ -125,7 +125,7 @@ export default function App() {
             ) : null}
             {currentView === "ranking" ? (
               <>
-                <Ranking />
+                <Ranking onOpenMovie={(id) => movieDetail_open(id.toString())} />
               </>
             ) : null}
           </div>

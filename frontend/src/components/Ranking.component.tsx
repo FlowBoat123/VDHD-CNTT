@@ -11,7 +11,11 @@ interface Section {
 
 const sections: Section[] = [];
 
-const Ranking: React.FC = () => {
+interface RankingProps {
+  onOpenMovie: (id: number) => void;
+}
+
+const Ranking: React.FC<RankingProps> = ({ onOpenMovie }) => {
   const [dynamicSections, setDynamicSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +40,8 @@ const Ranking: React.FC = () => {
         // Get the top 3 most frequent genres
         const topGenres = Object.entries(genreCount)
           .sort(([, a], [, b]) => b - a)
+          .slice(0, 6)
+          .sort(() => Math.random() - 0.5)
           .slice(0, 3)
           .map(([genre]) => genre);
 
@@ -81,7 +87,7 @@ const Ranking: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col overflow-y-auto">
       <div className="max-w-7xl mx-auto p-8 w-full">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Bảng xếp hạng</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold mb-6">Khám phá</h2>
 
         {loading ? (
           <div className="text-center py-12">Đang tải...</div>
@@ -91,7 +97,11 @@ const Ranking: React.FC = () => {
               <h3 className="text-xl font-semibold mb-4">{section.title}</h3>
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {section.movies.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onClick={() => onOpenMovie(movie.id)}
+                  />
                 ))}
               </div>
             </div>

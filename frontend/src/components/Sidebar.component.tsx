@@ -10,7 +10,6 @@ import {
   Plus,
   Search,
   MessageSquare,
-  Trophy,
 } from "lucide-react";
 import type { Chat } from "@/types/chat.type";
 import ChatListItem from "./ChatListItem.component";
@@ -46,8 +45,8 @@ export function Sidebar({
       <div className="hidden lg:flex w-64 border-r bg-muted/10 flex-col">
         <div className="p-4 border-b space-y-2">
           <Button onClick={() => onOpenRanking?.()} className="w-full">
-            <Trophy className="h-4 w-4 mr-2" />
-            Bảng xếp hạng
+            <Search className="h-4 w-4 mr-2" />
+            Khám phá
           </Button>
 
           <Button onClick={() => onOpenCollection?.()} className="w-full">
@@ -105,7 +104,7 @@ export function Sidebar({
 
             <Button onClick={() => onOpenRanking?.()} className="w-full">
               <MessageSquare className="h-4 w-4 mr-2" />
-              Bảng xếp hạng
+              Khám phá
             </Button>
 
             <Button onClick={() => onOpenCollection?.()} className="w-full">
@@ -146,7 +145,7 @@ export function Sidebar({
               className="w-full justify-start"
               onClick={onOpenRanking}
             >
-              Bảng xếp hạng
+              Khám phá
             </Button>
           </div>
         </SheetContent>
