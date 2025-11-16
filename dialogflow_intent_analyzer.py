@@ -248,7 +248,7 @@ def fetch_dialogflow_intents_detailed():
             intent_name = intent.display_name
             
             # Skip default intents
-            if intent_name in ["Default Fallback Intent", "Default Welcome Intent"]:
+            if intent_name in ["Default Fallback Intent", "Default Welcome Intent", "default_fallback"]:
                 continue
             
             print(f"\n  🎯 Processing: {intent_name}")
@@ -424,7 +424,7 @@ Trả về JSON:
                 "max_tokens": 800,
                 "response_format": {"type": "json_object"}
             },
-            timeout=15
+            timeout=30
         )
         
         if response.status_code == 200:
@@ -447,12 +447,20 @@ def call_llm_analyze_entity(entity_name: str, entity_data: Dict) -> Dict:
     if not DEEPSEEK_API_KEY:
         return {"goal": "N/A", "characteristics": [], "reasoning": "API not configured"}
     
-    # Build prompt
-    entities_desc = "\n".join([
-        f"  - \"{e['value']}\" " + 
-        (f"(synonyms: {', '.join(e['synonyms'][:3])})" if e['synonyms'] else "(no synonyms)")
-        for e in entity_data["sampled_entities"][:10]
-    ])
+    # Build prompt - escape special characters
+    entities_desc_list = []
+    for e in entity_data["sampled_entities"][:10]:
+        # Escape quotes and backslashes in value and synonyms
+        safe_value = e['value'].replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
+        safe_synonyms = [s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ') 
+                        for s in e['synonyms'][:3]]
+        
+        if safe_synonyms:
+            entities_desc_list.append(f'  - "{safe_value}" (synonyms: {", ".join(safe_synonyms)})')
+        else:
+            entities_desc_list.append(f'  - "{safe_value}" (no synonyms)')
+    
+    entities_desc = "\n".join(entities_desc_list)
     
     prompt = f"""Phân tích Entity Type trong hệ thống chatbot gợi ý phim.
 
@@ -465,7 +473,7 @@ def call_llm_analyze_entity(entity_name: str, entity_data: Dict) -> Dict:
 
 ---
 
-**Nhiệm vụ:** Phân tích MỤC TIÊU và ĐẶC ĐIỂM của entity type này.
+**Nhiệm vụ:** Phân tích MỤC TIÊU và ĐẶC ĐIỂM của entity type này trong chatbot.
 
 Trả về JSON:
 {{
@@ -500,7 +508,7 @@ Trả về JSON:
                 "max_tokens": 600,
                 "response_format": {"type": "json_object"}
             },
-            timeout=15
+            timeout=30
         )
         
         if response.status_code == 200:
@@ -511,6 +519,10 @@ Trả về JSON:
             print(f"    ⚠️ LLM API error: {response.status_code}")
             return {"goal": "Error", "characteristics": []}
     
+    except json.JSONDecodeError as e:
+        print(f"    ❌ JSON decode error: {e}")
+        print(f"    📝 Entity: @{entity_name}")
+        return {"goal": "JSON Parse Error", "characteristics": []}
     except Exception as e:
         print(f"    ❌ Error calling LLM: {e}")
         return {"goal": "Error", "characteristics": []}
@@ -600,12 +612,11 @@ def analyze_all_intents_and_entities():
 def evaluate_query_against_intents(query: str, analysis_data: Dict = None) -> List[Dict]:
     """
     Đánh giá câu hỏi mới với các intents đã phân tích
-    Trả về list intents với matching score
     """
     if analysis_data is None:
         if not os.path.exists(INTENT_ANALYSIS_PATH):
             print("❌ No analysis data found. Run analyze_all_intents_and_entities() first.")
-            return []
+            return {"top_matches": [], "overall_analysis": "No analysis data"}  # ✨ FIX: Return dict instead of list
         with open(INTENT_ANALYSIS_PATH, 'r', encoding='utf-8') as f:
             analysis_data = json.load(f)
     
@@ -613,7 +624,7 @@ def evaluate_query_against_intents(query: str, analysis_data: Dict = None) -> Li
     
     if not DEEPSEEK_API_KEY:
         print("⚠️ DEEPSEEK_API_KEY not configured")
-        return []
+        return {"top_matches": [], "overall_analysis": "API key not configured"}  # ✨ FIX
     
     # Build context về tất cả intents
     intents_context = ""
@@ -674,8 +685,10 @@ Chỉ trả về top 3 intents có score cao nhất (>30). Sort theo score giả
                 "max_tokens": 600,
                 "response_format": {"type": "json_object"}
             },
-            timeout=15
+            timeout=30
         )
+        
+        print(f"DeepSeek API response status: {response.status_code}")  # ✨ ADD logging
         
         if response.status_code == 200:
             data = response.json()
@@ -684,11 +697,14 @@ Chỉ trả về top 3 intents có score cao nhất (>30). Sort theo score giả
             return result
         else:
             print(f"⚠️ LLM API error: {response.status_code}")
-            return {"top_matches": [], "overall_analysis": "Error"}
+            print(f"Response: {response.text[:200]}")  # ✨ ADD logging
+            return {"top_matches": [], "overall_analysis": f"API error: {response.status_code}"}
     
     except Exception as e:
         print(f"❌ Error evaluating query: {e}")
-        return {"top_matches": [], "overall_analysis": "Error"}
+        import traceback
+        traceback.print_exc()
+        return {"top_matches": [], "overall_analysis": f"Error: {str(e)}"}
 
 
 def test_query_evaluation():
