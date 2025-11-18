@@ -184,12 +184,12 @@ export function MovieDetailWindow({
                   </div>
                   {communityAggregate ? (
                     <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300 text-center">
-                      Community rating: {communityAggregate.avgRating !== null ? communityAggregate.avgRating.toFixed(1) : "-"} ({communityAggregate.ratingCount} votes)
+                      Đánh giá cộng đồng: {communityAggregate.avgRating !== null ? communityAggregate.avgRating.toFixed(1) : "-"} ({communityAggregate.ratingCount} votes)
                     </p>
                   ) : null}
                   {typeof average === 'number' ? (
                     <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300 text-center font-medium">
-                      Average: {average.toFixed(1)}
+                      Trung bình: {average.toFixed(1)}
                     </p>
                   ) : null}
                 </div>
