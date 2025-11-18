@@ -1130,7 +1130,7 @@ def health():
 @app.route("/classify_intent", methods=["POST"])
 def classify_intent_endpoint():
     """
-    Classify intent using Sentence Transformers
+    Classify intent using LOCAL Sentence Transformers (fast, semantic)
     POST body: {"query": "gợi ý phim hành động"}
     Returns: {"intent": "movie_recommendation_request", "confidence": 0.95, "method": "sentence_transformer"}
     """
@@ -1150,6 +1150,118 @@ def classify_intent_endpoint():
         
     except Exception as e:
         import traceback
+        return jsonify({
+            "ok": False, 
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+@app.route("/classify_intent_deepseek", methods=["POST"])
+def classify_intent_deepseek_endpoint():
+    """
+    Classify intent using DEEPSEEK API via evaluate_query_against_intents
+    (Uses Dialogflow intent analysis data for context-aware classification)
+    """
+    try:
+        # Import function từ dialogflow_intent_analyzer
+        from dialogflow_intent_analyzer import evaluate_query_against_intents
+        
+        payload = request.get_json(force=True) or {}
+        query = payload.get("query") or payload.get("text")
+        
+        if not query:
+            return jsonify({"ok": False, "error": "Missing 'query' field"}), 400
+        
+        # Call evaluate_query_against_intents
+        print(f"🔍 Evaluating query with Dialogflow context: {query}")
+        
+        try:
+            evaluation_result = evaluate_query_against_intents(query)
+        except Exception as eval_err:
+            print(f"❌ evaluate_query_against_intents error: {eval_err}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                "ok": False,
+                "error": f"Evaluation failed: {str(eval_err)}",
+                "traceback": traceback.format_exc()
+            }), 500
+        
+        if not evaluation_result:
+            return jsonify({
+                "ok": False,
+                "error": "Failed to evaluate query - empty result"
+            }), 500
+        
+        print(f"📊 Evaluation result: {json.dumps(evaluation_result, ensure_ascii=False)[:200]}")
+        
+        top_matches = evaluation_result.get("top_matches", [])
+        overall_analysis = evaluation_result.get("overall_analysis", "")
+        
+        # Get best match
+        if top_matches and len(top_matches) > 0:
+            best_match = top_matches[0]
+            intent = best_match.get("intent")
+            score = best_match.get("score", 0)
+            reasoning = best_match.get("reasoning", "")
+            missing_info = best_match.get("missing_info", "")
+            confidence_level = best_match.get("confidence", "medium")
+            
+            # Convert score (0-100) to confidence (0-1)
+            confidence = score / 100.0
+            
+            # Map confidence level to numeric threshold
+            confidence_map = {
+                "high": 0.8,
+                "medium": 0.6,
+                "low": 0.4
+            }
+            
+            # Use the higher of score-based or level-based confidence
+            confidence = max(confidence, confidence_map.get(confidence_level, 0.5))
+            
+            result = {
+                "ok": True,
+                "intent": intent,
+                "confidence": confidence,
+                "score": score,
+                "reasoning": reasoning,
+                "missing_info": missing_info if missing_info else None,
+                "confidence_level": confidence_level,
+                "method": "deepseek_dialogflow_context",
+                "query": query,
+                "top_matches": top_matches,
+                "overall_analysis": overall_analysis
+            }
+            
+            print(f"✅ Best match: {intent} (score: {score}, confidence: {confidence:.2f})")
+            
+            return jsonify(result), 200
+        
+        else:
+            # No matches found
+            print(f"⚠️ No matches found. Overall analysis: {overall_analysis}")
+            return jsonify({
+                "ok": False,
+                "error": "No intent matches found",
+                "overall_analysis": overall_analysis,
+                "query": query,
+                "debug": {
+                    "evaluation_result": evaluation_result
+                }
+            }), 400
+        
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        return jsonify({
+            "ok": False,
+            "error": "dialogflow_intent_analyzer module not found",
+            "details": str(e)
+        }), 500
+    except Exception as e:
+        import traceback
+        print(f"❌ Unexpected error: {e}")
+        traceback.print_exc()
         return jsonify({
             "ok": False, 
             "error": str(e),

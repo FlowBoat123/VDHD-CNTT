@@ -224,6 +224,7 @@ export async function handleFallbackIntent(request) {
   const DEEP_SEEK_API = process.env.DEEP_SEEK_API;
   const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
   const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL;
+  const FLASK_API_URL = process.env.FLASK_API_URL || "http://localhost:5000";
 
   // Extract best text candidate from several common fields
   const textCandidates = request.text ? [request.text] : [];
@@ -275,7 +276,6 @@ export async function handleFallbackIntent(request) {
 
   // ===== STEP 2: TRY LOCAL SENTENCE TRANSFORMER CLASSIFIER =====
   console.log("Step 2: Trying local Sentence Transformer classifier...");
-  const FLASK_API_URL = process.env.FLASK_API_URL || "http://localhost:5000";
   
   try {
     const classifyResp = await axios.post(`${FLASK_API_URL}/classify_intent`, 
@@ -315,124 +315,65 @@ export async function handleFallbackIntent(request) {
     console.log("Local classifier unavailable, falling back to DeepSeek API:", localErr.message);
   }
 
-  // ===== STEP 3: CHECK IF DEEPSEEK API IS AVAILABLE =====
-  const hasDirectApi = !!DEEP_SEEK_API;
-  const hasKeyUrlPair = !!DEEPSEEK_API_KEY && !!DEEPSEEK_API_URL;
-
-  if (!hasDirectApi && !hasKeyUrlPair) {
-    console.warn("DEEP_SEEK API not configured. Using simple heuristics.");
-    logFallbackQuery(text, 'heuristic_no_api', 0.5, null);
-    
-    const lower = (text || "").toLowerCase();
-    if (lower.includes("tên") || lower.includes("name") || lower.includes("similar") || lower.includes("giống")) {
-      return handleMovieRecommendByName(request);
-    }
-    if (lower.includes("cá nhân") || lower.includes("personal") || lower.includes("đánh giá")) {
-      return handleRecommendPersonalization(request);
-    }
-    return handleMovieRecommendation(request);
-  }
-
-  // ===== STEP 4: USE DEEPSEEK API FOR COMPLEX/AMBIGUOUS QUERIES =====
-  console.log("Step 3: Calling DeepSeek API for complex query classification...");
+  // ===== STEP 3: USE DEEPSEEK VIA FLASK ENDPOINT (HIGH-ACCURACY CLASSIFICATION) =====
+  console.log("Step 3: Calling Flask /classify_intent_deepseek for high-accuracy classification...");
   
   try {
-    // Build prompt for intent classification
-    const intentList = Object.keys(intentMap).join(", ");
-    const systemPrompt = `You are an intent classifier for a movie recommendation chatbot. 
-Given user text, classify it into ONE of these intents:
-- movie_recommendation_request: General movie recommendations (genre, mood, etc.)
-- recommend_movie_by_name: Find similar movies based on a movie name
-- recommend_personalization: Personalized recommendations based on user history/ratings
-
-Respond ONLY with a JSON object in this exact format:
-{"intent": "intent_name", "confidence": 0.95}
-
-Available intents: ${intentList}`;
-
-    const payload = {
-      model: "deepseek-chat",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text }
-      ],
-      temperature: 0.3,
-      max_tokens: 100,
-      response_format: { type: "json_object" }
-    };
+    const deepseekClassifyResp = await axios.post(
+      `${FLASK_API_URL}/classify_intent_deepseek`, 
+      { query: text },
+      { timeout: 15000 }  // Longer timeout for DeepSeek API
+    );
     
-    console.log("Calling DEEP_SEEK_API with text:", text.substring(0, 100));
-
-    let resp;
-    if (hasDirectApi) {
-      resp = await axios.post(DEEP_SEEK_API, payload, { 
-        timeout: 8000,
-        headers: { "Content-Type": "application/json" }
-      });
-    } else {
-      // hasKeyUrlPair is true (we checked earlier). Use the URL with Authorization header.
-      const headers = { 
-        "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
-        "Content-Type": "application/json"
-      };
-      resp = await axios.post(DEEPSEEK_API_URL, payload, { headers, timeout: 8000 });
-    }
-    const data = resp && resp.data ? resp.data : null;
-    console.log("DEEP_SEEK_API response received:", !!data);
-
-    let chosen = null;
-    let confidence = 0;
-
-    if (data && data.choices && data.choices.length > 0) {
-      // Parse DeepSeek response (OpenAI format)
-      const content = data.choices[0].message?.content;
-      console.log("DeepSeek response content:", content);
+    if (deepseekClassifyResp.data && deepseekClassifyResp.data.ok) {
+      const { intent: chosen, confidence, reasoning, method } = deepseekClassifyResp.data;
+      console.log(`DeepSeek classifier result: ${chosen} (confidence: ${confidence})`);
+      console.log(`  Reasoning: ${reasoning}`);
       
-      if (content) {
+      const DEEPSEEK_THRESHOLD = 0.6;  // Threshold cho DeepSeek classification
+      
+      if (chosen && intentMap[chosen] && confidence >= DEEPSEEK_THRESHOLD) {
+        console.log(`✅ DeepSeek classifier matched: ${chosen} (confidence=${confidence})`);
+        logFallbackQuery(text, 'deepseek', confidence, chosen);
+        saveFallbackSample(text, 'deepseek', confidence, chosen);
+        
         try {
-          const parsed = JSON.parse(content);
-          chosen = parsed.intent;
-          confidence = parsed.confidence || 0;
-          console.log("Parsed intent:", chosen, "confidence:", confidence);
-        } catch (parseErr) {
-          console.error("Failed to parse DeepSeek JSON response:", parseErr.message);
-          // Try to extract intent from text response
-          const intentMatch = content.match(/movie_recommendation_request|recommend_movie_by_name|recommend_personalization/i);
-          if (intentMatch) {
-            chosen = intentMatch[0].toLowerCase();
-            confidence = 0.7;
-            console.log("Extracted intent from text:", chosen);
+          const result = await intentMap[chosen](request);
+          if (result && typeof result === "object") {
+            result.debug = Object.assign({}, result.debug || {}, { 
+              matchedBy: 'deepseek',
+              confidence: confidence,
+              reasoning: reasoning,
+              method: method,
+              intent: chosen 
+            });
           }
+          return result;
+        } catch (e) {
+          console.error("Error in deepseek-matched handler:", e.message);
+          // Continue to helpful response
         }
+      } else {
+        console.log(`⚠️  DeepSeek classifier confidence too low (${confidence} < ${DEEPSEEK_THRESHOLD})`);
       }
     }
-
-    const THRESHOLD = 0.6;
-    if (chosen && intentMap[chosen] && confidence >= THRESHOLD) {
-      console.log(`✅ DeepSeek classified: ${chosen} (confidence=${confidence}). Routing to handler.`);
-      logFallbackQuery(text, 'deepseek', confidence, chosen);
-      saveFallbackSample(text, 'deepseek', confidence, chosen);
-      
-      try {
-        const result = await intentMap[chosen](request);
-        // attach debug info for troubleshooting
-        if (result && typeof result === "object") {
-          result.debug = Object.assign({}, result.debug || {}, { 
-            matchedBy: 'deepseek',
-            _deep_seek: { chosen, confidence, raw: data } 
-          });
-        }
-        return result;
-      } catch (e) {
-        console.error("Error while delegating to chosen intent handler:", e && e.message ? e.message : e);
-        // fallthrough to default friendly error
-      }
+  } catch (deepseekErr) {
+    console.log("DeepSeek classifier unavailable:", deepseekErr.message);
+    if (deepseekErr.response) {
+      console.error("  Status:", deepseekErr.response.status);
+      console.error("  Data:", JSON.stringify(deepseekErr.response.data).substring(0, 200));
     }
+  }
 
-    // ===== STEP 4: CONFIDENCE TOO LOW - USE AI TO RESPOND HELPFULLY =====
-    console.log(`⚠️  Confidence too low (${confidence}) or no intent detected. Asking DeepSeek to respond directly.`);
-    logFallbackQuery(text, 'deepseek_low_confidence', confidence, chosen);
-    
+  // ===== STEP 4: CONFIDENCE TOO LOW - USE DEEPSEEK FOR HELPFUL RESPONSE =====
+  console.log(`⚠️  All classifiers failed or low confidence. Using DeepSeek for helpful response.`);
+  logFallbackQuery(text, 'deepseek_helpful_only', 0, null);
+  
+  // ✨ CẢI THIỆN: DeepSeek chỉ dùng để generate helpful response, không classify
+  const hasDirectApi = !!DEEP_SEEK_API;
+  const hasKeyUrlPair = !!DEEPSEEK_API_KEY && !!DEEPSEEK_API_URL;
+  
+  if (hasDirectApi || hasKeyUrlPair) {
     try {
       const helpfulPrompt = `Bạn là trợ lý chatbot gợi ý phim thông minh. Người dùng vừa hỏi: "${text}"
 
@@ -480,10 +421,8 @@ Trả lời ngắn gọn, thân thiện bằng tiếng Việt (2-3 câu). Không
               { text: { text: [helpfulContent] } }
             ],
             debug: { 
-              deepSeek: { 
-                classification: { chosen, confidence }, 
-                helpfulResponse: helpfulData 
-              }, 
+              matchedBy: 'deepseek_helpful_only',
+              helpfulResponse: helpfulData,
               text 
             }
           };
@@ -492,35 +431,16 @@ Trả lời ngắn gọn, thân thiện bằng tiếng Việt (2-3 câu). Không
     } catch (helpErr) {
       console.error("Error getting helpful response from DeepSeek:", helpErr.message);
     }
-
-    // ===== STEP 5: FINAL FALLBACK - DEFAULT HELP MESSAGE =====
-    console.log("⚠️  Returning default fallback message.");
-    logFallbackQuery(text, 'default_fallback', 0, null);
-    
-    return {
-      fulfillmentMessages: [
-        { text: { text: ["Xin lỗi, tôi chưa hiểu rõ yêu cầu của bạn. Tôi có thể giúp bạn:\n\n🎬 Gợi ý phim theo thể loại hoặc tâm trạng (ví dụ: \"Gợi ý phim hành động\")\n🎯 Tìm phim tương tự (ví dụ: \"Gợi ý phim giống Inception\")\n⭐ Gợi ý phim cá nhân hóa dựa trên sở thích của bạn\n\nBạn muốn thử tính năng nào?"] } }
-      ],
-      debug: { matchedBy: 'default_fallback', deepSeek: data, text }
-    };
-  } catch (err) {
-    console.error("❌ Error calling DEEP_SEEK_API:", err && err.message ? err.message : err);
-    if (err.response) {
-      console.error("API response status:", err.response.status);
-      console.error("API response data:", JSON.stringify(err.response.data).substring(0, 500));
-    }
-    
-    // ===== API ERROR FALLBACK - USE SIMPLE HEURISTICS =====
-    console.log("⚠️  API error, falling back to simple heuristics");
-    logFallbackQuery(text, 'error_fallback', 0, null);
-    
-    const lower = (text || "").toLowerCase();
-    if (lower.includes("tên") || lower.includes("name") || lower.includes("similar") || lower.includes("giống")) {
-      return handleMovieRecommendByName(request);
-    }
-    if (lower.includes("cá nhân") || lower.includes("personal") || lower.includes("đánh giá")) {
-      return handleRecommendPersonalization(request);
-    }
-    return handleMovieRecommendation(request);
   }
+
+  // ===== STEP 5: FINAL FALLBACK - DEFAULT HELP MESSAGE =====
+  console.log("⚠️  Returning default fallback message.");
+  logFallbackQuery(text, 'default_fallback', 0, null);
+  
+  return {
+    fulfillmentMessages: [
+      { text: { text: ["Xin lỗi, tôi chưa hiểu rõ yêu cầu của bạn. Tôi có thể giúp bạn:\n\n🎬 Gợi ý phim theo thể loại hoặc tâm trạng (ví dụ: \"Gợi ý phim hành động\")\n🎯 Tìm phim tương tự (ví dụ: \"Gợi ý phim giống Inception\")\n⭐ Gợi ý phim cá nhân hóa dựa trên sở thích của bạn\n\nBạn muốn thử tính năng nào?"] } }
+    ],
+    debug: { matchedBy: 'default_fallback', text }
+  };
 }

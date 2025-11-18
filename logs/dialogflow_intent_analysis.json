@@ -1,0 +1,994 @@
+{
+  "metadata": {
+    "analyzed_at": "2025-11-10T23:36:21.296369",
+    "project_id": "omega-wind-439402-e0",
+    "total_intents": 4,
+    "total_entity_types": 6
+  },
+  "intents": {
+    "movie_recommendation_request": {
+      "display_name": "movie_recommendation_request",
+      "action": "",
+      "parameters": [
+        {
+          "name": "rating_comparator",
+          "entity_type": "@rating_comparator",
+          "required": false
+        },
+        {
+          "name": "rating",
+          "entity_type": "@sys.number",
+          "required": false
+        },
+        {
+          "name": "publish_date",
+          "entity_type": "@publish_date",
+          "required": false
+        },
+        {
+          "name": "genre",
+          "entity_type": "@genre",
+          "required": false
+        },
+        {
+          "name": "date_comparator",
+          "entity_type": "@date_comparator",
+          "required": false
+        },
+        {
+          "name": "person",
+          "entity_type": "@sys.person",
+          "required": false
+        }
+      ],
+      "required_parameters": [],
+      "total_training_phrases": 74,
+      "sampled_training_phrases": [
+        {
+          "text": "cho tôi phim chính kịch",
+          "entities": [
+            "genre"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "bộ phim hay nhất năm 2000",
+          "entities": [
+            "publish_date"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Năm 2006 có phim gì hay không?",
+          "entities": [
+            "publish_date"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "phim có sự góp mặt của Emma Stone",
+          "entities": [
+            "sys.person"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "phim của james bond",
+          "entities": [
+            "sys.person"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Gợi ý phim anime mới",
+          "entities": [
+            "genre",
+            "date_comparator"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "tài liệu của christopher nolan",
+          "entities": [
+            "genre",
+            "sys.person"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "phim hài Christian Bale",
+          "entities": [
+            "genre",
+            "sys.person"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "tao thích phim hành động có rating 9 với cả phát hành vào năm 2025",
+          "entities": [
+            "genre",
+            "sys.number",
+            "publish_date"
+          ],
+          "entity_count": 3
+        },
+        {
+          "text": "trấn thành trên 5",
+          "entities": [
+            "sys.person",
+            "rating_comparator",
+            "sys.number"
+          ],
+          "entity_count": 3
+        }
+      ],
+      "sampling_strategy": "smart",
+      "llm_analysis": {
+        "goal": "Intent này nhằm xử lý các yêu cầu gợi ý phim từ người dùng dựa trên các tiêu chí cụ thể như thể loại, năm phát hành, đánh giá, hoặc diễn viên/đạo diễn.",
+        "characteristics": [
+          "Đặc điểm 1: User thường hỏi bằng cách kết hợp từ khóa 'phim', 'gợi ý', 'hay' với các thông số về thể loại, năm, rating hoặc người tham gia",
+          "Đặc điểm 2: Tất cả parameters đều tùy chọn, intent có thể xử lý từ yêu cầu đơn giản (chỉ genre) đến phức tạp (kết hợp nhiều tiêu chí)",
+          "Đặc điểm 3: Sử dụng khi user muốn tìm phim phù hợp sở thích, thường trong context giải trí, tìm kiếm nội dung xem"
+        ],
+        "key_patterns": [
+          "Pattern 1: [Từ khóa phim/gợi ý] + [genre] + [optional: publish_date/rating/person]",
+          "Pattern 2: [person] + [optional: rating_comparator + rating/date_comparator + publish_date/genre]"
+        ],
+        "entity_usage": "Các entities được sử dụng linh hoạt để trích xuất thông tin: genre xác định thể loại, publish_date và date_comparator lọc theo thời gian, rating và rating_comparator lọc theo đánh giá, person tìm phim liên quan đến diễn viên/đạo diễn.",
+        "examples_fit_score": {
+          "high_quality": [
+            "cho tôi phim chính kịch",
+            "phim có sự góp mặt của Emma Stone",
+            "tài liệu của christopher nolan"
+          ],
+          "medium_quality": [
+            "trấn thành trên 5",
+            "Gợi ý phim anime mới"
+          ],
+          "reasoning": "High quality examples có cấu trúc rõ ràng, entities được trích xuất dễ dàng (ví dụ: 'chính kịch' -> genre, 'Emma Stone' -> person). Medium quality examples có thể gây nhầm lẫn: 'trấn thành trên 5' có thể hiểu nhầm rating_comparator và số, 'anime mới' cần suy luận 'mới' là date_comparator."
+        },
+        "matching_criteria": "Điểm mạnh: Intent linh hoạt, xử lý được nhiều dạng câu hỏi kết hợp parameters. Điểm yếu: Dễ nhầm lẫn với các intent khác nếu câu hỏi không chứa từ khóa rõ ràng về 'phim' hoặc các entities không được nhận diện chính xác (ví dụ: tên riêng không có trong hệ thống)."
+      }
+    },
+    "recommend_movie_by_name": {
+      "display_name": "recommend_movie_by_name",
+      "action": "",
+      "parameters": [
+        {
+          "name": "movie_name",
+          "entity_type": "@movie_name",
+          "required": true
+        }
+      ],
+      "required_parameters": [
+        "movie_name"
+      ],
+      "total_training_phrases": 8,
+      "sampled_training_phrases": [
+        {
+          "text": "đề xuất cho tôi phim giống như inception",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Bộ phim giống the dark knight",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Tôi muốn xem phim giống như phim interstellar",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Đề xuất cho tôi phim như 12 angry man",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Có phim nào như green miles không",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Phim nào giống the matrix",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "đề xuất cho tôi phim giống như World War Z",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Có phim nào giống your name không",
+          "entities": [
+            "movie_name"
+          ],
+          "entity_count": 1
+        }
+      ],
+      "sampling_strategy": "smart",
+      "llm_analysis": {
+        "goal": "Hệ thống nhận diện yêu cầu đề xuất phim dựa trên một bộ phim cụ thể mà người dùng cung cấp, từ đó gợi ý các phim có đặc điểm tương tự.",
+        "characteristics": [
+          "Đặc điểm 1: Người dùng thường sử dụng các cụm từ như 'giống như', 'như', 'giống' để so sánh với phim đã biết",
+          "Đặc điểm 2: Thông tin bắt buộc là tên phim (movie_name), không có tham số tùy chọn",
+          "Đặc điểm 3: Context thường là khi người dùng muốn khám phá phim mới dựa trên sở thích hiện có, phổ biến trong các tình huống tìm kiếm giải trí cá nhân"
+        ],
+        "key_patterns": [
+          "Pattern 1: [đề xuất/gợi ý/tìm] + [phim] + [giống/như/giống như] + [tên phim]",
+          "Pattern 2: Từ khóa quan trọng: 'giống', 'như', 'đề xuất', 'phim'"
+        ],
+        "entity_usage": "Entity @@movie_name được sử dụng để trích xuất tên phim từ câu hỏi của người dùng, đảm bảo hệ thống hiểu rõ phim tham chiếu để thực hiện gợi ý chính xác.",
+        "examples_fit_score": {
+          "high_quality": [
+            "đề xuất cho tôi phim giống như inception",
+            "Tôi muốn xem phim giống như phim interstellar",
+            "Có phim nào như green miles không"
+          ],
+          "medium_quality": [
+            "Bộ phim giống the dark knight",
+            "Phim nào giống the matrix"
+          ],
+          "reasoning": "Các ví dụ high_quality có cấu trúc rõ ràng với từ khóa 'giống như' hoặc 'như', dễ nhận diện intent. Ví dụ medium_quality thiếu từ rõ ràng hơn (ví dụ: 'Bộ phim giống' có thể gây nhầm lẫn), nhưng vẫn chứa tham số cần thiết."
+        },
+        "matching_criteria": "Điểm mạnh: Intent khớp tốt khi câu hỏi chứa từ khóa so sánh (giống/như) và tên phim. Điểm yếu: Có thể nhầm lẫn nếu người dùng dùng từ ngữ khác (ví dụ: 'phim tương tự') mà không được huấn luyện, hoặc nếu thiếu tên phim."
+      }
+    },
+    "information_request": {
+      "display_name": "information_request",
+      "action": "",
+      "parameters": [
+        {
+          "name": "parameter",
+          "entity_type": "@parameter",
+          "required": false
+        },
+        {
+          "name": "person",
+          "entity_type": "@sys.person",
+          "required": false
+        },
+        {
+          "name": "movie_name",
+          "entity_type": "@movie_name",
+          "required": false
+        }
+      ],
+      "required_parameters": [],
+      "total_training_phrases": 40,
+      "sampled_training_phrases": [
+        {
+          "text": "Những thành tựu của The Rock",
+          "entities": [
+            "sys.person"
+          ],
+          "entity_count": 1
+        },
+        {
+          "text": "Phim Dust 2 được đánh giá bao nhiêu?",
+          "entities": [
+            "movie_name",
+            "parameter"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Tôi muốn xem danh sách diễn viên chính của phim The Batman",
+          "entities": [
+            "parameter",
+            "movie_name"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Rating của phim Tenet là bao nhiêu?",
+          "entities": [
+            "parameter",
+            "movie_name"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Tôi muốn biết thông tin về phim Top Gun: Maverick",
+          "entities": [
+            "parameter",
+            "sys.ignore"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Phim The Dark Knight có diễn viên nào?",
+          "entities": [
+            "sys.ignore",
+            "parameter"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Phim Ký Sinh Trùng được công chiếu năm nào?",
+          "entities": [
+            "sys.ignore",
+            "parameter"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "Phim Ironman được đánh giá bao nhiêu?",
+          "entities": [
+            "movie_name",
+            "parameter"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "đạo diễn của la la land",
+          "entities": [
+            "parameter",
+            "movie_name"
+          ],
+          "entity_count": 2
+        },
+        {
+          "text": "thông tin về christian bale",
+          "entities": [
+            "parameter",
+            "sys.person"
+          ],
+          "entity_count": 2
+        }
+      ],
+      "sampling_strategy": "smart",
+      "llm_analysis": {
+        "goal": "Intent này xử lý các yêu cầu thông tin về phim và nhân vật trong ngành điện ảnh, bao gồm thông tin về diễn viên, đạo diễn, rating, năm công chiếu và các chi tiết khác của phim.",
+        "characteristics": [
+          "Đặc điểm 1: User thường hỏi bằng các câu hỏi trực tiếp về thông tin cụ thể của phim hoặc nhân vật, sử dụng từ khóa như 'thông tin', 'đánh giá', 'rating', 'diễn viên', 'đạo diễn', 'năm công chiếu'",
+          "Đặc điểm 2: Thông tin bắt buộc là parameter (loại thông tin cần), movie_name hoặc person là tùy chọn nhưng thường có ít nhất một trong hai để xác định đối tượng",
+          "Đặc điểm 3: Context/tình huống sử dụng khi user đang tìm kiếm thông tin chi tiết về một bộ phim cụ thể hoặc nhân vật trong phim, thường trong giai đoạn nghiên cứu hoặc quyết định xem phim"
+        ],
+        "key_patterns": [
+          "Pattern 1: [Thông tin cần] + của + [tên phim/nhân vật]",
+          "Pattern 2: [Tên phim/nhân vật] + [động từ yêu cầu] + [thông tin cụ thể]"
+        ],
+        "entity_usage": "Parameter xác định loại thông tin user muốn (ví dụ: rating, diễn viên, năm công chiếu). Movie_name xác định phim cụ thể. Person xác định nhân vật (diễn viên, đạo diễn). Sys.ignore được dùng khi entity không rõ ràng nhưng vẫn khớp intent.",
+        "examples_fit_score": {
+          "high_quality": [
+            "Phim Dust 2 được đánh giá bao nhiêu?",
+            "Tôi muốn xem danh sách diễn viên chính của phim The Batman",
+            "Rating của phim Tenet là bao nhiêu?"
+          ],
+          "medium_quality": [
+            "Tôi muốn biết thông tin về phim Top Gun: Maverick",
+            "Phim The Dark Knight có diễn viên nào?",
+            "thông tin về christian bale"
+          ],
+          "reasoning": "Các examples high quality có đầy đủ parameter và movie_name/person rõ ràng, giúp xác định chính xác yêu cầu. Các examples medium quality thiếu một số entity cụ thể hoặc sử dụng sys.ignore, làm giảm độ chính xác trong việc trích xuất thông tin."
+        },
+        "matching_criteria": "Điểm mạnh: Intent khớp tốt với các câu hỏi có từ khóa về thông tin phim (rating, diễn viên, đạo diễn) và tên phim/nhân vật cụ thể. Điểm yếu: Có thể nhầm lẫn với các intent khác nếu thiếu entity rõ ràng, và cần xử lý các biến thể ngôn ngữ không có trong training phrases."
+      }
+    },
+    "recommend_personalization": {
+      "display_name": "recommend_personalization",
+      "action": "",
+      "parameters": [],
+      "required_parameters": [],
+      "total_training_phrases": 9,
+      "sampled_training_phrases": [
+        {
+          "text": "Tôi muốn nhận đề xuất cá nhân",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Cho tôi những bộ phim tôi thích",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Phim gì hợp với tôi vậy",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Phim các người dùng khác cũng xem là gì",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Đưa tôi đề xuất cá nhân hoá",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Phim nào hợp với tôi không",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Dựa trên thư viện của tôi, phim nào tôi đang thích vậy",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Tôi thich xem những bộ phim gì vậy",
+          "entities": [],
+          "entity_count": 0
+        },
+        {
+          "text": "Đề xuất cho tôi phim dựa trên những bộ phim tôi thích",
+          "entities": [],
+          "entity_count": 0
+        }
+      ],
+      "sampling_strategy": "smart",
+      "llm_analysis": {
+        "goal": "Người dùng muốn nhận đề xuất phim được cá nhân hóa dựa trên sở thích, lịch sử xem hoặc hành vi của họ, thay vì các tiêu chí chung như thể loại hay năm phát hành.",
+        "characteristics": [
+          "Đặc điểm 1: User thường hỏi bằng cách yêu cầu đề xuất phù hợp với sở thích cá nhân, sử dụng từ ngữ như 'cá nhân', 'hợp với tôi', 'tôi thích', 'dựa trên thư viện của tôi'.",
+          "Đặc điểm 2: Không có thông tin bắt buộc từ parameters; thông tin tùy chọn có thể bao gồm lịch sử xem hoặc sở thích ngầm định từ hệ thống.",
+          "Đặc điểm 3: Context thường là khi user đã có lịch sử tương tác với chatbot hoặc hệ thống, và muốn khai thác dữ liệu cá nhân để nhận gợi ý phù hợp hơn."
+        ],
+        "key_patterns": [
+          "Pattern 1: [Yêu cầu] + [từ khóa cá nhân hóa] + [phim] (ví dụ: 'Đưa tôi đề xuất cá nhân hóa')",
+          "Pattern 2: Từ khóa quan trọng: 'cá nhân', 'hợp với tôi', 'tôi thích', 'đề xuất', 'thư viện của tôi', 'người dùng khác'."
+        ],
+        "entity_usage": "Không có entities được chỉ định trong training phrases; intent dựa vào ngữ cảnh và dữ liệu người dùng (như lịch sử xem) thay vì tham số rõ ràng.",
+        "examples_fit_score": {
+          "high_quality": [
+            "Tôi muốn nhận đề xuất cá nhân",
+            "Đưa tôi đề xuất cá nhân hoá",
+            "Dựa trên thư viện của tôi, phim nào tôi đang thích vậy"
+          ],
+          "medium_quality": [
+            "Phim gì hợp với tôi vậy",
+            "Phim nào hợp với tôi không"
+          ],
+          "reasoning": "Các examples high quality trực tiếp yêu cầu đề xuất cá nhân hóa với từ khóa rõ ràng; medium quality có thể bị nhầm lẫn với intent chung (ví dụ: recommend_movie) nếu thiếu ngữ cảnh, nhưng vẫn phù hợp do nhấn mạnh 'hợp với tôi'."
+        },
+        "matching_criteria": "Điểm mạnh: Câu hỏi khớp nếu chứa từ khóa liên quan đến cá nhân hóa (ví dụ: 'cá nhân', 'tôi thích', 'thư viện của tôi') và yêu cầu đề xuất phim. Điểm yếu: Có thể chồng lấn với intent recommend_movie nếu câu hỏi chỉ nói chung chung về đề xuất mà không nhấn mạnh yếu tố cá nhân."
+      }
+    }
+  },
+  "entity_types": {
+    "rating_comparator": {
+      "display_name": "rating_comparator",
+      "kind": "KIND_MAP",
+      "total_entities": 4,
+      "sampled_entities": [
+        {
+          "value": ">",
+          "synonyms": [
+            ">",
+            "cao hơn",
+            "trên",
+            "hơn",
+            "lớn hơn",
+            "tối thiểu",
+            "ít nhất"
+          ]
+        },
+        {
+          "value": "<",
+          "synonyms": [
+            "<",
+            "dưới",
+            "nhỏ hơn",
+            "tối đa",
+            "nhiều nhất",
+            "bé hơn"
+          ]
+        },
+        {
+          "value": "khoảng",
+          "synonyms": [
+            "khoảng",
+            "cỡ",
+            "khoảng ~",
+            "~"
+          ]
+        },
+        {
+          "value": "trong khoảng",
+          "synonyms": [
+            "trong khoảng ... đến ...",
+            "từ ... đến ...",
+            "giữa ... đến ..."
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Entity này giúp chatbot hiểu và xử lý các điều kiện so sánh về rating/đánh giá phim từ người dùng, cho phép lọc và gợi ý phim dựa trên các tiêu chí rating cụ thể.",
+        "characteristics": [
+          "Đặc điểm 1: Kiểu dữ liệu comparator (so sánh), cụ thể là rating comparator",
+          "Đặc điểm 2: Độ đa dạng cao với nhiều synonyms cho mỗi giá trị, giúp chatbot nhận diện được nhiều cách diễn đạt khác nhau của người dùng",
+          "Đặc điểm 3: Use cases: Lọc phim theo rating (ví dụ: 'phim có rating cao hơn 8', 'phim rating khoảng 7-9')"
+        ],
+        "value_patterns": [
+          "Pattern 1: Định dạng giá trị chính là các toán tử so sánh (>, <) và từ khóa khoảng (khoảng, trong khoảng)",
+          "Pattern 2: Synonyms strategy: Mỗi giá trị có synonyms là các cách diễn đạt tự nhiên bằng tiếng Việt, giúp chatbot hiểu ngôn ngữ tự nhiên của người dùng"
+        ],
+        "usage_context": "Entity này thường xuất hiện trong các câu hỏi/ yêu cầu của người dùng về việc lọc phim theo rating, ví dụ: 'cho tôi xem phim có rating trên 8', 'gợi ý phim rating từ 7 đến 9'.",
+        "matching_strategy": "Cách match: Sử dụng synonyms matching - chatbot sẽ so khớp user input với các giá trị và synonyms đã định nghĩa, cho phép nhận diện chính xác các cách diễn đạt khác nhau của cùng một ý so sánh."
+      }
+    },
+    "movie_name": {
+      "display_name": "movie_name",
+      "kind": "KIND_MAP",
+      "total_entities": 9712,
+      "sampled_entities": [
+        {
+          "value": "Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum)",
+          "synonyms": [
+            "Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum)"
+          ]
+        },
+        {
+          "value": "Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)",
+          "synonyms": [
+            "Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)"
+          ]
+        },
+        {
+          "value": "Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival",
+          "synonyms": [
+            "Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival"
+          ]
+        },
+        {
+          "value": "A Champion and a Gentleman: The Official Review Of The 1996 FIA Formula One World Championship",
+          "synonyms": [
+            "A Champion and a Gentleman: The Official Review Of The 1996 FIA Formula One World Championship"
+          ]
+        },
+        {
+          "value": "National Parks Exploration Series: Acadia - The First National Park East of the Mississippi",
+          "synonyms": [
+            "National Parks Exploration Series: Acadia - The First National Park East of the Mississippi"
+          ]
+        },
+        {
+          "value": "Death on High Mountain",
+          "synonyms": [
+            "Death on High Mountain"
+          ]
+        },
+        {
+          "value": "Sex Drive",
+          "synonyms": [
+            "Sex Drive"
+          ]
+        },
+        {
+          "value": "Doc of Chucky",
+          "synonyms": [
+            "Doc of Chucky"
+          ]
+        },
+        {
+          "value": "The Misadventures of Dracula Von Barreto in the Lands of the Agrarian Reform",
+          "synonyms": [
+            "The Misadventures of Dracula Von Barreto in the Lands of the Agrarian Reform"
+          ]
+        },
+        {
+          "value": "Las de Caín",
+          "synonyms": [
+            "Las de Caín"
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Entity type này được thiết kế để nhận diện và trích xuất tên phim từ đầu vào của người dùng, giúp chatbot hiểu được bộ phim cụ thể mà người dùng đang đề cập hoặc quan tâm.",
+        "characteristics": [
+          "Đặc điểm 1: Kiểu dữ liệu - Tên phim (movie title), bao gồm cả phim điện ảnh, phim tài liệu, và các tác phẩm ngắn.",
+          "Đặc điểm 2: Độ đa dạng - Có tổng cộng 9712 giá trị, phản ánh sự đa dạng lớn về tên phim; synonyms thường trùng với giá trị gốc, cho thấy ít biến thể từ đồng nghĩa.",
+          "Đặc điểm 3: Use cases - Sử dụng trong các tình huống như gợi ý phim dựa trên tên, tìm kiếm thông tin phim, hoặc xử lý yêu cầu liên quan đến phim cụ thể."
+        ],
+        "value_patterns": [
+          "Pattern 1: Định dạng giá trị - Tên phim có thể dài, chứa ký tự đặc biệt, dấu câu, và thường bao gồm tiêu đề chính cùng phần mở rộng (ví dụ: phụ đề hoặc thông tin bổ sung).",
+          "Pattern 2: Synonyms strategy - Hầu hết synonyms giống hệt giá trị gốc, điều này cho thấy chiến lược tập trung vào khớp chính xác thay vì cung cấp nhiều biến thể từ đồng nghĩa."
+        ],
+        "usage_context": "Entity này thường xuất hiện trong ngữ cảnh người dùng hỏi về phim cụ thể, ví dụ: 'Gợi ý phim Sex Drive' hoặc 'Thông tin về The Misadventures of Dracula Von Barreto'.",
+        "matching_strategy": "Cách match chủ yếu dựa trên khớp chính xác (exact matching) do synonyms trùng với giá trị gốc, có thể kết hợp với kỹ thuật fuzzy matching để xử lý lỗi chính tả nhỏ trong đầu vào người dùng."
+      }
+    },
+    "genre": {
+      "display_name": "genre",
+      "kind": "KIND_MAP",
+      "total_entities": 19,
+      "sampled_entities": [
+        {
+          "value": "khoa học viễn tưởng",
+          "synonyms": [
+            "khoa học viễn tưởng",
+            "science fiction",
+            "sci-fi",
+            "phim viễn tưởng",
+            "phim khoa học"
+          ]
+        },
+        {
+          "value": "phim truyền hình",
+          "synonyms": [
+            "phim truyền hình",
+            "tv movie",
+            "truyền hình",
+            "series",
+            "tv"
+          ]
+        },
+        {
+          "value": "chiến tranh",
+          "synonyms": [
+            "chiến tranh",
+            "war",
+            "phim chiến tranh",
+            "phim lính",
+            "phim quân đội"
+          ]
+        },
+        {
+          "value": "chính kịch",
+          "synonyms": [
+            "chính kịch",
+            "drama",
+            "phim chính kịch",
+            "tâm lý",
+            "phim tâm lý"
+          ]
+        },
+        {
+          "value": "hành động",
+          "synonyms": [
+            "hành động",
+            "action",
+            "phim hành động",
+            "phim đánh nhau",
+            "phim võ thuật"
+          ]
+        },
+        {
+          "value": "tài liệu",
+          "synonyms": [
+            "tài liệu",
+            "documentary",
+            "phim tài liệu",
+            "phóng sự",
+            "document"
+          ]
+        },
+        {
+          "value": "hoạt hình",
+          "synonyms": [
+            "hoạt hình",
+            "animation",
+            "phim hoạt hình",
+            "cartoon",
+            "anime"
+          ]
+        },
+        {
+          "value": "viễn tây",
+          "synonyms": [
+            "viễn tây",
+            "western",
+            "cao bồi",
+            "miền tây",
+            "phim cao bồi"
+          ]
+        },
+        {
+          "value": "lịch sử",
+          "synonyms": [
+            "lịch sử",
+            "history",
+            "phim lịch sử",
+            "cổ trang",
+            "historical"
+          ]
+        },
+        {
+          "value": "gia đình",
+          "synonyms": [
+            "gia đình",
+            "family",
+            "phim gia đình",
+            "tình cảm gia đình",
+            "family movie"
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Entity type này giúp chatbot xác định thể loại phim mà người dùng muốn tìm kiếm hoặc nhận gợi ý, từ đó cung cấp kết quả phim phù hợp với sở thích của họ.",
+        "characteristics": [
+          "Đặc điểm 1: Kiểu dữ liệu genre (thể loại phim)",
+          "Đặc điểm 2: Độ đa dạng cao với nhiều synonyms cho mỗi giá trị, giúp chatbot hiểu các cách diễn đạt khác nhau của người dùng về cùng một thể loại",
+          "Đặc điểm 3: Use cases: Gợi ý phim theo thể loại, lọc kết quả tìm kiếm, phân loại phim trong cơ sở dữ liệu"
+        ],
+        "value_patterns": [
+          "Pattern 1: Định dạng giá trị chính là tên thể loại bằng tiếng Việt (ví dụ: 'khoa học viễn tưởng'), với các synonyms bao gồm cả tiếng Việt và tiếng Anh",
+          "Pattern 2: Synonyms strategy: Mỗi giá trị có 2-3 synonyms, kết hợp từ ngữ phổ biến trong cả tiếng Việt và tiếng Anh để tăng khả năng nhận diện"
+        ],
+        "usage_context": "Entity này thường xuất hiện trong các cuộc hội thoại khi người dùng yêu cầu gợi ý phim theo thể loại cụ thể (ví dụ: 'Gợi ý phim hành động cho tôi' hoặc 'Tôi thích phim khoa học viễn tưởng')",
+        "matching_strategy": "Cách match: Sử dụng kết hợp exact matching cho giá trị chính xác và synonyms matching để nhận diện các từ đồng nghĩa, với hỗ trợ đa ngôn ngữ (tiếng Việt và tiếng Anh)"
+      }
+    },
+    "publish_date": {
+      "display_name": "publish_date",
+      "kind": "KIND_MAP",
+      "total_entities": 376,
+      "sampled_entities": [
+        {
+          "value": "tháng 12 năm 2025",
+          "synonyms": [
+            "tháng 12 năm 2025"
+          ]
+        },
+        {
+          "value": "thập niên 2000",
+          "synonyms": [
+            "thập niên 2000"
+          ]
+        },
+        {
+          "value": "tháng 3/2000",
+          "synonyms": [
+            "tháng 3/2000",
+            "tháng 12 năm 2025"
+          ]
+        },
+        {
+          "value": "100 năm trước",
+          "synonyms": [
+            "100 năm trước"
+          ]
+        },
+        {
+          "value": "101 năm trước",
+          "synonyms": [
+            "101 năm trước"
+          ]
+        },
+        {
+          "value": "28 năm trước",
+          "synonyms": [
+            "28 năm trước"
+          ]
+        },
+        {
+          "value": "1916",
+          "synonyms": [
+            "1916"
+          ]
+        },
+        {
+          "value": "2074",
+          "synonyms": [
+            "2074"
+          ]
+        },
+        {
+          "value": "6 năm trước",
+          "synonyms": [
+            "6 năm trước"
+          ]
+        },
+        {
+          "value": "2063",
+          "synonyms": [
+            "2063"
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Error",
+        "characteristics": []
+      }
+    },
+    "date_comparator": {
+      "display_name": "date_comparator",
+      "kind": "KIND_MAP",
+      "total_entities": 5,
+      "sampled_entities": [
+        {
+          "value": "mới",
+          "synonyms": [
+            "mới",
+            "gần đây",
+            "vừa ra mắt",
+            "mới phát hành",
+            "vừa công chiếu",
+            "mới chiếu",
+            "ra mắt gần đây",
+            "mới đây",
+            "mới toanh",
+            "vừa mới"
+          ]
+        },
+        {
+          "value": "cũ",
+          "synonyms": [
+            "cũ",
+            "lâu đời",
+            "cổ điển",
+            "xưa",
+            "hoài niệm",
+            "phim cũ",
+            "ngày xưa",
+            "ra lâu rồi",
+            "đã lâu",
+            "ra mắt từ lâu",
+            "cổ"
+          ]
+        },
+        {
+          "value": "trước",
+          "synonyms": [
+            "trước",
+            "trước năm",
+            "sớm hơn",
+            "ra trước",
+            "phát hành trước",
+            "đời trước",
+            "thời trước",
+            "trước đó",
+            "trở về trước",
+            "các năm trước"
+          ]
+        },
+        {
+          "value": "sau",
+          "synonyms": [
+            "sau",
+            "sau năm",
+            "muộn hơn",
+            "ra sau",
+            "phát hành sau",
+            "trở đi",
+            "các năm sau",
+            "về sau",
+            "sau này"
+          ]
+        },
+        {
+          "value": "hiện đại",
+          "synonyms": [
+            "hiện đại",
+            "bây giờ",
+            "ngày nay",
+            "hiện nay",
+            "mới nhất",
+            "đương đại",
+            "thời nay"
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Entity này giúp chatbot hiểu và xác định các tiêu chí so sánh thời gian liên quan đến phim, từ đó gợi ý phim dựa trên thời điểm phát hành hoặc thời đại.",
+        "characteristics": [
+          "Đặc điểm 1: Kiểu dữ liệu date comparator (so sánh thời gian)",
+          "Đặc điểm 2: Độ đa dạng cao với nhiều synonyms cho mỗi giá trị, giúp hiểu nhiều cách diễn đạt của người dùng",
+          "Đặc điểm 3: Use cases: Lọc phim theo năm phát hành (mới/cũ), tìm phim theo thời đại (hiện đại/cổ điển), so sánh phim trước/sau một mốc thời gian"
+        ],
+        "value_patterns": [
+          "Pattern 1: Định dạng giá trị dạng từ khóa ngắn, mô tả quan hệ thời gian (ví dụ: 'mới', 'cũ', 'trước')",
+          "Pattern 2: Synonyms strategy: Mỗi giá trị có nhiều từ đồng nghĩa phổ biến trong tiếng Việt, bao phủ các cách nói thông thường"
+        ],
+        "usage_context": "Context: Khi người dùng yêu cầu gợi ý phim dựa trên thời gian (ví dụ: 'phim mới', 'phim cũ hay', 'phim trước năm 2000', 'phim hiện đại')",
+        "matching_strategy": "Cách match: Sử dụng kết hợp exact match và synonyms matching, cho phép nhận diện các từ đồng nghĩa trong input của người dùng để ánh xạ về giá trị chuẩn"
+      }
+    },
+    "parameter": {
+      "display_name": "parameter",
+      "kind": "KIND_MAP",
+      "total_entities": 10,
+      "sampled_entities": [
+        {
+          "value": "bối cảnh",
+          "synonyms": [
+            "bối cảnh"
+          ]
+        },
+        {
+          "value": "diễn viên",
+          "synonyms": [
+            "diễn viên",
+            "đóng chính",
+            "góp mặt"
+          ]
+        },
+        {
+          "value": "đạo diễn",
+          "synonyms": [
+            "đạo diễn",
+            "chỉ đạo",
+            "sản xuất"
+          ]
+        },
+        {
+          "value": "nội dung",
+          "synonyms": [
+            "nội dung",
+            "tóm tắt",
+            "chi tiết",
+            "tình tiết"
+          ]
+        },
+        {
+          "value": "năm",
+          "synonyms": [
+            "năm",
+            "phát hành",
+            "ra mắt"
+          ]
+        },
+        {
+          "value": "tiểu sử",
+          "synonyms": [
+            "tiểu sử",
+            "thông tin"
+          ]
+        },
+        {
+          "value": "ngày sinh",
+          "synonyms": [
+            "ngày sinh"
+          ]
+        },
+        {
+          "value": "ngày phát hành",
+          "synonyms": [
+            "ngày phát hành"
+          ]
+        },
+        {
+          "value": "phim đã đóng",
+          "synonyms": [
+            "phim đã đóng"
+          ]
+        },
+        {
+          "value": "giới tính",
+          "synonyms": [
+            "giới tính"
+          ]
+        }
+      ],
+      "sampling_strategy": "diverse",
+      "llm_analysis": {
+        "goal": "Entity type này xác định các tham số/thuộc tính mà người dùng có thể hỏi về phim hoặc nhân vật trong hệ thống chatbot gợi ý phim, giúp chatbot hiểu được khía cạnh cụ thể nào của phim/nhân vật mà người dùng quan tâm.",
+        "characteristics": [
+          "Đặc điểm 1: Kiểu dữ liệu (parameter/property - các thuộc tính mô tả phim và nhân vật như thông tin cơ bản, chi tiết kỹ thuật, thông tin cá nhân)",
+          "Đặc điểm 2: Độ đa dạng (có synonyms cho hầu hết các giá trị, giúp chatbot nhận diện nhiều cách diễn đạt khác nhau của cùng một tham số)",
+          "Đặc điểm 3: Use cases (hỗ trợ truy vấn thông tin chi tiết về phim, tìm kiếm phim theo tiêu chí, cung cấp thông tin nhân vật và đội ngũ sản xuất)"
+        ],
+        "value_patterns": [
+          "Pattern 1: Định dạng giá trị (các từ khóa tiếng Việt mô tả thuộc tính, không có định dạng cụ thể như số hay ngày tháng)",
+          "Pattern 2: Synonyms strategy (sử dụng từ đồng nghĩa và cách diễn đạt thông dụng để bao phủ nhiều cách người dùng có thể đề cập đến cùng một tham số)"
+        ],
+        "usage_context": "Entity này xuất hiện trong các câu hỏi tìm kiếm thông tin chi tiết về phim, truy vấn thông tin nhân vật, yêu cầu gợi ý phim dựa trên các tiêu chí cụ thể như diễn viên, đạo diễn, năm phát hành.",
+        "matching_strategy": "Exact match và synonyms matching - chatbot so khớp chính xác các từ trong input với giá trị và synonyms được định nghĩa, có thể kết hợp với fuzzy matching cho các biến thể nhỏ."
+      }
+    }
+  }
+}
