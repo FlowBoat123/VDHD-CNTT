@@ -34,6 +34,7 @@ router.post("/message", authenticateOptional, async (req, res) => {
     const fulfillmentMessages = dfResponse.fulfillmentMessages || [];
     let textParts = [];
     let moviesPayload = [];
+    let cardPayload = null;
     for (const msg of fulfillmentMessages) {
       const textArr = msg?.text?.text;
       if (Array.isArray(textArr) && textArr.length > 0) {
@@ -45,17 +46,21 @@ router.post("/message", authenticateOptional, async (req, res) => {
       ) {
         moviesPayload = msg.movieSuggestions;
       }
+      if (msg?.movieCard || msg?.personCard) {
+        cardPayload = msg.movieCard || msg.personCard;
+      }
     }
 
     const assistantText =
       textParts.length > 0
         ? textParts.join("\n\n")
         : dfResponse.fulfillmentText || "";
-    if (assistantText || moviesPayload.length > 0) {
+    if (assistantText || moviesPayload.length > 0 || cardPayload) {
       await saveChatMessage(uid, chatId, {
         sender: "assistant",
         content: assistantText,
         movies: moviesPayload,
+        card: cardPayload,
       });
     }
 

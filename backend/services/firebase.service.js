@@ -40,7 +40,7 @@ export async function setUserPreferences(uid, preferences) {
 export async function saveChatMessage(
   uid,
   chatId,
-  { sender, content, movies }
+  { sender, content, movies, card, text }
 ) {
   if (!uid) throw new Error("UID is required");
   if (!chatId) throw new Error("chatId is required");
@@ -73,12 +73,16 @@ export async function saveChatMessage(
 
   const payload = {
     sender,
-    content,
+    content: content || text || "",
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
   };
 
   if (Array.isArray(movies) && movies.length > 0) {
     payload.movieSuggestions = movies;
+  }
+
+  if (card) {
+    payload.card = card;
   }
 
   await messageRef.set(payload);

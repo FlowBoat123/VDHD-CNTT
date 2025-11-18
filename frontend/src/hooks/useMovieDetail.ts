@@ -145,6 +145,7 @@ export function usemovieDetail() {
                     title: movieDetail_movie.title,
                     poster: movieDetail_movie.posterUrl,
                     rating: movieDetail_movie.rating,
+                    genre: movieDetail_movie.genres, // Save genres as "genre" field
                 } as unknown as MovieType);
                 movieDetail_setIsSaved(true);
             }

@@ -7,18 +7,61 @@ import {
 import type { Message as MessageType } from "@/types/message.type";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
+import InfoCard from "@/components/InfoCard.component";
+import { useState } from "react";
 import { Loader } from "./ai-elements/loader";
 import { MovieCard } from "@/components/MovieCard.component";
+import { TypingIndicator } from "./TypingIndicator";
+import { Actions, Action } from "@/components/ai-elements/actions";
+import { Suggestions, Suggestion } from "@/components/ai-elements/suggestion";
+import {
+  CopyIcon,
+  RefreshCcwIcon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "lucide-react";
 
 export interface ChatAreaProps {
   messages: MessageType[];
   isLoading?: boolean;
-
+  isTyping?: boolean;
+  onSuggestionClick?: (suggestion: string) => void;
   onClickMovieCard?: (id: number) => void;
 }
 
-export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProps) {
+export function ChatArea({
+  messages,
+  isLoading,
+  isTyping,
+  onClickMovieCard,
+  onSuggestionClick,
+}: ChatAreaProps) {
   const hasMessages = messages.length > 0;
+
+  const sampleSuggestions = [
+    "Gợi ý cho tôi một bộ phim hài",
+    "Phim của Tom Hanks",
+    "Tóm tắt phim Inception",
+    "Tìm phim tương tự The Matrix",
+  ];
+
+  // per-message pagination state
+  const [suggestionPageMap, setSuggestionPageMap] = useState<
+    Record<string, number>
+  >({});
+  const PAGE_SIZE = 8;
+  const MAX_PAGES = 3;
+  const MAX_SUGGESTIONS = 40;
+
+  const getPage = (messageId: string | number) => {
+    const key = String(messageId);
+    return suggestionPageMap[key] ?? 1;
+  };
+
+  const setPage = (messageId: string | number, page: number) => {
+    const key = String(messageId);
+    setSuggestionPageMap((prev) => ({ ...prev, [key]: page }));
+  };
 
   return (
     <Conversation className="flex-1 flex flex-col">
@@ -30,28 +73,172 @@ export function ChatArea({ messages, isLoading, onClickMovieCard }: ChatAreaProp
           </div>
         ) : hasMessages ? (
           messages.map((m) => (
-            <Message key={m.id} from={m.sender}>
-              <MessageContent variant="contained">
-                {m.sender === "user" ? (
-                  m.content
-                ) : (
-                  <div className="space-y-3">
-                    <Response>{m.content}</Response>
-                    {m.movieSuggestions && m.movieSuggestions.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {m.movieSuggestions.map((movie) => (
-                          <MovieCard onClick={onClickMovieCard ? () => onClickMovieCard(movie.id) : undefined} key={movie.id} movie={movie} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </MessageContent>
-            </Message>
+            <div key={m.id}>
+              <Message from={m.sender}>
+                <MessageContent variant="contained">
+                  {m.sender === "user" ? (
+                    m.content
+                  ) : (
+                    <div className="space-y-3">
+                      {m.card ? (
+                        <InfoCard
+                          card={m.card}
+                          onClick={
+                            onClickMovieCard
+                              ? (id?: string | number) => {
+                                  try {
+                                    if (
+                                      m.card?.type === "movie" &&
+                                      id != null
+                                    ) {
+                                      onClickMovieCard(Number(id));
+                                    }
+                                  } catch (e) {
+                                    // ignore
+                                  }
+                                }
+                              : undefined
+                          }
+                        />
+                      ) : (
+                        <Response>{m.content}</Response>
+                      )}
+
+                      {m.movieSuggestions &&
+                        m.movieSuggestions.length > 0 &&
+                        (() => {
+                          const all = m.movieSuggestions || [];
+                          const limited = all.slice(
+                            0,
+                            Math.min(all.length, MAX_SUGGESTIONS)
+                          );
+                          const totalPages = Math.max(
+                            1,
+                            Math.min(
+                              MAX_PAGES,
+                              Math.ceil(limited.length / PAGE_SIZE)
+                            )
+                          );
+                          let currentPage = getPage(m.id);
+                          if (currentPage > totalPages)
+                            currentPage = totalPages;
+                          const start = (currentPage - 1) * PAGE_SIZE;
+                          const pageItems = limited.slice(
+                            start,
+                            start + PAGE_SIZE
+                          );
+
+                          return (
+                            <div>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {pageItems.map((movie) => (
+                                  <MovieCard
+                                    onClick={
+                                      onClickMovieCard
+                                        ? () => onClickMovieCard(movie.id)
+                                        : undefined
+                                    }
+                                    key={movie.id}
+                                    movie={movie}
+                                  />
+                                ))}
+                              </div>
+
+                              {totalPages > 1 && (
+                                <div className="flex justify-end mt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="text-sm text-slate-500">{`${currentPage}/${totalPages}`}</div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPage(
+                                          m.id,
+                                          Math.max(1, currentPage - 1)
+                                        )
+                                      }
+                                      disabled={currentPage <= 1}
+                                      className={`w-8 h-8 flex items-center justify-center rounded-md ${
+                                        currentPage <= 1
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : "hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      &lt;
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPage(
+                                          m.id,
+                                          Math.min(totalPages, currentPage + 1)
+                                        )
+                                      }
+                                      disabled={currentPage >= totalPages}
+                                      className={`w-8 h-8 flex items-center justify-center rounded-md ${
+                                        currentPage >= totalPages
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : "hover:bg-slate-100"
+                                      }`}
+                                    >
+                                      &gt;
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                    </div>
+                  )}
+                </MessageContent>
+              </Message>
+
+              {/* Actions for assistant/system messages */}
+              {m.sender === "user" ? null : (
+                <Actions>
+                  <Action label="Like">
+                    <ThumbsUpIcon className="size-3" />
+                  </Action>
+                  <Action label="Dislike">
+                    <ThumbsDownIcon className="size-3" />
+                  </Action>
+                  <Action label="Retry">
+                    <RefreshCcwIcon className="size-3" />
+                  </Action>
+                  <Action label="Copy">
+                    <CopyIcon className="size-3" />
+                  </Action>
+                </Actions>
+              )}
+            </div>
           ))
         ) : (
-          <ConversationEmptyState className="pb-24" />
+          <ConversationEmptyState className="pb-24">
+            {/* Thay thế nội dung mặc định bằng các gợi ý */}
+            <div className="flex flex-col items-center gap-4">
+              <span className="text-lg font-medium">
+                Bắt đầu cuộc trò chuyện
+              </span>
+              <div className="max-w-full">
+                <Suggestions>
+                  {sampleSuggestions.map((s) => (
+                    <Suggestion
+                      key={s}
+                      suggestion={s}
+                      onClick={
+                        onSuggestionClick
+                          ? () => onSuggestionClick(s)
+                          : undefined
+                      }
+                    />
+                  ))}
+                </Suggestions>
+              </div>
+            </div>
+          </ConversationEmptyState>
         )}
+
+        {isTyping && <TypingIndicator />}
       </ConversationContent>
 
       {/* stick-to-bottom button */}

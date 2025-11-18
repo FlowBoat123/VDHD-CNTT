@@ -7,7 +7,9 @@ type ResponseProps = ComponentProps<typeof Streamdown>;
 export const Response = memo(
   ({ className, ...props }: ResponseProps) => (
     <Streamdown
-      className={`size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0${className ? ` ${className}` : ""}`}
+      className={
+        `block whitespace-pre-wrap break-words overflow-visible [&>*:first-child]:mt-0 [&>*:last-child]:mb-0${className ? ` ${className}` : ""}`
+      }
       {...props}
     />
   ),
