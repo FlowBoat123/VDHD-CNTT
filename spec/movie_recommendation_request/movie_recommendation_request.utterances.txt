@@ -1,0 +1,45 @@
+MOVIE_RECOMMENDATION_REQUEST_SENTENCES
+Đề xuất phim chính kịch từ năm 2024
+Cho tôi phim chính kịch
+Gợi ý phim anime mới
+Tôi muốn xem phim hành động
+Phim hành động có Tom Cruise có rating từ 8 trở lên từ năm 2015 trở về
+Tôi muốn xem phim có rating cao hơn 8
+Tôi muốn xem phim được đạo diễn bởi Christopher Nolan
+Tôi muốn xem phim có sự góp mặt của Leonardo DiCaprio
+Gợi ý phim hành động
+Cho tôi phim hài lãng mạn
+Gợi ý phim kinh dị Việt Nam
+Tôi muốn xem phim hoạt hình cho trẻ em
+Phim viễn tưởng hay nhất năm 2023
+Cho tôi phim tài liệu về thiên nhiên
+Gợi ý phim cổ trang Hàn Quốc
+Tôi muốn xem phim có diễn viên Johnny Depp
+Phim được đạo diễn bởi Steven Spielberg
+Tôi muốn xem phim có rating cao nhất thập niên 2010
+Đề xuất phim hành động phiêu lưu
+Cho tôi phim Marvel mới
+Gợi ý phim anime dài tập
+Tôi muốn xem phim tâm lý trinh thám
+Phim có Scarlett Johansson
+Tôi muốn xem phim được chiếu năm 2022
+Đề xuất phim tình cảm hài nhẹ nhàng
+Cho tôi phim kinh dị Mỹ
+Tôi muốn xem phim có cảnh quay đẹp
+Gợi ý phim chiến tranh nổi tiếng
+Tôi muốn xem phim có Brad Pitt
+Phim được đạo diễn bởi Quentin Tarantino
+Cho tôi phim hoạt hình Nhật Bản
+Tôi muốn xem phim khoa học viễn tưởng có rating cao
+Đề xuất phim phiêu lưu kỳ ảo
+Phim lãng mạn Hàn Quốc năm 2021
+Cho tôi phim chính kịch Âu Mỹ
+Gợi ý phim hành động có Tom Hardy
+Tôi muốn xem phim có Jennifer Lawrence
+Phim nổi bật trên IMDB
+Đề xuất phim Netflix mới
+Cho tôi phim Marvel có rating cao
+Tôi muốn xem phim có cốt truyện ly kỳ
+Gợi ý phim anime phim ngắn
+Phim có diễn viên Margot Robbie
+Tôi muốn xem phim được chiếu tại Liên hoan phim Cannes

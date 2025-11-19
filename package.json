@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "testbot": "npx botium-cli run --convos spec/"
   },
   "keywords": [],
   "author": "",
@@ -17,5 +18,9 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "botium-cli": "^1.1.0",
+    "botium-connector-dialogflow": "^0.1.3"
   }
 }

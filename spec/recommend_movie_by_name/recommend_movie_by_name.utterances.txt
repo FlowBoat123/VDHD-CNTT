@@ -1,0 +1,50 @@
+RECOMMEND_MOVIE_BY_NAME_SENTENCES
+Cho tôi gợi ý phim giống như Avatar.
+Có phim nào tương tự The Lord of the Rings không?
+Tôi muốn xem phim giống Fight Club.
+Đề xuất cho tôi phim như The Godfather.
+Có phim nào giống Forrest Gump không?
+Tôi muốn xem phim tương tự Pulp Fiction.
+Cho tôi gợi ý phim như The Shawshank Redemption.
+Có phim nào giống Spirited Away không?
+Tôi muốn xem phim giống The Avengers.
+Đề xuất cho tôi phim như Gladiator.
+Có phim nào tương tự Joker không?
+Tôi muốn xem phim giống Black Panther.
+Cho tôi gợi ý phim giống Inception.
+Có phim nào giống La La Land không?
+Tôi muốn xem phim tương tự Parasite.
+Đề xuất cho tôi phim như Interstellar.
+Có phim nào giống Titanic không?
+Tôi muốn xem phim giống The Matrix.
+Cho tôi gợi ý phim như 12 Angry Men.
+Có phim nào tương tự Your Name không?
+Tôi muốn xem phim giống World War Z.
+Đề xuất cho tôi phim như The Dark Knight.
+Có phim nào giống Deadpool không?
+Tôi muốn xem phim giống Avengers: Endgame.
+Cho tôi gợi ý phim như Joker.
+Có phim nào tương tự The Lion King không?
+Tôi muốn xem phim giống Frozen.
+Đề xuất cho tôi phim như Moana.
+Có phim nào giống Coco không?
+Tôi muốn xem phim tương tự Beauty and the Beast.
+Cho tôi gợi ý phim giống Mulan.
+Có phim nào giống Aladdin không?
+Tôi muốn xem phim giống Zootopia.
+Đề xuất cho tôi phim như Toy Story.
+Có phim nào tương tự Finding Nemo không?
+Tôi muốn xem phim giống Up.
+Cho tôi gợi ý phim như Inside Out.
+Có phim nào giống Brave không?
+Tôi muốn xem phim tương tự Tangled.
+Đề xuất cho tôi phim như Ratatouille.
+Có phim nào giống Wall-E không?
+Tôi muốn xem phim giống Big Hero 6.
+Cho tôi gợi ý phim như The Incredibles.
+Có phim nào tương tự Monsters, Inc. không?
+Tôi muốn xem phim giống Cars.
+Đề xuất cho tôi phim như Kung Fu Panda.
+Có phim nào giống How to Train Your Dragon không?
+Tôi muốn xem phim tương tự Shrek.
+Cho tôi gợi ý phim giống Madagascar.

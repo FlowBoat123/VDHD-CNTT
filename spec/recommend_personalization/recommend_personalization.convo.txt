@@ -1,0 +1,6 @@
+recommend personalization
+#me
+RECOMMEND_PERSONALIZATION_SENTENCES
+
+#bot
+INTENT recommend_personalization
