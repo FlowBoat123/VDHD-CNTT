@@ -1,0 +1,51 @@
+RECOMMEND_PERSONALIZATION_SENTENCES
+Tìm phim phù hợp với sở thích của tôi
+Tôi muốn đề xuất phim dựa trên những gì tôi đã xem
+Phim nào người dùng cùng gu thường xem vậy
+Gợi ý cho tôi phim theo gu của riêng tôi
+Dựa trên lịch sử xem phim, tôi nên xem gì
+Phim nào đang thịnh hành dành cho tôi
+Cho tôi xem những bộ phim được cá nhân hoá
+Đề xuất phim dựa trên hồ sơ của tôi
+Tôi muốn nhận gợi ý phim dựa trên danh sách đã lưu
+Phim nào khán giả khác có cùng sở thích đánh giá cao
+Tìm giúp tôi những bộ phim theo đánh giá của tôi
+Gợi ý phim cá nhân hoá
+Phim nào tương tự những bộ tôi đã thích?
+Gợi ý phim dựa theo gu xem của tôi
+Cho tôi đề xuất phim theo sở thích cá nhân
+Tôi nên xem gì dựa trên những phim đã lưu?
+Đề xuất những tác phẩm phù hợp với tôi nhất
+Tôi muốn nhận gợi ý phim dựa trên profile cá nhân
+Gợi ý cho tôi một bộ phim hợp với mình
+Phim nào mà những người xem giống tôi cũng thích?
+Đề xuất cá nhân hoá dựa trên thư viện phim của tôi
+Tôi muốn tìm phim dựa trên đánh giá của tôi
+Cho tôi danh sách phim theo sở thích của tôi
+Gợi ý phim theo phong cách xem của tôi
+Tôi muốn xem những phim mà tôi chưa từng biết đến nhưng hợp gu
+Phim nào phù hợp với tài khoản của tôi?
+Đề xuất những bộ phim giống với những gì tôi thường xem
+Gợi ý cho tôi các bộ phim mà tôi sẽ thích
+Phim nào dành riêng cho tôi
+Dựa trên những gì tôi đã xem, phim nào là tốt nhất?
+Cho tôi những bộ phim mà bạn nghĩ tôi sẽ thích
+Tôi muốn gợi ý cá nhân
+Gợi ý những phim tương tự phim tôi yêu thích
+Tìm phim theo lịch sử tìm kiếm của tôi
+Đề xuất phim theo thị hiếu của tôi
+Cho tôi xem các bộ phim theo đánh giá cá nhân của tôi
+Phim nào có thể làm hài lòng tôi?
+Gợi ý phim dựa trên dữ liệu cá nhân của tôi
+Tôi muốn xem những phim mà người dùng giống tôi xem nhiều
+Đề xuất phim phù hợp với sở thích của mình
+Cho tôi phim dựa trên những bộ phim tôi đã xem
+Phim nào hợp nhất với profile của tôi?
+Gợi ý những bộ phim mà tôi chưa xem nhưng hợp gu
+Tôi cần đề xuất phim dựa trên xếp hạng của tôi
+Đưa tôi danh sách phim dựa theo những gì tôi đã xem
+Phim nào hợp với thị hiếu cá nhân của tôi?
+Gợi ý các tác phẩm điện ảnh dựa trên sở thích của tôi
+Đề xuất phim cho tôi dựa trên dữ liệu xem
+Tôi muốn nhận các gợi ý được lọc riêng cho tôi
+Cho tôi xem phim dựa trên sở thích của mình

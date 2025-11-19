@@ -1,0 +1,6 @@
+infomation request
+#me
+INFO_REQUEST_SENTENCES
+
+#bot
+INTENT information_request

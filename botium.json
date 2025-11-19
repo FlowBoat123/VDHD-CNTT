@@ -1,0 +1,11 @@
+{
+  "botium": {
+    "Capabilities": {
+      "PROJECTNAME": "Dialogflow ES Bot",
+      "CONTAINERMODE": "dialogflow",
+      "DIALOGFLOW_LANGUAGE_CODE": "vi"
+    },
+    "Sources": {},
+    "Envs": {}
+  }
+}
