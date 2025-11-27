@@ -1,0 +1,428 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-18T16:18:47.112154",
+    "total_intents": 4,
+    "total_intent_specific_questions": 48,
+    "total_cross_intent_questions": 0
+  },
+  "intent_specific_questions": {
+    "movie_recommendation_request": {
+      "intent": "movie_recommendation_request",
+      "adversarial_questions": [
+        {
+          "category": "boundary_case",
+          "question": "có gì hay để xem không",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "general_search",
+          "difficulty": "hard",
+          "why_hard": "Không đề cập rõ phim"
+        },
+        {
+          "category": "boundary_case",
+          "question": "tôi muốn xem cái gì đó",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "tv_show_request",
+          "difficulty": "hard",
+          "why_hard": "Mơ hồ giữa phim và TV"
+        },
+        {
+          "category": "missing_entities",
+          "question": "gợi ý phim hay",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "too_general",
+          "difficulty": "medium",
+          "why_hard": "Không có tiêu chí cụ thể"
+        },
+        {
+          "category": "missing_entities",
+          "question": "phim nào đáng xem",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "low_specificity",
+          "difficulty": "medium",
+          "why_hard": "Thiếu thông tin chi tiết"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "có phim nào chất không",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "slang_confusion",
+          "difficulty": "hard",
+          "why_hard": "Dùng tiếng lóng 'chất'"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "kiếm phim xem đê",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "casual_language",
+          "difficulty": "hard",
+          "why_hard": "Ngôn ngữ thân mật khó hiểu"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "bạn có thể đề xuất phim không",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "formal_phrasing",
+          "difficulty": "medium",
+          "why_hard": "Cách diễn đạt trang trọng"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "tìm giúp tôi phim phù hợp",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "search_intent",
+          "difficulty": "medium",
+          "why_hard": "Dùng từ 'tìm' thay 'gợi ý'"
+        },
+        {
+          "category": "edge_cases",
+          "question": "phim hành dộng năm 2020",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "spelling_error",
+          "difficulty": "hard",
+          "why_hard": "Sai chính tả 'hành dộng'"
+        },
+        {
+          "category": "edge_cases",
+          "question": "phim có đạo diễn Nguyễn Văn A",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "unknown_person",
+          "difficulty": "hard",
+          "why_hard": "Tên không có trong hệ thống"
+        },
+        {
+          "category": "multi_intent",
+          "question": "gợi ý phim và đặt vé",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "booking_intent",
+          "difficulty": "hard",
+          "why_hard": "Kết hợp yêu cầu gợi ý và đặt vé"
+        },
+        {
+          "category": "multi_intent",
+          "question": "phim hay và review chi tiết",
+          "expected_intent": "movie_recommendation_request",
+          "confusion_risk": "review_request",
+          "difficulty": "hard",
+          "why_hard": "Vừa gợi ý vừa yêu cầu review"
+        }
+      ]
+    },
+    "recommend_movie_by_name": {
+      "intent": "recommend_movie_by_name",
+      "adversarial_questions": [
+        {
+          "category": "boundary_case",
+          "question": "phim nào hay như avatar",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "search_movie",
+          "difficulty": "medium",
+          "why_hard": "thiếu từ khóa đề xuất rõ ràng"
+        },
+        {
+          "category": "boundary_case",
+          "question": "tìm phim tương tự titanic",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "search_movie",
+          "difficulty": "medium",
+          "why_hard": "dùng từ tương tự thay vì giống"
+        },
+        {
+          "category": "missing_entities",
+          "question": "đề xuất phim giống như",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "incomplete",
+          "difficulty": "easy",
+          "why_hard": "thiếu tên phim bắt buộc"
+        },
+        {
+          "category": "missing_entities",
+          "question": "cho tôi phim như",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "incomplete",
+          "difficulty": "easy",
+          "why_hard": "không có tên phim tham chiếu"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "có phim nào kiểu như matrix không",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "vague",
+          "difficulty": "hard",
+          "why_hard": "dùng từ kiểu như không chuẩn"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "phim na ná frozen",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "vague",
+          "difficulty": "hard",
+          "why_hard": "tiếng lóng na ná thay giống"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "gợi ý vài phim có vibe tương đồng với la la land",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "low",
+          "difficulty": "medium",
+          "why_hard": "cách diễn đạt khác lạ với vibe"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "tôi cần phim cảm giác gần giống pulp fiction",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "low",
+          "difficulty": "medium",
+          "why_hard": "dùng cảm giác gần giống thay giống"
+        },
+        {
+          "category": "edge_cases",
+          "question": "đề xuất phim giống như avata",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "spelling",
+          "difficulty": "hard",
+          "why_hard": "sai chính tả tên phim avatar"
+        },
+        {
+          "category": "edge_cases",
+          "question": "phim nào như người nhện",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "vague",
+          "difficulty": "hard",
+          "why_hard": "tên phim không rõ ràng người nhện"
+        },
+        {
+          "category": "multi_intent",
+          "question": "đề xuất phim giống như godzilla và xem ở đâu",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "multi",
+          "difficulty": "hard",
+          "why_hard": "kết hợp intent đề xuất và tìm rạp"
+        },
+        {
+          "category": "multi_intent",
+          "question": "phim như star wars và diễn viên chính",
+          "expected_intent": "recommend_movie_by_name",
+          "confusion_risk": "multi",
+          "difficulty": "hard",
+          "why_hard": "vừa đề xuất vừa hỏi thông tin phim"
+        }
+      ]
+    },
+    "information_request": {
+      "intent": "information_request",
+      "adversarial_questions": [
+        {
+          "category": "boundary_case",
+          "question": "Tôi muốn xem phim này",
+          "expected_intent": "information_request",
+          "confusion_risk": "watch_request",
+          "difficulty": "hard",
+          "why_hard": "Thiếu thông tin cụ thể về phim"
+        },
+        {
+          "category": "boundary_case",
+          "question": "Phim này hay không?",
+          "expected_intent": "information_request",
+          "confusion_risk": "review_request",
+          "difficulty": "hard",
+          "why_hard": "Hỏi ý kiến thay vì thông tin"
+        },
+        {
+          "category": "missing_entities",
+          "question": "Đánh giá bao nhiêu?",
+          "expected_intent": "information_request",
+          "confusion_risk": "vague_query",
+          "difficulty": "medium",
+          "why_hard": "Không có tên phim cụ thể"
+        },
+        {
+          "category": "missing_entities",
+          "question": "Diễn viên chính là ai?",
+          "expected_intent": "information_request",
+          "confusion_risk": "missing_movie",
+          "difficulty": "medium",
+          "why_hard": "Thiếu tên phim để xác định"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "Phim đó có chất không?",
+          "expected_intent": "information_request",
+          "confusion_risk": "slang_usage",
+          "difficulty": "hard",
+          "why_hard": "Dùng tiếng lóng không rõ nghĩa"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "Cái phim kia rating mấy?",
+          "expected_intent": "information_request",
+          "confusion_risk": "vague_reference",
+          "difficulty": "hard",
+          "why_hard": "Tham chiếu không rõ ràng"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "Cho tôi biết về dàn cast của The Batman",
+          "expected_intent": "information_request",
+          "confusion_risk": "different_phrasing",
+          "difficulty": "medium",
+          "why_hard": "Dùng từ 'cast' thay vì 'diễn viên'"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "Năm nào phim Tenet ra rạp?",
+          "expected_intent": "information_request",
+          "confusion_risk": "alternative_terms",
+          "difficulty": "medium",
+          "why_hard": "Dùng 'ra rạp' thay 'công chiếu'"
+        },
+        {
+          "category": "edge_cases",
+          "question": "Đạo diễn phim Tenet là ai?",
+          "expected_intent": "information_request",
+          "confusion_risk": "typo_in_name",
+          "difficulty": "hard",
+          "why_hard": "Sai chính tả tên phim"
+        },
+        {
+          "category": "edge_cases",
+          "question": "Rating của phim XyzAbc123?",
+          "expected_intent": "information_request",
+          "confusion_risk": "unknown_movie",
+          "difficulty": "hard",
+          "why_hard": "Tên phim không tồn tại"
+        },
+        {
+          "category": "multi_intent",
+          "question": "Tôi muốn xem rating và mua vé phim Tenet",
+          "expected_intent": "information_request",
+          "confusion_risk": "purchase_intent",
+          "difficulty": "hard",
+          "why_hard": "Kết hợp yêu cầu thông tin và mua vé"
+        },
+        {
+          "category": "multi_intent",
+          "question": "Ai đạo diễn phim này và nó có hay không?",
+          "expected_intent": "information_request",
+          "confusion_risk": "review_intent",
+          "difficulty": "hard",
+          "why_hard": "Hỏi thông tin và đánh giá chất lượng"
+        }
+      ]
+    },
+    "recommend_personalization": {
+      "intent": "recommend_personalization",
+      "adversarial_questions": [
+        {
+          "category": "boundary_case",
+          "question": "Gợi ý phim cho tôi",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "recommend_movie",
+          "difficulty": "medium",
+          "why_hard": "Thiếu từ khóa cá nhân hóa"
+        },
+        {
+          "category": "boundary_case",
+          "question": "Phim nào hay nhất?",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "recommend_movie",
+          "difficulty": "hard",
+          "why_hard": "Không có yếu tố cá nhân"
+        },
+        {
+          "category": "missing_entities",
+          "question": "Đề xuất cá nhân hóa",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "easy",
+          "why_hard": "Thiếu đối tượng phim"
+        },
+        {
+          "category": "missing_entities",
+          "question": "Hợp với tôi",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "medium",
+          "why_hard": "Thiếu yêu cầu rõ ràng"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "Chiếu cái gì hợp gu tôi?",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "search_movie",
+          "difficulty": "hard",
+          "why_hard": "Dùng tiếng lóng 'gu'"
+        },
+        {
+          "category": "ambiguous_phrasing",
+          "question": "Phim nào đúng ý tôi?",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "medium",
+          "why_hard": "Diễn đạt khác thường"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "Tôi muốn xem phim phù hợp sở thích",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "easy",
+          "why_hard": "Diễn đạt khác training"
+        },
+        {
+          "category": "paraphrasing",
+          "question": "Dựa vào lịch sử, gợi ý phim",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "medium",
+          "why_hard": "Cấu trúc câu khác"
+        },
+        {
+          "category": "edge_cases",
+          "question": "Đề xúât cá nhân hóa",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "hard",
+          "why_hard": "Sai chính tả 'xúât'"
+        },
+        {
+          "category": "edge_cases",
+          "question": "Gợi ý phim hợp với tôy",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "None",
+          "difficulty": "hard",
+          "why_hard": "Sai chính tả 'tôy'"
+        },
+        {
+          "category": "multi_intent",
+          "question": "Tìm phim hành động và đề xuất cá nhân",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "search_movie",
+          "difficulty": "hard",
+          "why_hard": "Kết hợp tìm kiếm và đề xuất"
+        },
+        {
+          "category": "multi_intent",
+          "question": "Đề xuất cá nhân và xem trailer",
+          "expected_intent": "recommend_personalization",
+          "confusion_risk": "watch_trailer",
+          "difficulty": "hard",
+          "why_hard": "Yêu cầu nhiều hành động"
+        }
+      ]
+    }
+  },
+  "cross_intent_questions": [],
+  "test_strategy": {
+    "description": "Adversarial test set designed to find classifier weaknesses",
+    "categories": [
+      "Boundary Cases: Intent confusion at boundaries",
+      "Missing Entities: Incomplete information",
+      "Ambiguous Phrasing: Unusual expressions",
+      "Paraphrasing: Different from training phrases",
+      "Edge Cases: Rare scenarios",
+      "Multi-Intent: Complex queries",
+      "Cross-Intent: Multiple intent possibilities"
+    ],
+    "difficulty_distribution": "60% hard, 30% medium, 10% easy"
+  }
+}

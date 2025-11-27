@@ -116,7 +116,8 @@ class SentenceTransformerRecommender:
                 print(f"✅ Loaded {len(self.movie_ids)} movie embeddings from cache")
                 return
             except Exception as e:
-                print("Failed to load cache, rebuilding. Error:", e)
+                print(f"⚠️ Failed to load sentence embeddings cache: {e}")
+                print("Rebuilding sentence embeddings...")
         
         print("🔄 Encoding movies with Sentence Transformer...")
         
@@ -253,7 +254,8 @@ def build_model(csv_path=MOVIES_CSV, links_path=LINKS_CSV, cache_path=MODEL_CACH
             
             return _df, _vectorizer, _tfidf
         except Exception as e:
-            print("Failed to load cache, rebuilding. Error:", e)
+            print(f"⚠️ Failed to load model cache: {e}")
+            print("Rebuilding model from scratch...")
 
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"CSV not found: {csv_path}")
@@ -645,7 +647,8 @@ def load_and_merge_ratings(force=False):
             print(f"✅ Loaded {len(user_movie_ratings)} merged ratings from cache")
             return user_movie_ratings
         except Exception as e:
-            print("Failed to load merged ratings cache, rebuilding. Error:", e)
+            print(f"⚠️ Failed to load merged ratings cache: {e}")
+            print("Rebuilding merged ratings from CSV and Firebase...")
     
     print("🔄 Loading ratings from CSV and Firebase...")
     
@@ -831,6 +834,13 @@ def train_ensemble_als_models(rating_matrix, force=False):
             print(f"✅ {name.upper()} trained in {elapsed:.1f}s")
         except Exception as e:
             print(f"❌ Failed to train {name}: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # ✨ FIX: Kiểm tra xem có model nào được train thành công không
+    if not trained_models:
+        print("❌ No models were trained successfully!")
+        return {}
     
     ensemble_models = trained_models
     
@@ -839,7 +849,7 @@ def train_ensemble_als_models(rating_matrix, force=False):
         dump(ensemble_models, ensemble_cache)
         print("Ensemble models cached ->", ensemble_cache)
     except Exception as e:
-        print("Failed to cache ensemble models:", e)
+        print(f"⚠️ Failed to cache ensemble models: {e}")
     
     return ensemble_models
 
@@ -849,6 +859,11 @@ def ensemble_recommendations(user_idx, user_items, movie_ids, N=20):
     Ensemble predictions từ nhiều models với weighted voting
     """
     global ensemble_models
+    
+    # ✨ FIX: Kiểm tra ensemble_models có tồn tại không
+    if not ensemble_models:
+        print("⚠️ No ensemble models available, returning empty recommendations")
+        return [], []
     
     all_recs = {}
     weights = {'als': 0.5, 'bpr': 0.3, 'lmf': 0.2}  # Trọng số models
@@ -908,10 +923,19 @@ def recommend_personalization_logic(payload):
     """Logic để tạo personalized recommendations với Ensemble + Thompson Sampling."""
     global user_movie_ratings, _df, ensemble_models, thompson_bandits
     
+    # ✨ FIX: Load ensemble models với error handling
     ensemble_cache = "models/ensemble_models.joblib"
-    print("Loading ensemble models from cache:", ensemble_cache)
-    ensemble_models = load(ensemble_cache)
-    print("✅ Ensemble models loaded from cache")
+    if os.path.exists(ensemble_cache):
+        try:
+            print("Loading ensemble models from cache:", ensemble_cache)
+            ensemble_models = load(ensemble_cache)
+            print("✅ Ensemble models loaded from cache")
+        except Exception as e:
+            print(f"⚠️ Failed to load ensemble models cache: {e}")
+            ensemble_models = {}
+    else:
+        print(f"⚠️ Ensemble models cache not found: {ensemble_cache}")
+        ensemble_models = {}
 
     if _df is None:
         build_model()

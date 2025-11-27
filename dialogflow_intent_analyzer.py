@@ -609,64 +609,117 @@ def analyze_all_intents_and_entities():
     return output
 
 
-def evaluate_query_against_intents(query: str, analysis_data: Dict = None) -> List[Dict]:
+# ...existing code...
+
+def evaluate_query_against_intents(query: str, analysis_data: Dict = None) -> Dict:  # ✨ FIX: Return Dict
     """
     Đánh giá câu hỏi mới với các intents đã phân tích
     """
     if analysis_data is None:
         if not os.path.exists(INTENT_ANALYSIS_PATH):
-            print("❌ No analysis data found. Run analyze_all_intents_and_entities() first.")
-            return {"top_matches": [], "overall_analysis": "No analysis data"}  # ✨ FIX: Return dict instead of list
-        with open(INTENT_ANALYSIS_PATH, 'r', encoding='utf-8') as f:
-            analysis_data = json.load(f)
+            print("⚠️ No analysis data found. Running analysis first...")
+            try:
+                analysis_data = analyze_all_intents_and_entities()
+                if not analysis_data:
+                    return {"top_matches": [], "overall_analysis": "Failed to analyze intents"}
+            except Exception as e:
+                print(f"❌ Error running analysis: {e}")
+                return {"top_matches": [], "overall_analysis": f"Error: {str(e)}"}
+        else:
+            with open(INTENT_ANALYSIS_PATH, 'r', encoding='utf-8') as f:
+                print("📄 Loading analysis data from file...")
+                analysis_data = json.load(f)
     
     intents = analysis_data.get("intents", {})
     
     if not DEEPSEEK_API_KEY:
         print("⚠️ DEEPSEEK_API_KEY not configured")
-        return {"top_matches": [], "overall_analysis": "API key not configured"}  # ✨ FIX
+        return {"top_matches": [], "overall_analysis": "API key not configured"}
     
-    # Build context về tất cả intents
-    intents_context = ""
+    if not intents:
+        print("⚠️ No intents found in analysis data")
+        return {"top_matches": [], "overall_analysis": "No intents configured"}
+    
+    # ✨ FIX: Build context với proper escaping - lấy thông tin chi tiết từ llm_analysis
+    intents_summary = []
     for intent_name, intent_info in intents.items():
         llm_analysis = intent_info.get("llm_analysis", {})
-        intents_context += f"\n### {intent_name}\n"
-        intents_context += f"**Goal:** {llm_analysis.get('goal', 'N/A')}\n"
-        intents_context += f"**Characteristics:**\n"
-        for char in llm_analysis.get('characteristics', []):
-            intents_context += f"  - {char}\n"
-        intents_context += f"**Matching Criteria:** {llm_analysis.get('matching_criteria', 'N/A')}\n"
-        intents_context += "\n"
+        
+        # Lấy thông tin chi tiết từ llm_analysis
+        goal = llm_analysis.get('goal', 'N/A')
+        characteristics = llm_analysis.get('characteristics', [])
+        key_patterns = llm_analysis.get('key_patterns', [])
+        matching_criteria = llm_analysis.get('matching_criteria', '')
+        
+        # Lấy high quality examples từ examples_fit_score
+        examples_fit_score = llm_analysis.get('examples_fit_score', {})
+        high_quality_examples = examples_fit_score.get('high_quality', [])
+        
+        # Fallback: nếu không có high_quality_examples, lấy từ sampled_training_phrases
+        if not high_quality_examples:
+            sampled = intent_info.get('sampled_training_phrases', [])[:3]
+            high_quality_examples = [p['text'] for p in sampled]
+        
+        # Build intent summary với thông tin đầy đủ
+        intent_summary = {
+            "intent": intent_name,
+            "goal": goal,
+            "characteristics": characteristics[:2] if len(characteristics) > 2 else characteristics,  # Lấy 2 đặc điểm quan trọng nhất
+            "key_patterns": key_patterns,
+            "examples": high_quality_examples[:3],  # Top 3 examples chất lượng cao
+            "matching_criteria": matching_criteria,
+            "required_params": intent_info.get('required_parameters', [])
+        }
+        
+        intents_summary.append(intent_summary)
     
-    prompt = f"""Đánh giá câu hỏi của user với các intents trong chatbot gợi ý phim.
+    # ✨ FIX: Improved prompt với context đầy đủ
+    prompt_context = []
+    for idx, intent_sum in enumerate(intents_summary, 1):
+        intent_block = f"""
+Intent {idx}: {intent_sum['intent']}
+- Mục tiêu: {intent_sum['goal']}
+- Đặc điểm chính:
+  {chr(10).join(['  • ' + c for c in intent_sum.get('characteristics', [])])}
+- Key patterns: {', '.join(intent_sum.get('key_patterns', []))}
+- Examples: {', '.join([f'"{ex}"' for ex in intent_sum.get('examples', [])])}
+- Matching criteria: {intent_sum.get('matching_criteria', 'N/A')}
+- Required params: {', '.join(intent_sum.get('required_params', [])) or 'None'}
+"""
+        prompt_context.append(intent_block.strip())
+    
+    prompt = f"""Classify user query into one of the available intents based on detailed analysis.
 
-**Query:** "{query}"
+Query: "{query}"
 
-**Available Intents:**
-{intents_context}
+Available Intents:
+{''.join([f'\n{ctx}\n---' for ctx in prompt_context])}
 
----
+Task:
+1. Analyze the query semantically based on intent goals and characteristics
+2. Match against key patterns and examples
+3. Consider matching criteria for each intent
+4. Score each match (0-100) based on:
+   - Goal alignment (40%)
+   - Pattern match (30%)
+   - Example similarity (20%)
+   - Required params presence (10%)
 
-**Nhiệm vụ:** 
-1. Phân tích query để hiểu user intent
-2. So sánh với goals và characteristics của từng intent
-3. Đánh giá độ phù hợp (matching score 0-100)
-
-**Trả về JSON:**
+Return JSON with top 3 intents (score > 30):
 {{
     "top_matches": [
         {{
             "intent": "intent_name",
             "score": 95,
-            "reasoning": "Tại sao query này match intent",
-            "missing_info": "Thông tin còn thiếu (nếu có)",
-            "confidence": "high|medium|low"
+            "reasoning": "Detailed reasoning based on goal, patterns, and examples",
+            "missing_info": "Missing required params if any",
+            "confidence": "high/medium/low"
         }}
     ],
-    "overall_analysis": "Phân tích tổng quan về query"
+    "overall_analysis": "Brief semantic analysis of the query"
 }}
 
-Chỉ trả về top 3 intents có score cao nhất (>30). Sort theo score giảm dần."""
+Sort by score descending. Return ONLY valid JSON."""
 
     try:
         response = requests.post(
@@ -678,7 +731,7 @@ Chỉ trả về top 3 intents có score cao nhất (>30). Sort theo score giả
             json={
                 "model": "deepseek-chat",
                 "messages": [
-                    {"role": "system", "content": "Bạn là chuyên gia đánh giá Intent matching. LUÔN trả về JSON hợp lệ."},
+                    {"role": "system", "content": "You are an intent classifier. ALWAYS return valid JSON only."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.2,
@@ -688,24 +741,60 @@ Chỉ trả về top 3 intents có score cao nhất (>30). Sort theo score giả
             timeout=30
         )
         
-        print(f"DeepSeek API response status: {response.status_code}")  # ✨ ADD logging
+        print(f"DeepSeek API response status: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
             content = data['choices'][0]['message']['content']
-            result = json.loads(content)
-            return result
+            
+            # ✨ FIX: Better JSON parsing with error handling
+            try:
+                result = json.loads(content)
+                
+                # Validate structure
+                if not isinstance(result, dict):
+                    raise ValueError("Response is not a dict")
+                
+                if "top_matches" not in result:
+                    result["top_matches"] = []
+                
+                if "overall_analysis" not in result:
+                    result["overall_analysis"] = "No analysis provided"
+                
+                print(f"✅ Parsed result: {len(result.get('top_matches', []))} matches")
+                return result
+                
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON parse error: {e}")
+                print(f"Raw content: {content[:200]}")
+                return {
+                    "top_matches": [],
+                    "overall_analysis": f"JSON parse error: {str(e)}",
+                    "raw_response": content[:500]
+                }
         else:
             print(f"⚠️ LLM API error: {response.status_code}")
-            print(f"Response: {response.text[:200]}")  # ✨ ADD logging
-            return {"top_matches": [], "overall_analysis": f"API error: {response.status_code}"}
+            print(f"Response: {response.text[:200]}")
+            return {
+                "top_matches": [],
+                "overall_analysis": f"API error: {response.status_code}",
+                "error_details": response.text[:200]
+            }
+    
+    except requests.exceptions.Timeout:
+        print("❌ DeepSeek API timeout")
+        return {"top_matches": [], "overall_analysis": "API timeout"}
     
     except Exception as e:
         print(f"❌ Error evaluating query: {e}")
         import traceback
         traceback.print_exc()
-        return {"top_matches": [], "overall_analysis": f"Error: {str(e)}"}
+        return {
+            "top_matches": [],
+            "overall_analysis": f"Error: {str(e)}"
+        }
 
+# ...existing code...
 
 def test_query_evaluation():
     """
