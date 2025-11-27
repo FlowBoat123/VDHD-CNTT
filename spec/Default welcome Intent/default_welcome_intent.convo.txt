@@ -1,6 +1,0 @@
-welcome
-#me
-WELCOME_SENTENCES
-
-#bot
-INTENT Default Welcome Intent
