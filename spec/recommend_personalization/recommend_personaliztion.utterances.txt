@@ -49,3 +49,23 @@ Gợi ý các tác phẩm điện ảnh dựa trên sở thích của tôi
 Đề xuất phim cho tôi dựa trên dữ liệu xem
 Tôi muốn nhận các gợi ý được lọc riêng cho tôi
 Cho tôi xem phim dựa trên sở thích của mình
+Tôi muốn được gợi ý phim theo sở thích cá nhân của tôi.
+Bot gợi ý phim phù hợp với gu của tôi đi.
+Tôi cần vài gợi ý phim hợp với sở thích của mình.
+Gợi ý phim theo kiểu tôi hay xem đi.
+Cho tôi vài phim phù hợp với phong cách xem phim của tôi.
+Gợi ý phim theo profile sở thích của tôi với.
+Tôi muốn xem phim hợp gu, bạn gợi ý được không?
+Bot gợi ý phim theo những gì tôi thích đi.
+Tôi muốn được đề xuất phim dựa trên sở thích.=
+Gợi ý tôi những phim hợp với khẩu vị cá nhân của tôi.
+Hãy giới thiệu vài phim hợp với thị hiếu của tôi.
+Cho tôi danh sách phim phù hợp cá nhân hóa.
+Tôi muốn xem phim mà bạn nghĩ là hợp với tôi.
+Gợi ý phim cá nhân hóa cho tôi đi.
+Tôi muốn được đề xuất phim theo gu cá nhân.
+Có phim nào hợp với sở thích của tôi không?
+Gợi ý phim theo hành vi xem phim của tôi.
+Tôi muốn xem những phim mà bạn nghĩ phù hợp với tôi.
+Gợi ý phim theo kiểu xem phim của tôi.
+Cho tôi vài gợi ý phim được cá nhân hóa.
