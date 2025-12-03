@@ -1,23 +1,23 @@
 {
   "metadata": {
-    "tested_at": "2025-11-18T17:15:24.942083",
+    "tested_at": "2025-12-01T22:02:18.361025",
     "classifier": "Dialogflow",
     "project_id": "omega-wind-439402-e0",
     "session_id": "adversarial-test-session"
   },
   "overall_metrics": {
-    "total_questions": 48,
-    "passed": 20,
-    "failed": 28,
-    "accuracy": 41.67,
-    "pass_rate": "41.7%"
+    "total_questions": 60,
+    "passed": 50,
+    "failed": 10,
+    "accuracy": 83.33,
+    "pass_rate": "83.3%"
   },
   "breakdown": {
     "intent_specific": {
-      "total": 48,
-      "passed": 20,
-      "failed": 28,
-      "accuracy": 41.67
+      "total": 60,
+      "passed": 50,
+      "failed": 10,
+      "accuracy": 83.33
     },
     "cross_intent": {
       "total": 0,
@@ -27,174 +27,180 @@
     }
   },
   "by_difficulty": {
-    "hard": {
-      "total": 28,
-      "passed": 12
+    "easy": {
+      "total": 23,
+      "passed": 19
     },
     "medium": {
-      "total": 16,
-      "passed": 6
+      "total": 19,
+      "passed": 15
     },
-    "easy": {
-      "total": 4,
-      "passed": 2
+    "hard": {
+      "total": 18,
+      "passed": 16
     }
   },
   "by_category": {
-    "boundary_case": {
-      "total": 8,
-      "passed": 2
+    "correct_intent_match": {
+      "total": 20,
+      "passed": 17
     },
-    "missing_entities": {
-      "total": 8,
-      "passed": 4
+    "paraphrasing": {
+      "total": 12,
+      "passed": 10
     },
     "ambiguous_phrasing": {
       "total": 8,
-      "passed": 2
+      "passed": 6
     },
-    "paraphrasing": {
+    "boundary_cases": {
       "total": 8,
-      "passed": 3
+      "passed": 7
     },
     "edge_cases": {
       "total": 8,
-      "passed": 6
+      "passed": 7
     },
-    "multi_intent": {
-      "total": 8,
+    "missing_entities": {
+      "total": 4,
       "passed": 3
     }
   },
   "intent_results": {
     "movie_recommendation_request": {
-      "total": 12,
-      "passed": 4,
-      "failed": 8,
+      "total": 15,
+      "passed": 15,
+      "failed": 0,
       "test_cases": [
         {
-          "question": "có gì hay để xem không",
-          "category": "boundary_case",
-          "difficulty": "hard",
+          "question": "Gợi ý phim khoa học viễn tưởng rating > 8",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.7338364124298096,
+          "confidence": 0.8612313866615295,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Rõ ràng, có entities",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "rating_comparator": "['>']",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[8.0]",
+            "publish_date": "[]",
+            "genre": "['khoa học viễn tưởng']"
+          },
+          "entities_used": {
+            "genre": "khoa học viễn tưởng",
+            "rating_comparator": ">"
+          },
+          "entities_detected": {
+            "rating_comparator": "['>']",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[8.0]",
+            "publish_date": "[]",
+            "genre": "['khoa học viễn tưởng']"
+          }
+        },
+        {
+          "question": "Phim nào mới nhất của đạo diễn Nolan?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.6324044466018677,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Không đề cập rõ phim",
+          "why_hard": "Rõ ràng, có person",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
             "rating_comparator": "[]",
             "date_comparator": "[]",
             "person": "[]",
-            "rating": "[]",
             "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {
+            "date_comparator": "mới",
+            "person": "Nolan"
+          },
+          "entities_detected": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
             "genre": "[]"
           }
         },
         {
-          "question": "tôi muốn xem cái gì đó",
-          "category": "boundary_case",
-          "difficulty": "hard",
+          "question": "Cho tôi phim chiến tranh thập niên 2000",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4628766179084778,
+          "confidence": 0.8225471377372742,
           "evaluation": {
             "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "confidence_level": "high",
+            "verdict": "PASS"
           },
-          "why_hard": "Mơ hồ giữa phim và TV",
+          "why_hard": "Rõ ràng, có entities",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
             "rating_comparator": "[]",
-            "publish_date": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
             "rating": "[]",
-            "genre": "[]"
+            "publish_date": "['thập niên 2000']",
+            "genre": "['chiến tranh']"
+          },
+          "entities_used": {
+            "genre": "chiến tranh",
+            "publish_date": "thập niên 2000"
+          },
+          "entities_detected": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[]",
+            "publish_date": "['thập niên 2000']",
+            "genre": "['chiến tranh']"
           }
         },
         {
-          "question": "gợi ý phim hay",
-          "category": "missing_entities",
-          "difficulty": "medium",
-          "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "Default Welcome Intent",
-          "confidence": 0.46574822068214417,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Không có tiêu chí cụ thể",
-          "fulfillment_text": "Xin chào! Tôi là chatbot chuyên gợi ý phim, bạn có yêu cầu nào để tôi giúp để tìm phim phù hợp với bạn không chẳng hạn tên tác giả, diễn viên, thể loại,...?",
-          "parameters": {}
-        },
-        {
-          "question": "phim nào đáng xem",
-          "category": "missing_entities",
-          "difficulty": "medium",
+          "question": "Phim nào hay?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.300991415977478,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Thiếu thông tin chi tiết",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "publish_date": "[]",
-            "rating": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "có phim nào chất không",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
-          "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4120320975780487,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Dùng tiếng lóng 'chất'",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "kiếm phim xem đê",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
-          "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.5536227822303772,
+          "confidence": 0.6308852434158325,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Ngôn ngữ thân mật khó hiểu",
+          "why_hard": "Rõ ràng, không entities",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {},
+          "entities_detected": {
             "person": "[]",
             "date_comparator": "[]",
             "rating_comparator": "[]",
@@ -204,55 +210,113 @@
           }
         },
         {
-          "question": "bạn có thể đề xuất phim không",
-          "category": "paraphrasing",
-          "difficulty": "medium",
+          "question": "Tìm phim phim truyền hình rating khoảng 7",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.45477741956710815,
+          "confidence": 0.8641251921653748,
           "evaluation": {
             "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "confidence_level": "high",
+            "verdict": "PASS"
           },
-          "why_hard": "Cách diễn đạt trang trọng",
+          "why_hard": "Rõ ràng, có entities",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
             "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['khoảng']",
             "rating": "[]",
             "publish_date": "[]",
-            "genre": "[]"
+            "genre": "['phim truyền hình']"
+          },
+          "entities_used": {
+            "genre": "phim truyền hình",
+            "rating_comparator": "khoảng"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['khoảng']",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "['phim truyền hình']"
           }
         },
         {
-          "question": "tìm giúp tôi phim phù hợp",
+          "question": "Bạn có thể đề xuất phim cũ không?",
           "category": "paraphrasing",
           "difficulty": "medium",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.3029521107673645,
+          "confidence": 0.5291456580162048,
           "evaluation": {
             "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "confidence_level": "medium",
+            "verdict": "PASS"
           },
-          "why_hard": "Dùng từ 'tìm' thay 'gợi ý'",
+          "why_hard": "Từ ngữ khác, có entity",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DDEE10>]",
+            "person": "[]",
             "date_comparator": "[]",
             "rating_comparator": "[]",
+            "rating": "[]",
             "publish_date": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {
+            "date_comparator": "cũ"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
+          }
+        },
+        {
+          "question": "Hãy tìm cho tôi phim trước tháng 3/2000",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.5547366738319397,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Cấu trúc khác, có entities",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "person": "[]",
+            "date_comparator": "['trước']",
+            "rating_comparator": "[]",
+            "publish_date": "['2000']",
+            "rating": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {
+            "date_comparator": "trước",
+            "publish_date": "tháng 3/2000"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "['trước']",
+            "rating_comparator": "[]",
+            "publish_date": "['2000']",
             "rating": "[]",
             "genre": "[]"
           }
         },
         {
-          "question": "phim hành dộng năm 2020",
-          "category": "edge_cases",
-          "difficulty": "hard",
+          "question": "Có phim nào đáng xem không?",
+          "category": "paraphrasing",
+          "difficulty": "medium",
           "expected_intent": "movie_recommendation_request",
           "predicted_intent": "movie_recommendation_request",
           "confidence": 1.0,
@@ -261,807 +325,1353 @@
             "confidence_level": "high",
             "verdict": "PASS"
           },
-          "why_hard": "Sai chính tả 'hành dộng'",
+          "why_hard": "Từ ngữ khác, không entities",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
             "rating_comparator": "[]",
             "date_comparator": "[]",
             "person": "[]",
             "rating": "[]",
-            "publish_date": "['2020']",
-            "genre": "['hành động']"
-          }
-        },
-        {
-          "question": "phim có đạo diễn Nguyễn Văn A",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 1.0,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "high",
-            "verdict": "PASS"
+            "publish_date": "[]",
+            "genre": "[]"
           },
-          "why_hard": "Tên không có trong hệ thống",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DDFB90>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DDFBD0>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DDFD10>]",
-            "date_comparator": "[]",
+          "entities_used": {},
+          "entities_detected": {
             "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
             "rating": "[]",
             "publish_date": "[]",
             "genre": "[]"
           }
         },
         {
-          "question": "gợi ý phim và đặt vé",
-          "category": "multi_intent",
+          "question": "Mấy phim hay hay đê",
+          "category": "ambiguous_phrasing",
           "difficulty": "hard",
           "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "Default Welcome Intent",
-          "confidence": 0.30252259969711304,
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.7982870936393738,
           "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
           },
-          "why_hard": "Kết hợp yêu cầu gợi ý và đặt vé",
-          "fulfillment_text": "Xin chào! Tôi là chatbot chuyên gợi ý phim, bạn có yêu cầu nào để tôi giúp để tìm phim phù hợp với bạn không chẳng hạn tên tác giả, diễn viên, thể loại,...?",
-          "parameters": {}
+          "why_hard": "Tiếng lóng, không entities",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {},
+          "entities_detected": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
+          }
         },
         {
-          "question": "phim hay và review chi tiết",
-          "category": "multi_intent",
+          "question": "Kiếm phim khoa học viễn tưởng rating < 6",
+          "category": "ambiguous_phrasing",
           "difficulty": "hard",
           "expected_intent": "movie_recommendation_request",
-          "predicted_intent": "information_request",
-          "confidence": 0.39659518003463745,
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.8321824669837952,
           "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
           },
-          "why_hard": "Vừa gợi ý vừa yêu cầu review",
-          "fulfillment_text": "123 anh cố lên",
+          "why_hard": "Từ khác lạ, có entities",
+          "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
-            "person": "",
-            "movie_name": "",
-            "parameter": "nội dung"
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['<']",
+            "publish_date": "[]",
+            "rating": "[6.0]",
+            "genre": "['khoa học viễn tưởng']"
+          },
+          "entities_used": {
+            "genre": "khoa học viễn tưởng",
+            "rating_comparator": "<"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['<']",
+            "publish_date": "[]",
+            "rating": "[6.0]",
+            "genre": "['khoa học viễn tưởng']"
+          }
+        },
+        {
+          "question": "Phim chiến tranh nào đáng xem nhất?",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.7056886553764343,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Gần với tìm kiếm cụ thể",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "['chiến tranh']"
+          },
+          "entities_used": {
+            "genre": "chiến tranh"
+          },
+          "entities_detected": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "['chiến tranh']"
+          }
+        },
+        {
+          "question": "Tôi muốn xem phim mới",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.6219455599784851,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Có thể hiểu là hỏi thông tin",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "person": "[]",
+            "date_comparator": "['mới']",
+            "rating_comparator": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {
+            "date_comparator": "mới"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "['mới']",
+            "rating_comparator": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          }
+        },
+        {
+          "question": "Gợi ý fim khoa hc viễn tưởng",
+          "category": "edge_cases",
+          "difficulty": "hard",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.704067051410675,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Sai chính tả nhẹ, có entity",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "['khoa học viễn tưởng']"
+          },
+          "entities_used": {
+            "genre": "khoa học viễn tưởng"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "['khoa học viễn tưởng']"
+          }
+        },
+        {
+          "question": "Phim nào của DJ có rating cao?",
+          "category": "edge_cases",
+          "difficulty": "hard",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.8962626457214355,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Viết tắt person, có entity",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['cao']",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {
+            "person": "DJ"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "['cao']",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          }
+        },
+        {
+          "question": "Gợi ý phim đi",
+          "category": "missing_entities",
+          "difficulty": "easy",
+          "expected_intent": "movie_recommendation_request",
+          "predicted_intent": "movie_recommendation_request",
+          "confidence": 0.6583232283592224,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Thiếu entities không bắt buộc",
+          "fulfillment_text": "cố lên Đức ơi",
+          "parameters": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {},
+          "entities_detected": {
+            "rating_comparator": "[]",
+            "date_comparator": "[]",
+            "person": "[]",
+            "rating": "[]",
+            "publish_date": "[]",
+            "genre": "[]"
           }
         }
       ]
     },
     "recommend_movie_by_name": {
-      "total": 12,
-      "passed": 6,
-      "failed": 6,
+      "total": 15,
+      "passed": 14,
+      "failed": 1,
       "test_cases": [
         {
-          "question": "phim nào hay như avatar",
-          "category": "boundary_case",
-          "difficulty": "medium",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.5468786358833313,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "thiếu từ khóa đề xuất rõ ràng",
-          "fulfillment_text": "hehe",
-          "parameters": {
-            "movie_name": "Avatar"
-          }
-        },
-        {
-          "question": "tìm phim tương tự titanic",
-          "category": "boundary_case",
-          "difficulty": "medium",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4285928010940552,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "dùng từ tương tự thay vì giống",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF5090>]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "đề xuất phim giống như",
-          "category": "missing_entities",
+          "question": "Có phim nào cùng thể loại với Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum) không?",
+          "category": "correct_intent_match",
           "difficulty": "easy",
           "expected_intent": "recommend_movie_by_name",
           "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.5601117610931396,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "thiếu tên phim bắt buộc",
-          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
-          "parameters": {
-            "movie_name": ""
-          }
-        },
-        {
-          "question": "cho tôi phim như",
-          "category": "missing_entities",
-          "difficulty": "easy",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "movie_recommendation_request",
           "confidence": 1.0,
           "evaluation": {
-            "correct": false,
+            "correct": true,
             "confidence_level": "high",
-            "verdict": "FAIL"
+            "verdict": "PASS"
           },
-          "why_hard": "không có tên phim tham chiếu",
-          "fulfillment_text": "cố lên Đức ơi",
+          "why_hard": "Rõ ràng, đầy đủ thông tin",
+          "fulfillment_text": "hehe",
           "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF5050>]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
+            "movie_name": "['Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum)']"
+          },
+          "entities_used": {
+            "movie_name": "Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum)"
+          },
+          "entities_detected": {
+            "movie_name": "['Through the Weeping Glass: On the Consolations of Life Everlasting (Limbos & Afterbreezes in the Mütter Museum)']"
           }
         },
         {
-          "question": "có phim nào kiểu như matrix không",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
+          "question": "Phim nào tương tự Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "recommend_movie_by_name",
           "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.6117016077041626,
+          "confidence": 0.8291712999343872,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Diễn đạt trực tiếp, đủ tham số",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)']"
+          },
+          "entities_used": {
+            "movie_name": "Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)"
+          },
+          "entities_detected": {
+            "movie_name": "['Rodney Gold Presents A Rodney Gold Trailer for A Rodney Gold Film by Rodney Gold (Rodney Gold!!)']"
+          }
+        },
+        {
+          "question": "Tôi muốn xem phim có vibe giống Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival.",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.7706704139709473,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "dùng từ kiểu như không chuẩn",
+          "why_hard": "Sử dụng từ khóa 'vibe giống'",
           "fulfillment_text": "hehe",
           "parameters": {
-            "movie_name": "matrix"
-          }
-        },
-        {
-          "question": "phim na ná frozen",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4154738187789917,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "movie_name": "['Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival']"
           },
-          "why_hard": "tiếng lóng na ná thay giống",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF5AD0>]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
+          "entities_used": {
+            "movie_name": "Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival"
+          },
+          "entities_detected": {
+            "movie_name": "['Ken Jacobs / Ghosts Of The Holy Ghost Spermic Brotherhood @ The Nervous Magic Lantern Festival']"
           }
         },
         {
-          "question": "gợi ý vài phim có vibe tương đồng với la la land",
+          "question": "Xem xong The Matrix, nên xem gì tiếp?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 1.0,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Mẫu câu phổ biến",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['The Matrix']"
+          },
+          "entities_used": {
+            "movie_name": "The Matrix"
+          },
+          "entities_detected": {
+            "movie_name": "['The Matrix']"
+          }
+        },
+        {
+          "question": "Gợi ý cho tôi phim tương tự Inception.",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.7507380247116089,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Ngắn gọn, rõ ràng",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Inception']"
+          },
+          "entities_used": {
+            "movie_name": "Inception"
+          },
+          "entities_detected": {
+            "movie_name": "['Inception']"
+          }
+        },
+        {
+          "question": "Sau khi thưởng thức bộ phim Avatar, bạn có đề xuất nào cho tôi không?",
           "category": "paraphrasing",
           "difficulty": "medium",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.6113349199295044,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
-            "verdict": "FAIL"
-          },
-          "why_hard": "cách diễn đạt khác lạ với vibe",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF6410>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF6450>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1DF6590>]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "tôi cần phim cảm giác gần giống pulp fiction",
-          "category": "paraphrasing",
-          "difficulty": "medium",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.5247045159339905,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "dùng cảm giác gần giống thay giống",
-          "fulfillment_text": "hehe",
-          "parameters": {
-            "movie_name": "Pulp Fiction"
-          }
-        },
-        {
-          "question": "đề xuất phim giống như avata",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.6216820478439331,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "sai chính tả tên phim avatar",
-          "fulfillment_text": "hehe",
-          "parameters": {
-            "movie_name": "Avatar"
-          }
-        },
-        {
-          "question": "phim nào như người nhện",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "recommend_personalization",
-          "confidence": 0.370988667011261,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "tên phim không rõ ràng người nhện",
-          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
-        },
-        {
-          "question": "đề xuất phim giống như godzilla và xem ở đâu",
-          "category": "multi_intent",
-          "difficulty": "hard",
-          "expected_intent": "recommend_movie_by_name",
-          "predicted_intent": "recommend_movie_by_name",
-          "confidence": 0.6576130986213684,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "kết hợp intent đề xuất và tìm rạp",
-          "fulfillment_text": "hehe",
-          "parameters": {
-            "movie_name": "Godzilla"
-          }
-        },
-        {
-          "question": "phim như star wars và diễn viên chính",
-          "category": "multi_intent",
-          "difficulty": "hard",
           "expected_intent": "recommend_movie_by_name",
           "predicted_intent": "information_request",
-          "confidence": 0.7155396342277527,
+          "confidence": 0.4629316031932831,
           "evaluation": {
             "correct": false,
-            "confidence_level": "medium",
+            "confidence_level": "low",
             "verdict": "FAIL"
           },
-          "why_hard": "vừa đề xuất vừa hỏi thông tin phim",
-          "fulfillment_text": "123 anh cố lên",
+          "why_hard": "Diễn đạt khác, không dùng từ khóa trực tiếp",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
           "parameters": {
-            "person": "",
-            "parameter": "diễn viên chính",
-            "movie_name": "Star Wars"
+            "person": "[]",
+            "movie_name": "Avatar",
+            "parameter": "[]"
+          },
+          "entities_used": {
+            "movie_name": "Avatar"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "Avatar",
+            "parameter": "[]"
+          }
+        },
+        {
+          "question": "Tôi đang tìm kiếm các tác phẩm điện ảnh có phong cách tương đồng với Spirited Away.",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.6678999662399292,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Ngôn ngữ trang trọng, từ vựng khác",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Spirited Away']"
+          },
+          "entities_used": {
+            "movie_name": "Spirited Away"
+          },
+          "entities_detected": {
+            "movie_name": "['Spirited Away']"
+          }
+        },
+        {
+          "question": "Có tác phẩm nào trong cùng phân loại với Shrek để tôi tham khảo?",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.5604958534240723,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Cấu trúc và từ ngữ học thuật",
+          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
+          "parameters": {
+            "movie_name": "[]"
+          },
+          "entities_used": {
+            "movie_name": "Shrek"
+          },
+          "entities_detected": {
+            "movie_name": "[]"
+          }
+        },
+        {
+          "question": "Xem phim Interstellar xong, có phim nào đỉnh tương tự không?",
+          "category": "ambiguous_phrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 1.0,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Dùng tiếng lóng 'đỉnh'",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Interstellar']"
+          },
+          "entities_used": {
+            "movie_name": "Interstellar"
+          },
+          "entities_detected": {
+            "movie_name": "['Interstellar']"
+          }
+        },
+        {
+          "question": "Titanic á, kiếm mấy phim vibe y chang cho tui.",
+          "category": "ambiguous_phrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.631023108959198,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Ngôn ngữ nói, từ địa phương",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Titanic']"
+          },
+          "entities_used": {
+            "movie_name": "Titanic"
+          },
+          "entities_detected": {
+            "movie_name": "['Titanic']"
+          }
+        },
+        {
+          "question": "Tôi thích The Godfather, bạn biết phim nào hay tương tự không?",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.6727052927017212,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Bắt đầu như chitchat, chuyển sang yêu cầu",
+          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
+          "parameters": {
+            "movie_name": "[]"
+          },
+          "entities_used": {
+            "movie_name": "The Godfather"
+          },
+          "entities_detected": {
+            "movie_name": "[]"
+          }
+        },
+        {
+          "question": "Đánh giá phim Parasite và gợi ý phim tương tự.",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 1.0,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Kết hợp yêu cầu đánh giá và gợi ý",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Parasite']"
+          },
+          "entities_used": {
+            "movie_name": "Parasite"
+          },
+          "entities_detected": {
+            "movie_name": "['Parasite']"
+          }
+        },
+        {
+          "question": "Có fim nào tương tự Avata không?",
+          "category": "edge_cases",
+          "difficulty": "hard",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.6865617036819458,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Sai chính tả 'fim', 'Avata'",
+          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
+          "parameters": {
+            "movie_name": "[]"
+          },
+          "entities_used": {
+            "movie_name": "Avata"
+          },
+          "entities_detected": {
+            "movie_name": "[]"
+          }
+        },
+        {
+          "question": "Phim giống LOTR?",
+          "category": "edge_cases",
+          "difficulty": "hard",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.7032398581504822,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Viết tắt, câu cụt",
+          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
+          "parameters": {
+            "movie_name": "[]"
+          },
+          "entities_used": {
+            "movie_name": "LOTR"
+          },
+          "entities_detected": {
+            "movie_name": "[]"
+          }
+        },
+        {
+          "question": "Gợi ý phim tương tự.",
+          "category": "missing_entities",
+          "difficulty": "hard",
+          "expected_intent": "recommend_movie_by_name",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.5576372742652893,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Thiếu tham số bắt buộc movie_name",
+          "fulfillment_text": "Bạn muốn gợi ý giống nhau trên phim gì?",
+          "parameters": {
+            "movie_name": "[]"
+          },
+          "entities_used": {},
+          "entities_detected": {
+            "movie_name": "[]"
           }
         }
       ]
     },
     "information_request": {
-      "total": 12,
-      "passed": 6,
-      "failed": 6,
+      "total": 15,
+      "passed": 7,
+      "failed": 8,
       "test_cases": [
         {
-          "question": "Tôi muốn xem phim này",
-          "category": "boundary_case",
-          "difficulty": "hard",
+          "question": "Cho biết diễn viên chính của phim Inception là ai?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "information_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.3763658404350281,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Thiếu thông tin cụ thể về phim",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
-            "person": "[]",
-            "publish_date": "[]",
-            "rating": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "Phim này hay không?",
-          "category": "boundary_case",
-          "difficulty": "hard",
-          "expected_intent": "information_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4229640066623688,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Hỏi ý kiến thay vì thông tin",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "publish_date": "[]",
-            "rating": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "Đánh giá bao nhiêu?",
-          "category": "missing_entities",
-          "difficulty": "medium",
-          "expected_intent": "information_request",
-          "predicted_intent": "information_request",
-          "confidence": 0.5910937190055847,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "Không có tên phim cụ thể",
-          "fulfillment_text": "123 anh cố lên",
-          "parameters": {
-            "person": "",
-            "parameter": "Đánh giá",
-            "movie_name": ""
-          }
-        },
-        {
-          "question": "Diễn viên chính là ai?",
-          "category": "missing_entities",
-          "difficulty": "medium",
-          "expected_intent": "information_request",
-          "predicted_intent": "movie_recommendation_request",
+          "predicted_intent": "recommend_movie_by_name",
           "confidence": 1.0,
           "evaluation": {
             "correct": false,
             "confidence_level": "high",
             "verdict": "FAIL"
           },
-          "why_hard": "Thiếu tên phim để xác định",
-          "fulfillment_text": "cố lên Đức ơi",
+          "why_hard": "Câu hỏi trực tiếp, rõ ràng",
+          "fulfillment_text": "hehe",
           "parameters": {
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E04350>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E04AD0>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E04B90>]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "Phim đó có chất không?",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
-          "expected_intent": "information_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.6371917724609375,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
-            "verdict": "FAIL"
+            "movie_name": "['Inception']"
           },
-          "why_hard": "Dùng tiếng lóng không rõ nghĩa",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
-            "person": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
+          "entities_used": {
+            "parameter": "diễn viên",
+            "movie_name": "Inception"
+          },
+          "entities_detected": {
+            "movie_name": "['Inception']"
           }
         },
         {
-          "question": "Cái phim kia rating mấy?",
-          "category": "ambiguous_phrasing",
-          "difficulty": "hard",
+          "question": "Bạn có thể cho tôi xem tình tiết phim The Dark Knight không?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "information_request",
           "predicted_intent": "information_request",
-          "confidence": 0.459453284740448,
+          "confidence": 0.7444958090782166,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Cấu trúc yêu cầu thông tin chuẩn",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
+          "parameters": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "[]"
+          },
+          "entities_used": {
+            "parameter": "tình tiết",
+            "movie_name": "The Dark Knight"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "[]"
+          }
+        },
+        {
+          "question": "Ngày phát hành của phim Titanic là khi nào?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.30000001192092896,
           "evaluation": {
             "correct": true,
             "confidence_level": "low",
             "verdict": "FAIL"
           },
-          "why_hard": "Tham chiếu không rõ ràng",
+          "why_hard": "Từ khóa đặc trưng, rõ ràng",
           "fulfillment_text": "123 anh cố lên",
           "parameters": {
-            "person": "",
+            "person": "[]",
             "movie_name": "",
-            "parameter": "rating"
+            "parameter": "['ngày phát hành']"
+          },
+          "entities_used": {
+            "parameter": "ngày phát hành",
+            "movie_name": "Titanic"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "['ngày phát hành']"
           }
         },
         {
-          "question": "Cho tôi biết về dàn cast của The Batman",
+          "question": "Đạo diễn phim Parasite là ai vậy?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.7928479909896851,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Câu hỏi ngắn gọn, đủ thông tin",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
+          "parameters": {
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": "Parasite"
+          },
+          "entities_used": {
+            "parameter": "đạo diễn",
+            "movie_name": "Parasite"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": "Parasite"
+          }
+        },
+        {
+          "question": "Năm công chiếu của phim Avatar 2 là bao nhiêu?",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.30000001192092896,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "low",
+            "verdict": "FAIL"
+          },
+          "why_hard": "Từ khóa rõ ràng, cấu trúc đơn giản",
+          "fulfillment_text": "123 anh cố lên",
+          "parameters": {
+            "person": "[]",
+            "movie_name": "Parasite",
+            "parameter": "['năm', 'công chiếu']"
+          },
+          "entities_used": {
+            "parameter": "năm công chiếu",
+            "movie_name": "Avatar 2"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "Parasite",
+            "parameter": "['năm', 'công chiếu']"
+          }
+        },
+        {
+          "question": "Tôi muốn biết thông tin về bối cảnh trong phim The Matrix",
           "category": "paraphrasing",
           "difficulty": "medium",
           "expected_intent": "information_request",
           "predicted_intent": "information_request",
-          "confidence": 0.5705143213272095,
+          "confidence": 0.8053578734397888,
           "evaluation": {
             "correct": true,
-            "confidence_level": "medium",
+            "confidence_level": "high",
             "verdict": "PASS"
           },
-          "why_hard": "Dùng từ 'cast' thay vì 'diễn viên'",
+          "why_hard": "Cấu trúc khác, từ ngữ thay đổi",
           "fulfillment_text": "123 anh cố lên",
           "parameters": {
-            "person": "<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E057D0>",
-            "movie_name": "The Batman",
-            "parameter": ""
+            "person": "[]",
+            "movie_name": "The Matrix",
+            "parameter": "['tiểu sử']"
+          },
+          "entities_used": {
+            "parameter": "bối cảnh",
+            "movie_name": "The Matrix"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "The Matrix",
+            "parameter": "['tiểu sử']"
           }
         },
         {
-          "question": "Năm nào phim Tenet ra rạp?",
+          "question": "Có thể cung cấp cho tôi danh sách diễn viên phim Harry Potter không?",
           "category": "paraphrasing",
           "difficulty": "medium",
           "expected_intent": "information_request",
           "predicted_intent": "information_request",
-          "confidence": 0.6377676725387573,
+          "confidence": 0.5662316679954529,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Dùng 'ra rạp' thay 'công chiếu'",
-          "fulfillment_text": "123 anh cố lên",
+          "why_hard": "Diễn đạt khác, vẫn đủ thông tin",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
           "parameters": {
-            "person": "",
-            "parameter": "năm",
-            "movie_name": "Tenet"
-          }
-        },
-        {
-          "question": "Đạo diễn phim Tenet là ai?",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "information_request",
-          "predicted_intent": "information_request",
-          "confidence": 0.7034359574317932,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": ""
           },
-          "why_hard": "Sai chính tả tên phim",
-          "fulfillment_text": "123 anh cố lên",
-          "parameters": {
-            "person": "",
-            "parameter": "",
-            "movie_name": "Tenet"
-          }
-        },
-        {
-          "question": "Rating của phim XyzAbc123?",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "information_request",
-          "predicted_intent": "information_request",
-          "confidence": 0.6407105326652527,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
+          "entities_used": {
+            "parameter": "diễn viên",
+            "movie_name": "Harry Potter"
           },
-          "why_hard": "Tên phim không tồn tại",
-          "fulfillment_text": "123 anh cố lên",
-          "parameters": {
-            "person": "",
-            "parameter": "Rating",
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "[]",
             "movie_name": ""
           }
         },
         {
-          "question": "Tôi muốn xem rating và mua vé phim Tenet",
-          "category": "multi_intent",
+          "question": "Thông tin về đạo diễn của bộ phim Forrest Gump là gì?",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.30000001192092896,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "low",
+            "verdict": "FAIL"
+          },
+          "why_hard": "Cấu trúc câu khác biệt",
+          "fulfillment_text": "123 anh cố lên",
+          "parameters": {
+            "person": "[]",
+            "parameter": "['đạo diễn']",
+            "movie_name": ""
+          },
+          "entities_used": {
+            "parameter": "đạo diễn",
+            "movie_name": "Forrest Gump"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "['đạo diễn']",
+            "movie_name": ""
+          }
+        },
+        {
+          "question": "Phim Star Wars có mấy phần vậy? Cho xem cái",
+          "category": "ambiguous_phrasing",
+          "difficulty": "medium",
+          "expected_intent": "information_request",
+          "predicted_intent": "recommend_movie_by_name",
+          "confidence": 0.3424958288669586,
+          "evaluation": {
+            "correct": false,
+            "confidence_level": "low",
+            "verdict": "FAIL"
+          },
+          "why_hard": "Tiếng lóng, không chuẩn mực",
+          "fulfillment_text": "hehe",
+          "parameters": {
+            "movie_name": "['Star Wars']"
+          },
+          "entities_used": {
+            "parameter": "phần",
+            "movie_name": "Star Wars"
+          },
+          "entities_detected": {
+            "movie_name": "['Star Wars']"
+          }
+        },
+        {
+          "question": "Ê, tình tiết phim Joker sao rồi? Kể nghe coi",
+          "category": "ambiguous_phrasing",
+          "difficulty": "medium",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.8469173908233643,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Ngôn ngữ thân mật, không trang trọng",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
+          "parameters": {
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": "Joker"
+          },
+          "entities_used": {
+            "parameter": "tình tiết",
+            "movie_name": "Joker"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": "Joker"
+          }
+        },
+        {
+          "question": "Phim nào có đạo diễn là Christopher Nolan?",
+          "category": "boundary_cases",
           "difficulty": "hard",
           "expected_intent": "information_request",
           "predicted_intent": "information_request",
-          "confidence": 0.6368817687034607,
+          "confidence": 0.30000001192092896,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "low",
+            "verdict": "FAIL"
+          },
+          "why_hard": "Có thể nhầm với tìm kiếm phim",
+          "fulfillment_text": "123 anh cố lên",
+          "parameters": {
+            "person": "[]",
+            "parameter": "['đạo diễn']",
+            "movie_name": "Joker"
+          },
+          "entities_used": {
+            "parameter": "đạo diễn",
+            "person": "Christopher Nolan"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "['đạo diễn']",
+            "movie_name": "Joker"
+          }
+        },
+        {
+          "question": "Diễn viên nào đóng trong phim Avengers?",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.568088173866272,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Kết hợp yêu cầu thông tin và mua vé",
-          "fulfillment_text": "123 anh cố lên",
+          "why_hard": "Gần với yêu cầu danh sách diễn viên",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
           "parameters": {
-            "person": "",
-            "movie_name": "Tenet",
-            "parameter": ""
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": ""
+          },
+          "entities_used": {
+            "parameter": "diễn viên",
+            "movie_name": "Avengers"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "[]",
+            "movie_name": ""
           }
         },
         {
-          "question": "Ai đạo diễn phim này và nó có hay không?",
-          "category": "multi_intent",
-          "difficulty": "hard",
+          "question": "Cho biết năm fim Interstelar ra mắt",
+          "category": "edge_cases",
+          "difficulty": "medium",
           "expected_intent": "information_request",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.5096308588981628,
+          "predicted_intent": "information_request",
+          "confidence": 0.30000001192092896,
           "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
+            "correct": true,
+            "confidence_level": "low",
             "verdict": "FAIL"
           },
-          "why_hard": "Hỏi thông tin và đánh giá chất lượng",
-          "fulfillment_text": "cố lên Đức ơi",
+          "why_hard": "Sai chính tả nhẹ",
+          "fulfillment_text": "123 anh cố lên",
           "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
             "person": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
+            "movie_name": "",
+            "parameter": "['năm']"
+          },
+          "entities_used": {
+            "parameter": "năm",
+            "movie_name": "Interstelar"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "['năm']"
+          }
+        },
+        {
+          "question": "Đạo diễn của phim R.G.P.A.R.G.T.f.A.R.G.F.b.R.G là ai?",
+          "category": "edge_cases",
+          "difficulty": "hard",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.7547836899757385,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Tên phim viết tắt, khó nhận diện",
+          "fulfillment_text": "Bạn cần tôi cung cấp những thông tin gì?",
+          "parameters": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "[]"
+          },
+          "entities_used": {
+            "parameter": "đạo diễn",
+            "movie_name": "R.G.P.A.R.G.T.f.A.R.G.F.b.R.G"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "movie_name": "",
+            "parameter": "[]"
+          }
+        },
+        {
+          "question": "Cho biết diễn viên chính là ai?",
+          "category": "missing_entities",
+          "difficulty": "easy",
+          "expected_intent": "information_request",
+          "predicted_intent": "information_request",
+          "confidence": 0.30000001192092896,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "low",
+            "verdict": "FAIL"
+          },
+          "why_hard": "Thiếu tên phim nhưng vẫn đủ parameter",
+          "fulfillment_text": "123 anh cố lên",
+          "parameters": {
+            "person": "[]",
+            "parameter": "['diễn viên chính']",
+            "movie_name": ""
+          },
+          "entities_used": {
+            "parameter": "diễn viên"
+          },
+          "entities_detected": {
+            "person": "[]",
+            "parameter": "['diễn viên chính']",
+            "movie_name": ""
           }
         }
       ]
     },
     "recommend_personalization": {
-      "total": 12,
-      "passed": 4,
-      "failed": 8,
+      "total": 15,
+      "passed": 14,
+      "failed": 1,
       "test_cases": [
         {
-          "question": "Gợi ý phim cho tôi",
-          "category": "boundary_case",
-          "difficulty": "medium",
+          "question": "Gợi ý phim dựa theo sở thích của tôi",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
           "expected_intent": "recommend_personalization",
-          "predicted_intent": "Default Welcome Intent",
-          "confidence": 1.0,
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.7528851628303528,
           "evaluation": {
-            "correct": false,
-            "confidence_level": "high",
-            "verdict": "FAIL"
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
           },
-          "why_hard": "Thiếu từ khóa cá nhân hóa",
-          "fulfillment_text": "Xin chào! Tôi là chatbot chuyên gợi ý phim, bạn có yêu cầu nào để tôi giúp để tìm phim phù hợp với bạn không chẳng hạn tên tác giả, diễn viên, thể loại,...?",
-          "parameters": {}
+          "why_hard": "Rõ ràng yêu cầu cá nhân hóa",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
         },
         {
-          "question": "Phim nào hay nhất?",
-          "category": "boundary_case",
+          "question": "Tìm phim phù hợp với hành vi xem của tôi",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.8719175457954407,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Nhấn mạnh hành vi cá nhân",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Đề xuất phim cá nhân hóa cho tôi",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.6901012659072876,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Từ khóa cá nhân hóa rõ ràng",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Gợi ý phim theo lịch sử xem phim của tôi",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.7991262078285217,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Dựa trên dữ liệu cá nhân",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Tôi muốn phim đề xuất dựa trên tâm trạng hiện tại",
+          "category": "correct_intent_match",
+          "difficulty": "easy",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.6710623502731323,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Yếu tố cá nhân hóa rõ",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Hãy chọn phim phù hợp với gu của tôi",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.8711109161376953,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Dùng từ 'gu' thay cho sở thích",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Tôi cần phim được tùy chỉnh theo thói quen xem",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.6006662249565125,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Cấu trúc khác, từ 'tùy chỉnh'",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Đưa ra phim dựa trên dữ liệu cá nhân của tôi",
+          "category": "paraphrasing",
+          "difficulty": "medium",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.7448481917381287,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Diễn đạt kỹ thuật hơn",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Kiếm phim hợp gu tui",
+          "category": "ambiguous_phrasing",
+          "difficulty": "hard",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.8936314582824707,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "high",
+            "verdict": "PASS"
+          },
+          "why_hard": "Tiếng lóng, không chuẩn",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Phim nào dành riêng cho mình tôi?",
+          "category": "ambiguous_phrasing",
           "difficulty": "hard",
           "expected_intent": "recommend_personalization",
           "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.4139634668827057,
+          "confidence": 0.5453113913536072,
           "evaluation": {
             "correct": false,
-            "confidence_level": "low",
+            "confidence_level": "medium",
             "verdict": "FAIL"
           },
-          "why_hard": "Không có yếu tố cá nhân",
+          "why_hard": "Cách diễn đạt khác lạ",
           "fulfillment_text": "cố lên Đức ơi",
           "parameters": {
-            "rating_comparator": "[]",
-            "date_comparator": "[]",
             "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
+            "publish_date": "[]",
+            "rating": "[]",
+            "genre": "[]"
+          },
+          "entities_used": {},
+          "entities_detected": {
+            "person": "[]",
+            "date_comparator": "[]",
+            "rating_comparator": "[]",
             "publish_date": "[]",
             "rating": "[]",
             "genre": "[]"
           }
         },
         {
-          "question": "Đề xuất cá nhân hóa",
-          "category": "missing_entities",
-          "difficulty": "easy",
-          "expected_intent": "recommend_personalization",
-          "predicted_intent": "recommend_personalization",
-          "confidence": 0.5786091685295105,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "Thiếu đối tượng phim",
-          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
-        },
-        {
-          "question": "Hợp với tôi",
-          "category": "missing_entities",
-          "difficulty": "medium",
-          "expected_intent": "recommend_personalization",
-          "predicted_intent": "recommend_personalization",
-          "confidence": 0.5921434164047241,
-          "evaluation": {
-            "correct": true,
-            "confidence_level": "medium",
-            "verdict": "PASS"
-          },
-          "why_hard": "Thiếu yêu cầu rõ ràng",
-          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
-        },
-        {
-          "question": "Chiếu cái gì hợp gu tôi?",
-          "category": "ambiguous_phrasing",
+          "question": "Gợi ý phim cho tôi xem",
+          "category": "boundary_cases",
           "difficulty": "hard",
           "expected_intent": "recommend_personalization",
           "predicted_intent": "recommend_personalization",
-          "confidence": 0.30911076068878174,
+          "confidence": 0.522235631942749,
           "evaluation": {
             "correct": true,
-            "confidence_level": "low",
-            "verdict": "FAIL"
+            "confidence_level": "medium",
+            "verdict": "PASS"
           },
-          "why_hard": "Dùng tiếng lóng 'gu'",
+          "why_hard": "Thiếu yếu tố cá nhân hóa rõ",
           "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
         },
         {
-          "question": "Phim nào đúng ý tôi?",
-          "category": "ambiguous_phrasing",
+          "question": "Đề xuất phim dựa trên phim tôi thích",
+          "category": "boundary_cases",
+          "difficulty": "hard",
+          "expected_intent": "recommend_personalization",
+          "predicted_intent": "recommend_personalization",
+          "confidence": 0.7433021664619446,
+          "evaluation": {
+            "correct": true,
+            "confidence_level": "medium",
+            "verdict": "PASS"
+          },
+          "why_hard": "Có thể bị nhầm thành gợi ý tương tự",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
+        },
+        {
+          "question": "Gợi ý phim dựa theo sở thích của tôii",
+          "category": "edge_cases",
           "difficulty": "medium",
           "expected_intent": "recommend_personalization",
-          "predicted_intent": "default_fallback",
+          "predicted_intent": "recommend_personalization",
           "confidence": 1.0,
           "evaluation": {
-            "correct": false,
+            "correct": true,
             "confidence_level": "high",
-            "verdict": "FAIL"
+            "verdict": "PASS"
           },
-          "why_hard": "Diễn đạt khác thường",
-          "fulfillment_text": "Vui lòng nhắc lại.",
-          "parameters": {}
+          "why_hard": "Sai chính tả nhẹ",
+          "fulfillment_text": "Làm đề xuất cá nhân đi cu",
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
         },
         {
-          "question": "Tôi muốn xem phim phù hợp sở thích",
-          "category": "paraphrasing",
-          "difficulty": "easy",
-          "expected_intent": "recommend_personalization",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.5131564736366272,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Diễn đạt khác training",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[<proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E06990>, <proto.marshal.collections.maps.MapComposite object at 0x0000024CF1E07150>]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "[]"
-          }
-        },
-        {
-          "question": "Dựa vào lịch sử, gợi ý phim",
-          "category": "paraphrasing",
+          "question": "Pim đề xuất cá nhân hóa",
+          "category": "edge_cases",
           "difficulty": "medium",
           "expected_intent": "recommend_personalization",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.5830850005149841,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Cấu trúc câu khác",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "rating": "[]",
-            "publish_date": "[]",
-            "genre": "['lịch sử']"
-          }
-        },
-        {
-          "question": "Đề xúât cá nhân hóa",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "recommend_personalization",
           "predicted_intent": "recommend_personalization",
-          "confidence": 0.5710803270339966,
+          "confidence": 0.6151909232139587,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Sai chính tả 'xúât'",
+          "why_hard": "Viết tắt 'phim' thành 'pim'",
           "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
         },
         {
-          "question": "Gợi ý phim hợp với tôy",
-          "category": "edge_cases",
-          "difficulty": "hard",
-          "expected_intent": "recommend_personalization",
-          "predicted_intent": "Default Welcome Intent",
-          "confidence": 0.34018799662590027,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "low",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Sai chính tả 'tôy'",
-          "fulfillment_text": "Xin chào! Tôi là chatbot chuyên gợi ý phim, bạn có yêu cầu nào để tôi giúp để tìm phim phù hợp với bạn không chẳng hạn tên tác giả, diễn viên, thể loại,...?",
-          "parameters": {}
-        },
-        {
-          "question": "Tìm phim hành động và đề xuất cá nhân",
-          "category": "multi_intent",
-          "difficulty": "hard",
-          "expected_intent": "recommend_personalization",
-          "predicted_intent": "movie_recommendation_request",
-          "confidence": 0.6688756942749023,
-          "evaluation": {
-            "correct": false,
-            "confidence_level": "medium",
-            "verdict": "FAIL"
-          },
-          "why_hard": "Kết hợp tìm kiếm và đề xuất",
-          "fulfillment_text": "cố lên Đức ơi",
-          "parameters": {
-            "person": "[]",
-            "date_comparator": "[]",
-            "rating_comparator": "[]",
-            "publish_date": "[]",
-            "rating": "[]",
-            "genre": "['hành động']"
-          }
-        },
-        {
-          "question": "Đề xuất cá nhân và xem trailer",
-          "category": "multi_intent",
-          "difficulty": "hard",
+          "question": "Gợi ý phim cá nhân hóa",
+          "category": "missing_entities",
+          "difficulty": "easy",
           "expected_intent": "recommend_personalization",
           "predicted_intent": "recommend_personalization",
-          "confidence": 0.5831007957458496,
+          "confidence": 0.6277726888656616,
           "evaluation": {
             "correct": true,
             "confidence_level": "medium",
             "verdict": "PASS"
           },
-          "why_hard": "Yêu cầu nhiều hành động",
+          "why_hard": "Thiếu thông tin không bắt buộc",
           "fulfillment_text": "Làm đề xuất cá nhân đi cu",
-          "parameters": {}
+          "parameters": {},
+          "entities_used": {},
+          "entities_detected": {}
         }
       ]
     }

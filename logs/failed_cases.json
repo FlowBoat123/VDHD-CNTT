@@ -1,86 +1,69 @@
 [
   {
-    "question": "gợi ý phim hay",
-    "expected_intent": "movie_recommendation_request"
+    "question": "Sau khi thưởng thức bộ phim Avatar, bạn có đề xuất nào cho tôi không?",
+    "expected_intent": "recommend_movie_by_name",
+    "entities_used": {
+      "movie_name": "Avatar"
+    }
   },
   {
-    "question": "gợi ý phim và đặt vé",
-    "expected_intent": "movie_recommendation_request"
+    "question": "Cho biết diễn viên chính của phim Inception là ai?",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "diễn viên",
+      "movie_name": "Inception"
+    }
   },
   {
-    "question": "phim hay và review chi tiết",
-    "expected_intent": "movie_recommendation_request"
+    "question": "Ngày phát hành của phim Titanic là khi nào?",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "ngày phát hành",
+      "movie_name": "Titanic"
+    }
   },
   {
-    "question": "tìm phim tương tự titanic",
-    "expected_intent": "recommend_movie_by_name"
+    "question": "Năm công chiếu của phim Avatar 2 là bao nhiêu?",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "năm công chiếu",
+      "movie_name": "Avatar 2"
+    }
   },
   {
-    "question": "cho tôi phim như",
-    "expected_intent": "recommend_movie_by_name"
+    "question": "Thông tin về đạo diễn của bộ phim Forrest Gump là gì?",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "đạo diễn",
+      "movie_name": "Forrest Gump"
+    }
   },
   {
-    "question": "phim na ná frozen",
-    "expected_intent": "recommend_movie_by_name"
+    "question": "Phim Star Wars có mấy phần vậy? Cho xem cái",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "phần",
+      "movie_name": "Star Wars"
+    }
   },
   {
-    "question": "gợi ý vài phim có vibe tương đồng với la la land",
-    "expected_intent": "recommend_movie_by_name"
+    "question": "Cho biết năm fim Interstelar ra mắt",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "năm",
+      "movie_name": "Interstelar"
+    }
   },
   {
-    "question": "phim nào như người nhện",
-    "expected_intent": "recommend_movie_by_name"
+    "question": "Cho biết diễn viên chính là ai?",
+    "expected_intent": "information_request",
+    "entities_used": {
+      "parameter": "diễn viên"
+    }
   },
   {
-    "question": "phim như star wars và diễn viên chính",
-    "expected_intent": "recommend_movie_by_name"
-  },
-  {
-    "question": "Tôi muốn xem phim này",
-    "expected_intent": "information_request"
-  },
-  {
-    "question": "Phim này hay không?",
-    "expected_intent": "information_request"
-  },
-  {
-    "question": "Diễn viên chính là ai?",
-    "expected_intent": "information_request"
-  },
-  {
-    "question": "Phim đó có chất không?",
-    "expected_intent": "information_request"
-  },
-  {
-    "question": "Ai đạo diễn phim này và nó có hay không?",
-    "expected_intent": "information_request"
-  },
-  {
-    "question": "Gợi ý phim cho tôi",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Phim nào hay nhất?",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Phim nào đúng ý tôi?",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Tôi muốn xem phim phù hợp sở thích",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Dựa vào lịch sử, gợi ý phim",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Gợi ý phim hợp với tôy",
-    "expected_intent": "recommend_personalization"
-  },
-  {
-    "question": "Tìm phim hành động và đề xuất cá nhân",
-    "expected_intent": "recommend_personalization"
+    "question": "Phim nào dành riêng cho mình tôi?",
+    "expected_intent": "recommend_personalization",
+    "entities_used": {}
   }
 ]

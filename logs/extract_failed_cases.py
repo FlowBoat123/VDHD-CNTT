@@ -20,14 +20,17 @@ intent_results = data.get("intent_results", {})
 
 for intent_name, intent_info in intent_results.items():
     for tc in intent_info.get("test_cases", []):
+        eva = tc.get("evaluation", {})
         expected = tc.get("expected_intent")
         predicted = tc.get("predicted_intent")
         question = tc.get("question")
+        entities_used = tc.get("entities_used", [])
 
-        if expected != predicted:
+        if eva.get("correct") is False or eva.get("verdict") == "FAIL":
             failed.append({
                 "question": question,
-                "expected_intent": expected
+                "expected_intent": expected,
+                "entities_used": entities_used
             })
 
 with out_path.open("w", encoding="utf-8") as f:

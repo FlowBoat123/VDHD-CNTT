@@ -1,457 +1,601 @@
 #!/usr/bin/env python3
 """
-Auto-import training phrases into Dialogflow ES.
+Auto import training phrases into Dialogflow ES.
 
-Usage:
-  export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
-  python auto_import_dialogflow_es.py \
-    --project-id my-gcp-project \
-    --input dialogflow_enriched_training_data.json \
-    [--language vi] [--dry-run]
+Supports input entries:
+- plain strings (single TrainingPhrase part)
+- dict with {"text": "...", "entities": [...]} where each entity may include:
+    { "entity": "<name>", "value": "<text>", "start": int, "end": int,
+      "alias": "...", "entity_type": "<@...>" }
+- dict with {"parts": [...]} or {"parts_json": "..."} (legacy)
 
-Input file format (JSON):
-{
-  "movie_recommendation_request": [
-    "cho tôi vài phim hay để xem",
-    "bạn giới thiệu phim nào hấp dẫn không"
-  ],
-  ...
-}
+This variant PREFERS the following custom entities (uses @<name>):
+  date_comparator, genre, movie_name, parameter, publish_date, rating_comparator
+
+And will use system entities for number and person when appropriate:
+  @sys.number, @sys.person
+
+Run with --dry-run to preview.
 """
-import argparse
-import json
-import os
-import sys
-import time
-from typing import List, Dict, Set
-import requests
+from __future__ import annotations
+import argparse, json, os, sys, time, re
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
 
+# try import dialogflow
 try:
     from google.cloud import dialogflow_v2 as dialogflow
     from google.api_core.exceptions import GoogleAPICallError
-except Exception as e:
-    print("Missing google-cloud-dialogflow dependency. Install with:")
-    print("  pip install google-cloud-dialogflow")
+except Exception:
+    print("Missing google-cloud-dialogflow. Install with: pip install google-cloud-dialogflow")
     raise
 
-# ----- Helpers -----
-def chunked(iterable, n):
-    it = iter(iterable)
-    while True:
-        chunk = []
-        for _ in range(n):
-            try:
-                chunk.append(next(it))
-            except StopIteration:
-                break
-        if not chunk:
-            break
-        yield chunk
+# .env loader fallback
+BASE_DIR = Path(__file__).resolve().parent
+ENV_PATH = BASE_DIR / ".env"
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=ENV_PATH)
+except Exception:
+    if ENV_PATH.exists():
+        for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k,v = line.split("=",1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
+# --------- Configuration: preferred/custom entities ----------
+PREFERRED_ENTITY_NAMES = {
+    "date_comparator",
+    "genre",
+    "movie_name",
+    "parameter",
+    "publish_date",
+    "rating_comparator"
+}
+SYS_NUMBER = "@sys.number"
+SYS_PERSON = "@sys.person"
+SYS_ANY = "@sys.any"
+
+# ---------------- helpers ----------------
 def normalize_phrase(p: str) -> str:
-    # canonical normalization for deduplication
     return " ".join(p.strip().split()).lower()
 
+def load_input_json(path: Path) -> Dict[str, List[Any]]:
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError("Input must be a JSON object mapping intent -> list")
+    out: Dict[str, List[Any]] = {}
+    for k, v in data.items():
+        if not isinstance(v, list):
+            continue
+        out[k] = [item for item in v if (isinstance(item, str) and item.strip()) or isinstance(item, dict)]
+    return out
 
-def build_training_phrase_parts(phrase: str, annotate_params: bool = False, entity_map: Dict[str, List[str]] = None):
-    """Return a list of TrainingPhrase.Part objects for a phrase.
+# ---------------- entity inference ----------------
+def looks_like_number(s: str) -> bool:
+    if not s:
+        return False
+    s = s.strip()
+    # percent, range, digits, decimals
+    if re.fullmatch(r'[-+]?\d+(\.\d+)?', s):
+        return True
+    if "%" in s:
+        return True
+    if re.search(r'\d+\s*-\s*\d+', s):
+        return True
+    return False
 
-    If `annotate_params` is True, the function will look for parameter markers
-    in the phrase using either `{param}` or `<param>` syntax and mark those
-    parts with an entity_type and alias (e.g. alias 'movie_name' -> entity '@movie_name').
+def looks_like_person_alias_or_value(alias: Optional[str], value: str) -> bool:
+    # heuristic: alias contains actor/diễn viên/person/name OR value has two capitalized words (simple)
+    if alias:
+        a = alias.lower()
+        if any(x in a for x in ("person","actor","diễn viên","name","person_name","actor_name")):
+            return True
+    # value heuristic: has at least 2 words starting with uppercase or Vietnamese name tokens (very rough)
+    if value:
+        tokens = value.strip().split()
+        caps = sum(1 for t in tokens if t[:1].isalpha() and t[0].isupper())
+        if len(tokens) >= 2 and caps >= 1:
+            return True
+    return False
 
-    This is a lightweight heuristic: it only annotates explicit markers.
+def infer_entity_type_from_alias_or_value(alias: Optional[str], value: str, entity_map: Dict[str, List[str]]) -> str:
     """
-    parts = []
-    if not annotate_params:
-        # single unannotated part
-        part = dialogflow.Intent.TrainingPhrase.Part(text=phrase)
-        return [part]
+    Priority:
+      1) If alias exactly equals one of preferred custom names -> @alias
+      2) If alias exactly matches any entity_map key -> @alias
+      3) If value exactly matches entity_map entries for a preferred entity -> @preferred
+      4) If value matches any entity_map entry -> that entity
+      5) Heuristics: number -> @sys.number ; person-like -> @sys.person
+      6) Guess from alias (date etc.)
+      7) fallback @sys.any
+    """
+    # 1) alias preferred
+    if alias:
+        a = alias.strip()
+        if a in PREFERRED_ENTITY_NAMES:
+            return f"@{a}"
+        if a in entity_map:
+            return f"@{a}"
 
-    import re
+    val = (value or "").strip()
+    val_low = val.lower()
 
-    def _find_quoted(s: str):
-        m = re.search(r'["\'«](.+?)["\'»]', s)
-        return m.group(1).strip() if m else None
+    # 3) exact match in entity_map with priority for preferred types
+    if entity_map:
+        # first check exact matches for preferred names
+        for pref in PREFERRED_ENTITY_NAMES:
+            syns = entity_map.get(pref, [])
+            for s in syns:
+                if s and s.strip().lower() == val_low:
+                    return f"@{pref}"
+        # then check any entity type exact match
+        for et_name, syns in entity_map.items():
+            for s in syns:
+                if s and s.strip().lower() == val_low:
+                    return f"@{et_name}"
+        # loose contains/inclusion: prefer preferred entities first
+        for pref in PREFERRED_ENTITY_NAMES:
+            syns = entity_map.get(pref, [])
+            for s in syns:
+                if s and (s.strip().lower() in val_low or val_low in s.strip().lower()):
+                    return f"@{pref}"
+        for et_name, syns in entity_map.items():
+            for s in syns:
+                if s and (s.strip().lower() in val_low or val_low in s.strip().lower()):
+                    return f"@{et_name}"
 
-    def _find_pattern_after_keywords(s: str):
-        # look for patterns like 'phim na ná X', 'phim giống X', 'phim như X'
-        patterns = [r'phim\s+(?:na\s*ná|na-na|na|giống\s+với|giống|như)\s+(.{1,80})$',
-                    r'phim\s+(.{1,80})$']
-        for p in patterns:
-            m = re.search(p, s, flags=re.IGNORECASE)
-            if m:
-                cand = m.group(1).strip()
-                # strip trailing punctuation
-                cand = re.sub(r'[\.,!?]$', '', cand).strip()
-                return cand
-        return None
+    # 5) numeric / person heuristics
+    if looks_like_number(val):
+        return SYS_NUMBER
+    if looks_like_person_alias_or_value(alias, val):
+        return SYS_PERSON
 
-    def _tmdb_search(query: str, tmdb_key: str):
-        try:
-            url = 'https://api.themoviedb.org/3/search/movie'
-            resp = requests.get(url, params={'api_key': tmdb_key, 'query': query}, timeout=5)
-            resp.raise_for_status()
-            data = resp.json()
-            results = data.get('results', [])
-            if results:
-                # return the first title
-                return results[0].get('title') or results[0].get('original_title')
-        except Exception:
-            return None
+    # 6) alias-based guess for common sys types
+    if alias:
+        al = alias.lower()
+        if "date" in al or "ngày" in al:
+            return "@sys.date"
+        if "time" in al:
+            return "@sys.time"
+        if "number" in al or "số" in al:
+            return SYS_NUMBER
+        if "phone" in al or "sdt" in al or "điện thoại" in al:
+            return "@sys.phone-number"
+        if "email" in al:
+            return "@sys.email"
 
-    # try quoted first
-    candidate = _find_quoted(phrase)
-    if not candidate:
-        candidate = _find_pattern_after_keywords(phrase)
+    # fallback
+    return SYS_ANY
 
-    # If candidate found, try to refine via TMDB if API key available
-    tmdb_key = os.getenv('TMDB_API_KEY')
-    if not tmdb_key:
-        # try backend/.env
-        try:
-            repo_root = Path(__file__).resolve().parents[1]
-            env_path = repo_root / 'backend' / '.env'
-            if env_path.exists():
-                for line in env_path.read_text(encoding='utf-8').splitlines():
-                    if line.strip().startswith('TMDB_API_KEY'):
-                        val = line.split('=', 1)[1].strip().strip("'\"")
-                        tmdb_key = val
-                        break
-        except Exception:
-            tmdb_key = None
+# ---------------- build parts (robust) ----------------
+def build_parts_from_item(item: Any, entity_map: Dict[str, List[str]]) -> List[dialogflow.Intent.TrainingPhrase.Part]:
+    parts: List[dialogflow.Intent.TrainingPhrase.Part] = []
 
-    tmdb_title = None
-    if candidate and tmdb_key:
-        tmdb_title = _tmdb_search(candidate, tmdb_key)
+    # plain string
+    if isinstance(item, str):
+        return [dialogflow.Intent.TrainingPhrase.Part(text=item)]
 
-    match_text = tmdb_title or candidate
+    # legacy parts / parts_json
+    if isinstance(item, dict):
+        parts_list = None
+        if "parts" in item and isinstance(item["parts"], list):
+            parts_list = item["parts"]
+        elif "parts_json" in item:
+            try:
+                parts_list = json.loads(item["parts_json"])
+            except Exception:
+                parts_list = None
 
-    if match_text:
-        # locate match_text in phrase (case-insensitive)
-        idx = phrase.lower().find(match_text.lower())
-        if idx >= 0:
-            if idx > 0:
-                parts.append(dialogflow.Intent.TrainingPhrase.Part(text=phrase[:idx]))
-            matched = phrase[idx:idx+len(match_text)]
-            parts.append(dialogflow.Intent.TrainingPhrase.Part(text=matched, entity_type='@movie_name', alias='movie_name', user_defined=True))
-            if idx+len(match_text) < len(phrase):
-                parts.append(dialogflow.Intent.TrainingPhrase.Part(text=phrase[idx+len(match_text):]))
-            return parts
+        if parts_list:
+            for p in parts_list:
+                text = str(p.get("text", "")).strip() if p else ""
+                if not text:
+                    continue
+                if p.get("is_entity") or p.get("entity_type") or p.get("alias"):
+                    et = p.get("entity_type")
+                    alias = p.get("alias") or p.get("entity")
+                    if not et and alias:
+                        # prefer preferred names
+                        if alias in PREFERRED_ENTITY_NAMES:
+                            et = f"@{alias}"
+                        else:
+                            et = f"@{alias}"
+                    part = dialogflow.Intent.TrainingPhrase.Part(
+                        text=text,
+                        entity_type=et if et else None,
+                        alias=alias if alias else None,
+                        user_defined=True
+                    )
+                else:
+                    part = dialogflow.Intent.TrainingPhrase.Part(text=text)
+                parts.append(part)
+            if parts:
+                return parts
 
-    # If explicit heuristics didn't detect, try matching against entity_map values
-    if annotate_params and entity_map:
-        text_low = phrase.lower()
-        # build list of (entity_display_name, synonym) sorted by synonym length desc
-        matches = []
-        for ent_name, synonyms in entity_map.items():
-            for syn in synonyms:
-                syn_low = syn.lower()
-                idx = text_low.find(syn_low)
-                if idx >= 0:
-                    matches.append((ent_name, syn, idx, len(syn_low)))
-        if matches:
-            # prefer longest match and earliest position
-            matches.sort(key=lambda x: (-x[3], x[2]))
-            ent_name, syn, idx, _ = matches[0]
-            parts = []
-            if idx > 0:
-                parts.append(dialogflow.Intent.TrainingPhrase.Part(text=phrase[:idx]))
-            matched = phrase[idx:idx+len(syn)]
-            parts.append(dialogflow.Intent.TrainingPhrase.Part(text=matched, entity_type=f'@{ent_name}', alias=ent_name, user_defined=True))
-            if idx+len(syn) < len(phrase):
-                parts.append(dialogflow.Intent.TrainingPhrase.Part(text=phrase[idx+len(syn):]))
-            return parts
+        # robust handling for {"text": "...", "entities": [...]}
+        if "text" in item and isinstance(item["text"], str) and isinstance(item.get("entities"), list):
+            text: str = item["text"]
+            ents = item.get("entities", [])
+            text_lower = text.lower()
+            used_spans: List[Tuple[int,int]] = []
 
-    # fallback: no detected parameter, return single part
-    return [dialogflow.Intent.TrainingPhrase.Part(text=phrase)]
+            def find_next_nonoverlap(substr: str, start_search=0) -> Optional[Tuple[int,int]]:
+                if not substr:
+                    return None
+                s = text_lower.find(substr.lower(), start_search)
+                while s != -1:
+                    e = s + len(substr)
+                    overlap = False
+                    for (us, ue) in used_spans:
+                        if not (e <= us or s >= ue):
+                            overlap = True
+                            break
+                    if not overlap:
+                        return (s, e)
+                    s = text_lower.find(substr.lower(), s+1)
+                pattern = r'\b' + re.escape(substr) + r'\b'
+                m = re.search(pattern, text, flags=re.IGNORECASE)
+                if m:
+                    s, e = m.start(), m.end()
+                    for (us, ue) in used_spans:
+                        if not (e <= us or s >= ue):
+                            return None
+                    return (s, e)
+                return None
 
-# ----- Dialogflow operations -----
-class DialogflowESImporter:
+            def ent_key(e):
+                try:
+                    return (int(e.get("start")) if e.get("start") is not None else 10**9, -(len(str(e.get("value") or ""))))
+                except Exception:
+                    return (10**9, 0)
+
+            try:
+                ents_sorted = sorted(ents, key=ent_key)
+            except Exception:
+                ents_sorted = ents
+
+            spans = []
+            for e in ents_sorted:
+                s = None
+                t = None
+                try:
+                    if e.get("start") is not None:
+                        s = int(e.get("start"))
+                    if e.get("end") is not None:
+                        t = int(e.get("end"))
+                except Exception:
+                    s = None
+                    t = None
+                val = str(e.get("value") or "").strip()
+                ok = False
+                if s is not None and t is not None and 0 <= s < t <= len(text):
+                    sample = text[s:t]
+                    if val and sample.strip().lower() != val.lower():
+                        ok = False
+                    else:
+                        ok = True
+                if not ok and val:
+                    found = find_next_nonoverlap(val, 0)
+                    if found:
+                        s, t = found
+                        ok = True
+                if not ok and val:
+                    found = find_next_nonoverlap(val, 0)
+                    if found:
+                        s, t = found
+                        ok = True
+                if ok:
+                    spans.append((s, t, e))
+                    used_spans.append((s, t))
+                else:
+                    # skip if not locatable
+                    continue
+
+            spans.sort(key=lambda x: x[0])
+            cursor = 0
+            for s, t, e in spans:
+                if cursor < s:
+                    pre = text[cursor:s]
+                    if pre:
+                        parts.append(dialogflow.Intent.TrainingPhrase.Part(text=pre))
+                ent_text = text[s:t]
+                alias = e.get("alias") or e.get("entity") or None
+                provided_et = e.get("entity_type") or None
+                if provided_et:
+                    entity_type = provided_et
+                else:
+                    entity_type = infer_entity_type_from_alias_or_value(alias, e.get("value") or ent_text, entity_map)
+                if entity_type is None:
+                    entity_type = SYS_ANY
+                part = dialogflow.Intent.TrainingPhrase.Part(
+                    text=ent_text,
+                    entity_type=entity_type,
+                    alias=alias if alias else None,
+                    user_defined=True
+                )
+                parts.append(part)
+                cursor = t
+            if cursor < len(text):
+                tail = text[cursor:]
+                if tail:
+                    parts.append(dialogflow.Intent.TrainingPhrase.Part(text=tail))
+            if parts:
+                return parts
+
+    # fallback
+    return [dialogflow.Intent.TrainingPhrase.Part(text=str(item))]
+
+# ---------------- Dialogflow importer ----------------
+class DFImporter:
     def __init__(self, project_id: str, language_code: str = "vi"):
         self.project_id = project_id
-        self.language_code = language_code
+        self.language = language_code
         self.intents_client = dialogflow.IntentsClient()
         self.parent = f"projects/{project_id}/agent"
-        # Entity types client and entity map (populated on demand)
         try:
-            self.entity_types_client = dialogflow.EntityTypesClient()
+            self.entity_client = dialogflow.EntityTypesClient()
         except Exception:
-            self.entity_types_client = None
-        self._entity_map = None
+            self.entity_client = None
+        self.entity_map: Dict[str, List[str]] = {}
 
     def list_intents(self) -> List[dialogflow.Intent]:
-        # List intents (lightweight). Use get_intent for full data when needed.
-        intents = list(self.intents_client.list_intents(request={"parent": self.parent}))
-        return intents
+        return list(self.intents_client.list_intents(request={"parent": self.parent}))
 
-    def get_intent_full(self, intent_name: str) -> dialogflow.Intent:
-        """Fetch the full intent (INTENT_VIEW_FULL) including training_phrases."""
+    def get_intent_full(self, name: str) -> dialogflow.Intent:
+        return self.intents_client.get_intent(request={"name": name, "intent_view": dialogflow.IntentView.INTENT_VIEW_FULL})
+
+    def load_entity_map_from_df(self) -> Dict[str, List[str]]:
+        emap: Dict[str, List[str]] = {}
+        if not self.entity_client:
+            return emap
         try:
-            full = self.intents_client.get_intent(request={"name": intent_name, "intent_view": dialogflow.IntentView.INTENT_VIEW_FULL})
-            return full
-        except Exception:
-            # propagate exception to caller
-            raise
-
-    def load_entity_map(self) -> Dict[str, List[str]]:
-        """Load entity types and their synonyms/values from Dialogflow.
-
-        Returns a mapping from entity display name (e.g. 'movie_name') to a list
-        of strings (values and synonyms). The returned map is cached on the
-        importer instance as `self._entity_map`.
-        """
-        if self._entity_map is not None:
-            return self._entity_map
-
-        if not self.entity_types_client:
-            self._entity_map = {}
-            return self._entity_map
-
-        emap = {}
-        try:
-            for et in self.entity_types_client.list_entity_types(request={"parent": self.parent}):
-                name = et.display_name
-                values = []
-                # et.entities contains Entity objects with 'value' and optional 'synonyms'
-                for ent in getattr(et, "entities", []):
+            for et in self.entity_client.list_entity_types(request={"parent": self.parent}):
+                key = et.display_name
+                vals: List[str] = []
+                for ent in getattr(et, "entities", []) or []:
                     v = getattr(ent, "value", None)
                     if v:
-                        values.append(v)
-                    # synonyms may be present
+                        vals.append(str(v))
                     for s in getattr(ent, "synonyms", []) or []:
-                        if s and s != v:
-                            values.append(s)
-                # normalize and unique
-                clean = []
+                        if s:
+                            vals.append(str(s))
                 seen = set()
-                for v in values:
-                    if not isinstance(v, str):
-                        continue
+                clean = []
+                for v in vals:
                     vv = v.strip()
                     if not vv:
                         continue
-                    key = vv.lower()
-                    if key in seen:
+                    lk = vv.lower()
+                    if lk in seen:
                         continue
-                    seen.add(key)
+                    seen.add(lk)
                     clean.append(vv)
                 if clean:
-                    emap[name] = clean
+                    emap[key] = clean
         except Exception:
-            # if entity listing fails, leave empty
             emap = {}
-
-        self._entity_map = emap
+        # ensure preferred keys exist (so alias lookup works even if entity empty)
+        for pref in PREFERRED_ENTITY_NAMES:
+            emap.setdefault(pref, emap.get(pref, []))
+        self.entity_map = emap
         return emap
 
-    def find_intent_by_display_name(self, display_name: str, intents: List[dialogflow.Intent]):
+    def find_intent_by_display_name(self, name: str, intents: List[dialogflow.Intent]) -> Optional[dialogflow.Intent]:
         for it in intents:
-            if it.display_name == display_name:
+            if it.display_name == name:
                 return it
         return None
 
-    def create_intent(self, display_name: str, training_phrases: List[str]) -> dialogflow.Intent:
-        # Build training phrases objects
+    def create_intent(self, display_name: str, items: List[Any]) -> dialogflow.Intent:
         tp_objs = []
-        for phrase in training_phrases:
-            parts = build_training_phrase_parts(phrase, annotate_params=self._annotate_params if hasattr(self, '_annotate_params' ) else False)
-            tp = dialogflow.Intent.TrainingPhrase(parts=parts)
-            tp_objs.append(tp)
-
+        for it in items:
+            parts = build_parts_from_item(it, self.entity_map)
+            tp_objs.append(dialogflow.Intent.TrainingPhrase(parts=parts))
         intent = dialogflow.Intent(
             display_name=display_name,
             training_phrases=tp_objs,
-            # set messages default so DF is happy (optional)
             messages=[dialogflow.Intent.Message(text=dialogflow.Intent.Message.Text(text=[""]))]
         )
+        return self.intents_client.create_intent(request={"parent": self.parent, "intent": intent, "language_code": self.language})
 
-        created_intent = self.intents_client.create_intent(
-            request={"parent": self.parent, "intent": intent, "language_code": self.language_code}
-        )
-        return created_intent
-
-    def update_intent_add_phrases(self, intent: dialogflow.Intent, new_phrases: List[str]):
-        # Safely add training phrases onto existing intent. To avoid accidentally
-        # overwriting other fields, fetch the full intent from the API, merge
-        # training_phrases, and update only the `training_phrases` field via FieldMask.
+    def update_intent_add_phrases(self, intent: dialogflow.Intent, items: List[Any]) -> Tuple[List[str], int, int]:
         from google.protobuf import field_mask_pb2
-
-        # Refresh the intent from the server to ensure we have the full training_phrases
         try:
-            fetched = self.intents_client.get_intent(request={"name": intent.name, "intent_view": dialogflow.IntentView.INTENT_VIEW_FULL})
-        except Exception as e:
-            # Fall back to the passed-in intent if get_intent fails for some reason
+            fetched = self.get_intent_full(intent.name)
+        except Exception:
             fetched = intent
-
-        existing_phrases = set()
+        existing_norm: Set[str] = set()
         existing_tp_objs = []
         if getattr(fetched, "training_phrases", None):
             for tp in fetched.training_phrases:
-                text = "".join([part.text for part in tp.parts])
-                existing_phrases.add(normalize_phrase(text))
+                txt = "".join([part.text for part in tp.parts])
+                existing_norm.add(normalize_phrase(txt))
                 existing_tp_objs.append(tp)
-
-        added = []
-        for phrase in new_phrases:
-            if normalize_phrase(phrase) not in existing_phrases:
-                parts = build_training_phrase_parts(phrase, annotate_params=self._annotate_params if hasattr(self, '_annotate_params' ) else False)
-                tp = dialogflow.Intent.TrainingPhrase(parts=parts)
-                existing_tp_objs.append(tp)
-                existing_phrases.add(normalize_phrase(phrase))
-                added.append(phrase)
-
-        if not added:
-            return []
-
-        # Build a minimal Intent object with the name and updated training_phrases only
+        added_texts: List[str] = []
+        for it in items:
+            if isinstance(it, str):
+                key = normalize_phrase(it)
+            else:
+                if isinstance(it, dict):
+                    if "parts" in it and isinstance(it["parts"], list):
+                        combined = "".join([p.get("text", "") for p in it["parts"] if p.get("text")])
+                        key = normalize_phrase(combined)
+                    elif "parts_json" in it:
+                        try:
+                            pl = json.loads(it["parts_json"])
+                            combined = "".join([p.get("text", "") for p in pl if p.get("text")])
+                            key = normalize_phrase(combined)
+                        except Exception:
+                            key = normalize_phrase(json.dumps(it, ensure_ascii=False))
+                    elif "text" in it and isinstance(it["text"], str):
+                        key = normalize_phrase(it["text"])
+                    else:
+                        key = normalize_phrase(json.dumps(it, ensure_ascii=False))
+                else:
+                    key = normalize_phrase(str(it))
+            if key in existing_norm:
+                continue
+            parts = build_parts_from_item(it, self.entity_map)
+            tp = dialogflow.Intent.TrainingPhrase(parts=parts)
+            existing_tp_objs.append(tp)
+            existing_norm.add(key)
+            added_texts.append(key)
+        if not added_texts:
+            return [], len(getattr(fetched, "training_phrases", [])), len(existing_tp_objs)
         new_intent = dialogflow.Intent(name=fetched.name, training_phrases=existing_tp_objs)
-
         update_mask = field_mask_pb2.FieldMask(paths=["training_phrases"])
-        try:
-            updated = self.intents_client.update_intent(
-                request={
-                    "intent": new_intent,
-                    "language_code": self.language_code,
-                    "update_mask": update_mask,
-                }
-            )
-        except GoogleAPICallError as e:
-            raise RuntimeError(f"Failed to update intent {intent.display_name}: {e}")
+        updated = self.intents_client.update_intent(request={"intent": new_intent, "language_code": self.language, "update_mask": update_mask})
+        before = len(getattr(fetched, "training_phrases", []) or [])
+        after = len(existing_tp_objs)
+        return added_texts, before, after
 
-        # Return list of phrases that were actually added and counts for verification
-        before_count = len(fetched.training_phrases) if getattr(fetched, "training_phrases", None) else 0
-        after_count = len(existing_tp_objs)
-        return added, before_count, after_count
-
-# ----- Main CLI flow -----
+# ---------------- CLI ----------------
 def main():
-    parser = argparse.ArgumentParser(description="Auto import training phrases into Dialogflow ES")
-    parser.add_argument("--project-id", required=True, help="GCP project id (Dialogflow project)")
-    parser.add_argument("--input", required=True, help="Input JSON file mapping intent->phrases")
-    parser.add_argument("--language", default="vi", help="Language code (default: vi)")
-    parser.add_argument("--dry-run", action="store_true", help="Don't apply changes, only print plan")
-    parser.add_argument("--batch-delay", type=float, default=0.2, help="Delay between API calls (sec)")
-    parser.add_argument("--annotate-params", action="store_true", help="Treat {param} or <param> in phrases as parameters and annotate parts")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--project-id", required=True)
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--language", default="vi")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--batch-delay", type=float, default=0.2)
+    parser.add_argument("--annotate-from-entities", action="store_true",
+                        help="Load entity types from Dialogflow and use them to infer entity_type for entities in input")
     args = parser.parse_args()
 
-    if not os.path.isfile(args.input):
-        print("Input file not found:", args.input)
+    inp = Path(args.input)
+    if not inp.exists():
+        print("Input file not found:", inp)
         sys.exit(1)
 
-    with open(args.input, "r", encoding="utf-8") as f:
-        data: Dict[str, List[str]] = json.load(f)
+    data = load_input_json(inp)
+    importer = DFImporter(args.project_id, args.language)
 
-    # normalize phrases lists
-    for k, v in data.items():
-        data[k] = [p for p in v if isinstance(p, str) and p.strip()]
-
-    importer = DialogflowESImporter(args.project_id, args.language)
-    # pass annotate flag to importer so parts builder can mark parameter parts
-    setattr(importer, '_annotate_params', bool(args.annotate_params))
-    if args.annotate_params:
-        print("Loading entity map from Dialogflow for parameter auto-detection...")
-        emap = importer.load_entity_map()
-        print(f"  Loaded {len(emap)} entity types for annotation.")
+    if args.annotate_from_entities:
+        print("Loading entity map from Dialogflow...")
+        emap = importer.load_entity_map_from_df()
+        print(f"Loaded {len(emap)} entity types")
     else:
-        emap = None
+        importer.entity_map = {k: [] for k in PREFERRED_ENTITY_NAMES}
 
-    print("Listing existing intents...")
-    existing_intents = importer.list_intents()
-    print(f"Found {len(existing_intents)} intents in project {args.project_id}.")
+    intents = importer.list_intents()
+    print(f"Found {len(intents)} intents in project {args.project_id}")
 
     created = []
     updated = []
     skipped = []
 
-    for intent_name, phrases in data.items():
-        # dedupe input phrases
-        normalized_set: Set[str] = set()
-        unique_phrases = []
-        for p in phrases:
-            np = normalize_phrase(p)
-            if np not in normalized_set:
-                normalized_set.add(np)
-                unique_phrases.append(p)
-
-        matched_intent = importer.find_intent_by_display_name(intent_name, existing_intents)
-
-        if matched_intent is None:
-            print(f"[CREATE] Intent '{intent_name}' does not exist. Will create with {len(unique_phrases)} phrases.")
-            if not args.dry_run:
-                try:
-                    created_intent = importer.create_intent(intent_name, unique_phrases)
-                    created.append((intent_name, len(unique_phrases)))
-                    # report counts: before=0, after=<created count>
-                    after_cnt = len(getattr(created_intent, "training_phrases", []))
-                    print(f"    Created intent '{intent_name}': before=0 phrases, after={after_cnt} phrases, added={after_cnt}")
-                    # small delay
-                    time.sleep(args.batch_delay)
-                except Exception as e:
-                    print(f"Error creating intent {intent_name}: {e}")
+    for intent_name, items in data.items():
+        # dedupe input items by textual repr
+        seen = set()
+        unique = []
+        for it in items:
+            if isinstance(it, str):
+                key = normalize_phrase(it)
+            elif isinstance(it, dict):
+                if "parts" in it and isinstance(it["parts"], list):
+                    combined = "".join([p.get("text", "") for p in it["parts"] if p.get("text")])
+                    key = normalize_phrase(combined)
+                elif "parts_json" in it:
+                    try:
+                        pl = json.loads(it["parts_json"])
+                        combined = "".join([p.get("text", "") for p in pl if p.get("text")])
+                        key = normalize_phrase(combined)
+                    except Exception:
+                        key = normalize_phrase(json.dumps(it, ensure_ascii=False))
+                elif "text" in it and isinstance(it["text"], str):
+                    key = normalize_phrase(it["text"])
+                else:
+                    key = normalize_phrase(json.dumps(it, ensure_ascii=False))
             else:
-                created.append((intent_name, len(unique_phrases)))
-                print(f"    (DRY) Create intent '{intent_name}': before=0 phrases, after={len(unique_phrases)} phrases, added={len(unique_phrases)}")
-        else:
-            # fetch full intent to get existing training_phrases (list_intents may return lightweight intents)
-            try:
-                full_intent = importer.get_intent_full(matched_intent.name)
-            except Exception:
-                # fallback to the listed intent if fetch fails
-                full_intent = matched_intent
+                key = normalize_phrase(str(it))
+            if key not in seen:
+                seen.add(key)
+                unique.append(it)
 
-            # compute which phrases are new vs duplicates using the full intent
+        matched = importer.find_intent_by_display_name(intent_name, intents)
+        if matched is None:
+            print(f"[CREATE] {intent_name} -> {len(unique)} phrases")
+            if args.dry_run:
+                for sample in unique[:3]:
+                    parts = build_parts_from_item(sample, importer.entity_map)
+                    print("  sample parts:", [(p.text, getattr(p, "entity_type", None), getattr(p, "alias", None)) for p in parts])
+                created.append((intent_name, len(unique)))
+            else:
+                try:
+                    ci = importer.create_intent(intent_name, unique)
+                    cnt = len(getattr(ci, "training_phrases", []) or [])
+                    created.append((intent_name, cnt))
+                    print(f"  Created {intent_name}: phrases={cnt}")
+                except Exception as e:
+                    print(f"  Error creating {intent_name}: {e}")
+        else:
+            try:
+                full = importer.get_intent_full(matched.name)
+            except Exception:
+                full = matched
             existing_texts = set()
-            if getattr(full_intent, "training_phrases", None):
-                for tp in full_intent.training_phrases:
+            if getattr(full, "training_phrases", None):
+                for tp in full.training_phrases:
                     txt = "".join([part.text for part in tp.parts])
                     existing_texts.add(normalize_phrase(txt))
-
-            to_add = [p for p in unique_phrases if normalize_phrase(p) not in existing_texts]
-            if to_add:
-                before_cnt = len(existing_texts)
-                print(f"[UPDATE] Intent '{intent_name}': will add {len(to_add)} new phrases.")
-                if not args.dry_run:
-                    try:
-                        result = importer.update_intent_add_phrases(matched_intent, to_add)
-                        # result is (added_list, before_count, after_count)
-                        if isinstance(result, tuple):
-                            added, before_cnt, after_cnt = result
-                        else:
-                            # backward compatibility (shouldn't happen)
-                            added = result
-                            before_cnt = before_cnt
-                            after_cnt = before_cnt + len(added)
-
-                        updated.append((intent_name, len(added)))
-                        print(f"    Updated intent '{intent_name}': before={before_cnt} phrases, after={after_cnt} phrases, added={len(added)}")
-                        time.sleep(args.batch_delay)
-                    except Exception as e:
-                        print(f"Error updating intent {intent_name}: {e}")
+            to_add = []
+            for it in unique:
+                if isinstance(it, str):
+                    key = normalize_phrase(it)
+                elif isinstance(it, dict):
+                    if "parts" in it and isinstance(it["parts"], list):
+                        combined = "".join([p.get("text", "") for p in it["parts"] if p.get("text")])
+                        key = normalize_phrase(combined)
+                    elif "parts_json" in it:
+                        try:
+                            pl = json.loads(it["parts_json"])
+                            combined = "".join([p.get("text", "") for p in pl if p.get("text")])
+                            key = normalize_phrase(combined)
+                        except Exception:
+                            key = normalize_phrase(json.dumps(it, ensure_ascii=False))
+                    elif "text" in it and isinstance(it["text"], str):
+                        key = normalize_phrase(it["text"])
+                    else:
+                        key = normalize_phrase(json.dumps(it, ensure_ascii=False))
                 else:
-                    # dry-run: compute expected after count
-                    after_cnt = before_cnt + len(to_add)
-                    updated.append((intent_name, len(to_add)))
-                    print(f"    (DRY) Update intent '{intent_name}': before={before_cnt} phrases, after={after_cnt} phrases, added={len(to_add)}")
-            else:
-                before_cnt = len(existing_texts)
-                print(f"[SKIP] Intent '{intent_name}': no new phrases to add. before={before_cnt}, after={before_cnt}")
+                    key = normalize_phrase(str(it))
+                if key not in existing_texts:
+                    to_add.append(it)
+            if not to_add:
                 skipped.append(intent_name)
+                print(f"[SKIP] {intent_name}: no new phrases")
+            else:
+                print(f"[UPDATE] {intent_name}: adding {len(to_add)} phrases")
+                if args.dry_run:
+                    for sample in to_add[:3]:
+                        parts = build_parts_from_item(sample, importer.entity_map)
+                        print("  sample parts:", [(p.text, getattr(p, "entity_type", None), getattr(p, "alias", None)) for p in parts])
+                    updated.append((intent_name, len(to_add)))
+                else:
+                    try:
+                        added, before, after = importer.update_intent_add_phrases(matched, to_add)
+                        updated.append((intent_name, len(added)))
+                        print(f"  Updated {intent_name}: before={before}, after={after}, added={len(added)}")
+                    except Exception as e:
+                        print(f"  Error updating {intent_name}: {e}")
 
-    # Summary
+        time.sleep(args.batch_delay)
+
     print("\n=== Summary ===")
-    print(f"Intents to be created: {len(created)}")
-    for name, n in created:
-        print(f"  - {name}: phrases={n}")
-    print(f"Intents updated: {len(updated)}")
-    for name, n in updated:
-        print(f"  - {name}: added_phrases={n}")
-    print(f"Intents skipped (no change): {len(skipped)}")
+    print(f"Created: {len(created)}")
+    for n, c in created:
+        print(f"  - {n}: phrases={c}")
+    print(f"Updated: {len(updated)}")
+    for n, c in updated:
+        print(f"  - {n}: added={c}")
+    print(f"Skipped: {len(skipped)}")
     if args.dry_run:
-        print("\n(DRY RUN) No changes were applied.")
+        print("(DRY RUN) No changes were applied.")
     else:
-        print("\n(Changes applied.)")
+        print("Changes applied.")
 
 if __name__ == "__main__":
     main()
