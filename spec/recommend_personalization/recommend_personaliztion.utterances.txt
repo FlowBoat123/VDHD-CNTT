@@ -69,3 +69,5 @@ Gợi ý phim theo hành vi xem phim của tôi.
 Tôi muốn xem những phim mà bạn nghĩ phù hợp với tôi.
 Gợi ý phim theo kiểu xem phim của tôi.
 Cho tôi vài gợi ý phim được cá nhân hóa.
+Tôi muốn xem nhưng không rõ mình muốn gì
+Tôi muốn xem nhưng không biết nên chọn phim nào cho buổi tối
