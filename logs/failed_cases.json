@@ -1,0 +1,86 @@
+[
+  {
+    "question": "gợi ý phim hay",
+    "expected_intent": "movie_recommendation_request"
+  },
+  {
+    "question": "gợi ý phim và đặt vé",
+    "expected_intent": "movie_recommendation_request"
+  },
+  {
+    "question": "phim hay và review chi tiết",
+    "expected_intent": "movie_recommendation_request"
+  },
+  {
+    "question": "tìm phim tương tự titanic",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "cho tôi phim như",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "phim na ná frozen",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "gợi ý vài phim có vibe tương đồng với la la land",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "phim nào như người nhện",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "phim như star wars và diễn viên chính",
+    "expected_intent": "recommend_movie_by_name"
+  },
+  {
+    "question": "Tôi muốn xem phim này",
+    "expected_intent": "information_request"
+  },
+  {
+    "question": "Phim này hay không?",
+    "expected_intent": "information_request"
+  },
+  {
+    "question": "Diễn viên chính là ai?",
+    "expected_intent": "information_request"
+  },
+  {
+    "question": "Phim đó có chất không?",
+    "expected_intent": "information_request"
+  },
+  {
+    "question": "Ai đạo diễn phim này và nó có hay không?",
+    "expected_intent": "information_request"
+  },
+  {
+    "question": "Gợi ý phim cho tôi",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Phim nào hay nhất?",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Phim nào đúng ý tôi?",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Tôi muốn xem phim phù hợp sở thích",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Dựa vào lịch sử, gợi ý phim",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Gợi ý phim hợp với tôy",
+    "expected_intent": "recommend_personalization"
+  },
+  {
+    "question": "Tìm phim hành động và đề xuất cá nhân",
+    "expected_intent": "recommend_personalization"
+  }
+]

@@ -1,0 +1,317 @@
+[
+  {
+    "original": "gợi ý phim hay",
+    "expected_intent": "movie_recommendation_request",
+    "paraphrases": [
+      "Đề xuất những bộ phim hay",
+      "Gợi ý cho tôi các bộ phim đáng xem",
+      "Cho tôi xin vài gợi ý phim hay"
+    ],
+    "all_phrases": [
+      "gợi ý phim hay",
+      "Đề xuất những bộ phim hay",
+      "Gợi ý cho tôi các bộ phim đáng xem",
+      "Cho tôi xin vài gợi ý phim hay"
+    ]
+  },
+  {
+    "original": "gợi ý phim và đặt vé",
+    "expected_intent": "movie_recommendation_request",
+    "paraphrases": [
+      "Gợi ý cho tôi phim và thực hiện đặt vé",
+      "Đề xuất phim và đặt mua vé",
+      "Tư vấn phim và đặt vé xem"
+    ],
+    "all_phrases": [
+      "gợi ý phim và đặt vé",
+      "Gợi ý cho tôi phim và thực hiện đặt vé",
+      "Đề xuất phim và đặt mua vé",
+      "Tư vấn phim và đặt vé xem"
+    ]
+  },
+  {
+    "original": "phim hay và review chi tiết",
+    "expected_intent": "movie_recommendation_request",
+    "paraphrases": [
+      "phim hay kèm đánh giá chi tiết",
+      "phim chất lượng và nhận xét tỉ mỉ",
+      "bộ phim hấp dẫn cùng bài phân tích kỹ lưỡng"
+    ],
+    "all_phrases": [
+      "phim hay và review chi tiết",
+      "phim hay kèm đánh giá chi tiết",
+      "phim chất lượng và nhận xét tỉ mỉ",
+      "bộ phim hấp dẫn cùng bài phân tích kỹ lưỡng"
+    ]
+  },
+  {
+    "original": "tìm phim tương tự titanic",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "Tìm các bộ phim có nội dung tương tự như Titanic",
+      "Gợi ý cho tôi những phim giống với Titanic",
+      "Hãy tìm kiếm những bộ phim tương tự Titanic"
+    ],
+    "all_phrases": [
+      "tìm phim tương tự titanic",
+      "Tìm các bộ phim có nội dung tương tự như Titanic",
+      "Gợi ý cho tôi những phim giống với Titanic",
+      "Hãy tìm kiếm những bộ phim tương tự Titanic"
+    ]
+  },
+  {
+    "original": "cho tôi phim như",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "tôi muốn xem phim như",
+      "hiển thị cho tôi phim như",
+      "có thể cho tôi xem phim như"
+    ],
+    "all_phrases": [
+      "cho tôi phim như",
+      "tôi muốn xem phim như",
+      "hiển thị cho tôi phim như",
+      "có thể cho tôi xem phim như"
+    ]
+  },
+  {
+    "original": "phim na ná frozen",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "phim tương tự frozen",
+      "phim giống với frozen",
+      "phim có nét tương đồng với frozen"
+    ],
+    "all_phrases": [
+      "phim na ná frozen",
+      "phim tương tự frozen",
+      "phim giống với frozen",
+      "phim có nét tương đồng với frozen"
+    ]
+  },
+  {
+    "original": "gợi ý vài phim có vibe tương đồng với la la land",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "Hãy đề xuất một số bộ phim có không khí tương tự như La La Land",
+      "Bạn có thể gợi ý vài phim mang cảm giác gần giống La La Land không?",
+      "Cho mình xin vài gợi ý phim có tông màu và vibe tương đồng với La La Land"
+    ],
+    "all_phrases": [
+      "gợi ý vài phim có vibe tương đồng với la la land",
+      "Hãy đề xuất một số bộ phim có không khí tương tự như La La Land",
+      "Bạn có thể gợi ý vài phim mang cảm giác gần giống La La Land không?",
+      "Cho mình xin vài gợi ý phim có tông màu và vibe tương đồng với La La Land"
+    ]
+  },
+  {
+    "original": "phim nào như người nhện",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "Phim nào giống Người Nhện",
+      "Bộ phim nào tương tự Người Nhện",
+      "Có phim nào như Người Nhện không"
+    ],
+    "all_phrases": [
+      "phim nào như người nhện",
+      "Phim nào giống Người Nhện",
+      "Bộ phim nào tương tự Người Nhện",
+      "Có phim nào như Người Nhện không"
+    ]
+  },
+  {
+    "original": "phim như star wars và diễn viên chính",
+    "expected_intent": "recommend_movie_by_name",
+    "paraphrases": [
+      "các bộ phim như star wars cùng với diễn viên chính",
+      "những tác phẩm điện ảnh ví dụ star wars và các ngôi sao đóng chính",
+      "các phim kiểu star wars và diễn viên đảm nhận vai chính"
+    ],
+    "all_phrases": [
+      "phim như star wars và diễn viên chính",
+      "các bộ phim như star wars cùng với diễn viên chính",
+      "những tác phẩm điện ảnh ví dụ star wars và các ngôi sao đóng chính",
+      "các phim kiểu star wars và diễn viên đảm nhận vai chính"
+    ]
+  },
+  {
+    "original": "Tôi muốn xem phim này",
+    "expected_intent": "information_request",
+    "paraphrases": [
+      "Tôi muốn được xem bộ phim này",
+      "Tôi có hứng thú xem phim này",
+      "Tôi thích xem bộ phim này"
+    ],
+    "all_phrases": [
+      "Tôi muốn xem phim này",
+      "Tôi muốn được xem bộ phim này",
+      "Tôi có hứng thú xem phim này",
+      "Tôi thích xem bộ phim này"
+    ]
+  },
+  {
+    "original": "Phim này hay không?",
+    "expected_intent": "information_request",
+    "paraphrases": [
+      "Phim này có hay không?",
+      "Bộ phim này có thú vị không?",
+      "Đánh giá của bạn về phim này thế nào?"
+    ],
+    "all_phrases": [
+      "Phim này hay không?",
+      "Phim này có hay không?",
+      "Bộ phim này có thú vị không?",
+      "Đánh giá của bạn về phim này thế nào?"
+    ]
+  },
+  {
+    "original": "Diễn viên chính là ai?",
+    "expected_intent": "information_request",
+    "paraphrases": [
+      "Ai là diễn viên đóng vai chính?",
+      "Người đóng vai chính trong phim là ai vậy?",
+      "Cho tôi biết tên của diễn viên chính?"
+    ],
+    "all_phrases": [
+      "Diễn viên chính là ai?",
+      "Ai là diễn viên đóng vai chính?",
+      "Người đóng vai chính trong phim là ai vậy?",
+      "Cho tôi biết tên của diễn viên chính?"
+    ]
+  },
+  {
+    "original": "Phim đó có chất không?",
+    "expected_intent": "information_request",
+    "paraphrases": [
+      "Phim đó có hay không?",
+      "Phim đó có đáng xem không?",
+      "Phim đó có tốt không?"
+    ],
+    "all_phrases": [
+      "Phim đó có chất không?",
+      "Phim đó có hay không?",
+      "Phim đó có đáng xem không?",
+      "Phim đó có tốt không?"
+    ]
+  },
+  {
+    "original": "Ai đạo diễn phim này và nó có hay không?",
+    "expected_intent": "information_request",
+    "paraphrases": [
+      "Ai là đạo diễn của phim này và phim có hay không?",
+      "Phim này do ai làm đạo diễn và nó có hay?",
+      "Đạo diễn phim này là ai và phim đó có hay không?"
+    ],
+    "all_phrases": [
+      "Ai đạo diễn phim này và nó có hay không?",
+      "Ai là đạo diễn của phim này và phim có hay không?",
+      "Phim này do ai làm đạo diễn và nó có hay?",
+      "Đạo diễn phim này là ai và phim đó có hay không?"
+    ]
+  },
+  {
+    "original": "Gợi ý phim cho tôi",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Bạn có thể đề xuất phim cho tôi không?",
+      "Tôi muốn bạn gợi ý một số bộ phim.",
+      "Hãy giới thiệu cho tôi vài bộ phim đi."
+    ],
+    "all_phrases": [
+      "Gợi ý phim cho tôi",
+      "Bạn có thể đề xuất phim cho tôi không?",
+      "Tôi muốn bạn gợi ý một số bộ phim.",
+      "Hãy giới thiệu cho tôi vài bộ phim đi."
+    ]
+  },
+  {
+    "original": "Phim nào hay nhất?",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Phim nào đáng xem nhất?",
+      "Bạn có thể gợi ý phim hay nhất không?",
+      "Đâu là bộ phim xuất sắc nhất?"
+    ],
+    "all_phrases": [
+      "Phim nào hay nhất?",
+      "Phim nào đáng xem nhất?",
+      "Bạn có thể gợi ý phim hay nhất không?",
+      "Đâu là bộ phim xuất sắc nhất?"
+    ]
+  },
+  {
+    "original": "Phim nào đúng ý tôi?",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Có bộ phim nào hợp gu tôi không?",
+      "Phim nào phù hợp với sở thích của tôi?",
+      "Tôi nên xem phim nào phù hợp với gu của mình?"
+    ],
+    "all_phrases": [
+      "Phim nào đúng ý tôi?",
+      "Có bộ phim nào hợp gu tôi không?",
+      "Phim nào phù hợp với sở thích của tôi?",
+      "Tôi nên xem phim nào phù hợp với gu của mình?"
+    ]
+  },
+  {
+    "original": "Tôi muốn xem phim phù hợp sở thích",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Tôi muốn tìm những bộ phim phù hợp với sở thích của mình.",
+      "Tôi muốn xem những bộ phim hợp gu của tôi.",
+      "Tôi muốn được xem các phim phù hợp với sở thích cá nhân."
+    ],
+    "all_phrases": [
+      "Tôi muốn xem phim phù hợp sở thích",
+      "Tôi muốn tìm những bộ phim phù hợp với sở thích của mình.",
+      "Tôi muốn xem những bộ phim hợp gu của tôi.",
+      "Tôi muốn được xem các phim phù hợp với sở thích cá nhân."
+    ]
+  },
+  {
+    "original": "Dựa vào lịch sử, gợi ý phim",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Dựa trên lịch sử xem phim, hãy đề xuất cho tôi.",
+      "Gợi ý phim dựa theo lịch sử đã xem.",
+      "Từ lịch sử xem phim, hãy đưa ra các gợi ý."
+    ],
+    "all_phrases": [
+      "Dựa vào lịch sử, gợi ý phim",
+      "Dựa trên lịch sử xem phim, hãy đề xuất cho tôi.",
+      "Gợi ý phim dựa theo lịch sử đã xem.",
+      "Từ lịch sử xem phim, hãy đưa ra các gợi ý."
+    ]
+  },
+  {
+    "original": "Gợi ý phim hợp với tôy",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Gợi ý cho tôi những bộ phim phù hợp",
+      "Hãy đề xuất phim phù hợp với sở thích của tôi",
+      "Bạn có thể gợi ý những bộ phim hợp gu tôi không?"
+    ],
+    "all_phrases": [
+      "Gợi ý phim hợp với tôy",
+      "Gợi ý cho tôi những bộ phim phù hợp",
+      "Hãy đề xuất phim phù hợp với sở thích của tôi",
+      "Bạn có thể gợi ý những bộ phim hợp gu tôi không?"
+    ]
+  },
+  {
+    "original": "Tìm phim hành động và đề xuất cá nhân",
+    "expected_intent": "recommend_personalization",
+    "paraphrases": [
+      "Tìm kiếm phim thể loại hành động và các gợi ý cá nhân",
+      "Tôi muốn tìm phim hành động và nhận đề xuất riêng",
+      "Hãy tìm cho tôi phim hành động cùng những gợi ý cá nhân"
+    ],
+    "all_phrases": [
+      "Tìm phim hành động và đề xuất cá nhân",
+      "Tìm kiếm phim thể loại hành động và các gợi ý cá nhân",
+      "Tôi muốn tìm phim hành động và nhận đề xuất riêng",
+      "Hãy tìm cho tôi phim hành động cùng những gợi ý cá nhân"
+    ]
+  }
+]
