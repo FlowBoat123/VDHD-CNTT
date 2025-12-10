@@ -1,0 +1,6 @@
+movie recommend fallback
+#me
+FALLBACK_MOVIE_SENTENCES
+
+#bot
+INTENT default_fallback

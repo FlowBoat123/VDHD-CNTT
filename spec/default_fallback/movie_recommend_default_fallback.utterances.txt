@@ -1,0 +1,7 @@
+FALLBACK_MOVIE_SENTENCES
+Phim vừa chiếu nhưng tôi không chắc có nên xem không
+Tôi nghe nói có phim hay nhưng không biết lúc nào nên xem
+Phim vừa mới ra nhưng cảm giác lạ lắm
+Tôi muốn xem mà không biết nên xem từ đầu hay giữa
+Tôi muốn xem mà không biết nên đặt tên thể loại gì
+Tôi muốn xem mà không biết bắt đầu từ đâu

@@ -1,0 +1,6 @@
+movie recommendation by name
+#me
+RECOMMEND_MOVIE_BY_NAME_SENTENCES
+
+#bot
+INTENT recommend_movie_by_name

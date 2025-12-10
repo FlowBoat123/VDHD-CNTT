@@ -1,0 +1,112 @@
+MOVIE_RECOMMENDATION_REQUEST_SENTENCES
+Đề xuất phim chính kịch từ năm 2024
+Cho tôi phim chính kịch
+Gợi ý phim anime mới
+Tôi muốn xem phim hành động
+Phim hành động có Tom Cruise có rating từ 8 trở lên từ năm 2015 trở về
+Tôi muốn xem phim có rating cao hơn 8
+Tôi muốn xem phim được đạo diễn bởi Christopher Nolan
+Tôi muốn xem phim có sự góp mặt của Leonardo DiCaprio
+Gợi ý phim hành động
+Cho tôi phim hài lãng mạn
+Gợi ý phim kinh dị Việt Nam
+Tôi muốn xem phim hoạt hình cho trẻ em
+Phim viễn tưởng hay nhất năm 2023
+Cho tôi phim tài liệu về thiên nhiên
+Gợi ý phim cổ trang Hàn Quốc
+Tôi muốn xem phim có diễn viên Johnny Depp
+Phim được đạo diễn bởi Steven Spielberg
+Tôi muốn xem phim có rating cao nhất thập niên 2010
+Đề xuất phim hành động phiêu lưu
+Cho tôi phim Marvel mới
+Gợi ý phim anime dài tập
+Tôi muốn xem phim tâm lý trinh thám
+Phim có Scarlett Johansson
+Tôi muốn xem phim được chiếu năm 2022
+Đề xuất phim tình cảm hài nhẹ nhàng
+Cho tôi phim kinh dị Mỹ
+Tôi muốn xem phim có cảnh quay đẹp
+Gợi ý phim chiến tranh nổi tiếng
+Tôi muốn xem phim có Brad Pitt
+Phim được đạo diễn bởi Quentin Tarantino
+Cho tôi phim hoạt hình Nhật Bản
+Tôi muốn xem phim khoa học viễn tưởng có rating cao
+Đề xuất phim phiêu lưu kỳ ảo
+Phim lãng mạn Hàn Quốc năm 2021
+Cho tôi phim chính kịch Âu Mỹ
+Gợi ý phim hành động có Tom Hardy
+Tôi muốn xem phim có Jennifer Lawrence
+Phim nổi bật trên IMDB
+Đề xuất phim Netflix mới
+Cho tôi phim Marvel có rating cao
+Tôi muốn xem phim có cốt truyện ly kỳ
+Gợi ý phim anime phim ngắn
+Phim có diễn viên Margot Robbie
+Tôi muốn xem phim được chiếu tại Liên hoan phim Cannes
+Gợi ý tôi vài phim hành động hay với.
+Có phim kinh dị nào đáng xem không?
+Cho tôi top phim tình cảm nhẹ nhàng.
+Tôi muốn xem phim hài thư giãn, có gì hay?
+Đề xuất vài phim khoa học viễn tưởng được không?
+Có phim nào plot twist mạnh không?
+Gợi ý phim trinh thám hay nhất vài năm gần đây.
+Tôi muốn xem phim viễn tây, có gợi ý nào không?
+Có phim nào lấy bối cảnh vũ trụ không?
+Cho tôi các phim hoạt hình phù hợp gia đình.
+Gợi ý phim ngắn tầm 90 phút.
+Tôi muốn xem phim buồn khóc, có phim nào cảm động không?
+Phim nào có kỹ xảo đẹp?
+Gợi ý tôi phim Hàn Quốc hay.
+Tôi muốn xem phim Nhật Bản về tâm lý.
+Có phim nào chủ đề sinh tồn trong rừng không?
+Gợi ý phim nói về hacker.
+Tôi muốn xem phim cổ trang Trung Quốc.
+Có phim nào dựa trên sự thật hay không?
+Cho tôi top phim đoạt Oscar vài năm gần đây.
+Bộ phim này mà xem xong vừa trống rỗng vừa đầy
+Có phim nào mà vừa khó hiểu vừa hấp dẫn
+Tôi muốn xem nhưng không biết gọi nó là phim gì
+Phim vừa mới ra mà cảm giác lạ lùng khó tả
+Bộ phim nào mà xem xong vừa nhớ vừa quên
+Tôi muốn xem mà không biết nên xem lúc nào
+Có phim nào mà vừa bí ẩn vừa quen thuộc
+Phim nào mà vừa mơ hồ vừa đáng nhớ
+Có phim nào mà vừa rối vừa thú vị
+Phim nào mà vừa mơ hồ vừa rõ nét
+Bộ phim này mà xem xong chỉ còn cảm giác
+Có phim nào mà vừa buồn vừa vui mà không rõ lý do
+Tôi muốn xem cái gì đó vừa quen vừa xa lạ
+Phim vừa mới ra nhưng vừa thấy lạ vừa quen
+Bộ phim nào mà xem xong mà không biết cảm xúc gì
+Có phim nào mà vừa mờ vừa sâu
+Phim nào mà vừa khó chịu vừa thích
+Bộ phim nào mà xem xong vừa cười vừa trống rỗng
+Tôi muốn xem nhưng không muốn cốt truyện quá rõ ràng
+Có phim nào mà vừa quen vừa quên
+Phim nào mà vừa thấy hay vừa không nhớ vì sao
+Tôi muốn xem một cái gì đó vừa mờ vừa sáng
+Bộ phim này mà vừa buồn vừa cười không rõ ràng
+Có phim nào mà xem xong còn cảm giác lạ lùng
+Tôi muốn xem mà không biết gọi thể loại gì
+Phim vừa mới ra nhưng cảm giác như đã xem rồi
+Bộ phim nào mà xem xong vừa muốn quên vừa muốn nhớ
+Phim nào mà vừa buồn vừa không hẳn là vui
+Tôi muốn xem một cái gì đó mà khó diễn tả bằng lời
+Bộ phim này mà xem xong là kiểu không nhớ gì nhưng vẫn thích
+Có phim nào mà vừa nhạt vừa sâu
+Tôi muốn xem mà không biết từ đâu bắt đầu
+Có phim nào mà cảm giác giống như một giấc mơ mờ
+Tôi muốn phim nhưng không biết từ thể loại nào
+Bộ phim nào mà xem xong mà vẫn muốn xem lại lần nữa mà không nhớ tên
+Có phim nào mà tôi cảm giác vừa quen vừa lạ hoắc
+Không biết phim nào hợp với cảm giác vừa mới uống cà phê xong
+Tôi muốn xem gì đó nhưng không phải kiểu hành động hay hài
+Có bộ phim nào mà xem xong vẫn còn suy nghĩ cả đêm
+Phim nào khiến tôi vừa cười vừa tự hỏi mình
+Tôi nghe nói có phim nhưng không biết nên bắt đầu từ đâu
+Bộ phim nào mà xem xong không nhớ cốt truyện nhưng vẫn thích
+Có phim nào như kiểu vừa quen vừa lạ
+Có phim nào mà cốt truyện hơi rối rắm không?
+Có bộ phim nào vừa hài vừa tình cảm không?
+Có phim nào về siêu anh hùng nhưng không bạo lực không?
+Có bộ phim gì vui cho trẻ con không?

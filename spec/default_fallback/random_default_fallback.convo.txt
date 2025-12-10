@@ -1,0 +1,6 @@
+random message fallback
+#me
+RANDOM_MESSAGES_FALLBACK_SENTENCES
+
+#bot
+INTENT default_fallback

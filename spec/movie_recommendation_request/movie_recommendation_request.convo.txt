@@ -1,0 +1,6 @@
+movie recommendation request
+#me
+MOVIE_RECOMMENDATION_REQUEST_SENTENCES
+
+#bot
+INTENT movie_recommendation_request
